@@ -48,16 +48,16 @@ public:
   virtual void initialize();
   virtual void step();
 private:
-  void setOffsets(std::vector<std::vector<std::vector<int> > >&);
-  unsigned getTar(const unsigned, const int);
+  void setOffsets(std::vector<int>&);
+  unsigned getTar(const unsigned, const unsigned);
 private:
   const short nMols;
   const unsigned nDim;
-  const unsigned nCols;
-  const unsigned nLayers;
-  const unsigned nRows;
+  const int nCols;
+  const int nLayers;
+  const int nRows;
   const unsigned nVoxels;
-  std::vector<std::vector<std::vector<int> > >theOffsets;
+  std::vector<int> theOffsets;
   RandomLib::Random theRng;
   std::vector<unsigned> theLattice;
   std::vector<unsigned> theMols;
