@@ -52,6 +52,7 @@ void SpatiocyteStepper::initialize()
 
 void SpatiocyteStepper::setOffsets(std::vector<int>& anOffsets)
 {
+  /*
   anOffsets.resize(ADJS);
   anOffsets[0] = -nRows*nCols;
   anOffsets[1] = -1;
@@ -59,6 +60,64 @@ void SpatiocyteStepper::setOffsets(std::vector<int>& anOffsets)
   anOffsets[3] = +nRows;
   anOffsets[4] = 1;
   anOffsets[5] = nRows*nCols;
+  */
+  //col=even, layer=even
+  anOffsets.resize(ADJS*4);
+  anOffsets[0] = -1;
+  anOffsets[1] = 1;
+  anOffsets[2] = -nRows-1;
+  anOffsets[3] = -nRows;
+  anOffsets[4] = nRows-1;
+  anOffsets[5] = nRows;
+  anOffsets[6] = -nRows*nCols-nRows;
+  anOffsets[7] = -nRows*nCols-1;
+  anOffsets[8] = -nRows*nCols;
+  anOffsets[9] = nRows*nCols-nRows;
+  anOffsets[10] = nRows*nCols-1;
+  anOffsets[11] = nRows*nCols;
+
+
+  //col=odd, layer=even +12 = %col*12
+  anOffsets[12] = -1;
+  anOffsets[13] = 1;
+  anOffsets[14] = -nRows;
+  anOffsets[15] = -nRows+1;
+  anOffsets[16] = nRows;
+  anOffsets[17] = nRows+1;
+  anOffsets[18] = -nRows*nCols-nRows;
+  anOffsets[19] = -nRows*nCols;
+  anOffsets[20] = -nRows*nCols+1;
+  anOffsets[21] = nRows*nCols-nRows;
+  anOffsets[22] = nRows*nCols;
+  anOffsets[23] = nRows*nCols+1;
+
+  //col=even, layer=odd +24 = %layer*24
+  anOffsets[24] = -1;
+  anOffsets[25] = 1;
+  anOffsets[26] = -nRows;
+  anOffsets[27] = -nRows+1;
+  anOffsets[28] = nRows;
+  anOffsets[29] = nRows+1;
+  anOffsets[30] = -nRows*nCols;
+  anOffsets[31] = -nRows*nCols+1;
+  anOffsets[32] = -nRows*nCols+nRows;
+  anOffsets[33] = nRows*nCols;
+  anOffsets[34] = nRows*nCols+1;
+  anOffsets[35] = nRows*nCols+nRows;
+
+  //col=odd, layer=odd +36 = %col*12 + %layer*24
+  anOffsets[36] = -1;
+  anOffsets[37] = 1;
+  anOffsets[38] = -nRows;
+  anOffsets[39] = -nRows+1;
+  anOffsets[40] = nRows-1;
+  anOffsets[41] = nRows;
+  anOffsets[42] = -nRows*nCols-1;
+  anOffsets[43] = -nRows*nCols+1;
+  anOffsets[44] = -nRows*nCols+nRows;
+  anOffsets[45] = nRows*nCols-1;
+  anOffsets[46] = nRows*nCols;
+  anOffsets[47] = nRows*nCols+nRows;
 }
 
 unsigned SpatiocyteStepper::getTar(const unsigned curr, const int anOffset)
@@ -76,8 +135,10 @@ void SpatiocyteStepper::step()
 {
   for(unsigned short i(0); i != 10000; ++i)
     { 
-      const unsigned aTar(getTar(theMols[i], 
-                                 theOffsets[theRng.IntegerC(ADJS-1)]));
+      const unsigned aTar(getTar(theMols[i], theOffsets[
+                                 theRng.IntegerC(ADJS-1) + 
+                                 (theMols[i]%(nRows*nCols)/nRows)%2*12 +
+                                 (theMols[i]/(nRows*nCols))%2*24]));
       if(!(theLattice[aTar/WORD] & (1 << aTar%WORD)))
         {
           theLattice[aTar/WORD] |= 1 << aTar%WORD;

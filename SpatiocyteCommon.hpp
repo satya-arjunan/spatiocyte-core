@@ -30,4 +30,4 @@
 
 #define TYPE unsigned
 #define WORD (sizeof(TYPE)*8)
-#define ADJS 6
+#define ADJS 12
