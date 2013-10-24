@@ -29,27 +29,27 @@
 //
 
 
-#ifndef __SpatiocyteStepper_hpp
-#define __SpatiocyteStepper_hpp
+#ifndef __Stepper_hpp
+#define __Stepper_hpp
 
 #include <RandomLib/Random.hpp>
 
-class SpatiocyteStepper
+class Stepper
 { 
 public: 
-  SpatiocyteStepper():
+  Stepper():
     nMols(10000),
     nDim(pow(11722464,1.0/3)),
     nCols(nDim),
     nLayers(nDim),
     nRows(nDim),
     nVoxels(nCols*nLayers*nRows) {}
-  virtual ~SpatiocyteStepper() {}
+  virtual ~Stepper() {}
   virtual void initialize();
   virtual void step();
 private:
   void setOffsets(std::vector<int>&);
-  unsigned getTar(const unsigned, const unsigned);
+  unsigned getTar(const unsigned, const unsigned) const;
 private:
   const short nMols;
   const unsigned nDim;
@@ -63,5 +63,5 @@ private:
   std::vector<unsigned> theMols;
 };
 
-#endif /* __SpatiocyteStepper_hpp */
+#endif /* __Stepper_hpp */
 

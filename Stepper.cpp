@@ -28,11 +28,10 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-#include <SpatiocyteStepper.hpp>
-#include <SpatiocyteCommon.hpp>
-#include <climits>
+#include <Stepper.hpp>
+#include <Common.hpp>
 
-void SpatiocyteStepper::initialize()
+void Stepper::initialize()
 {
   theLattice.resize(nVoxels/WORD+1, 0);
   theMols.resize(nMols);
@@ -51,7 +50,7 @@ void SpatiocyteStepper::initialize()
     }
 }
 
-void SpatiocyteStepper::setOffsets(std::vector<int>& anOffsets)
+void Stepper::setOffsets(std::vector<int>& anOffsets)
 {
   /*
   anOffsets.resize(ADJS);
@@ -143,7 +142,7 @@ void SpatiocyteStepper::setOffsets(std::vector<int>& anOffsets)
   */
 }
 
-unsigned SpatiocyteStepper::getTar(const unsigned curr, const unsigned aRand)
+unsigned Stepper::getTar(const unsigned curr, const unsigned aRand) const
 {
   const unsigned col((curr%(nRows*nCols)/nRows)%2);
   const unsigned layer((curr/(nRows*nCols))%2);
@@ -195,7 +194,7 @@ unsigned SpatiocyteStepper::getTar(const unsigned curr, const unsigned aRand)
 }
 
 
-void SpatiocyteStepper::step()
+void Stepper::step()
 {
   for(unsigned i(0); i != 10000; ++i)
     { 
