@@ -37,17 +37,12 @@
 class Model
 { 
 public: 
-  Model(Stepper& aStepper):
-    theStepper(aStepper) {}
+  Model(Stepper& stepper):
+    _stepper(stepper) {}
   ~Model() {}
-  void initialize();
   void run(const double);
-  Stepper& getStepper() const
-    {
-      return theStepper;
-    }
 private:
-  Stepper& theStepper;
+  Stepper& _stepper;
 };
 
 #endif /* __Model_hpp */

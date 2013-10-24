@@ -29,54 +29,34 @@
 //
 
 
-#ifndef __Compartment_hpp
-#define __Compartment_hpp
+#ifndef __Diffuser_hpp
+#define __Diffuser_hpp
 
-#include <Common.hpp>
+#include <RandomLib/Random.hpp>
+#include <Compartment.hpp>
 
-class Compartment
+class Species;
+
+class Diffuser
 { 
 public: 
-  Compartment(const double voxRadius, const double lenX,
-              const double lenY, const double lenZ);
-  ~Compartment() {}
-  void populate();
-  std::vector<unsigned>& getLattice()
-    {
-      return _lattice;
-    }
-  int getCols()
-    {
-      return _cols;
-    }
-  int getLays()
-    {
-      return _lays;
-    }
-  int getRows()
-    {
-      return _rows;
-    }
-  unsigned getVoxs()
-    {
-      return _voxs;
-    }
-  unsigned getTar(const unsigned, const unsigned) const;
+  Diffuser(const double D, Species& species, Compartment& comp,
+           std::vector<unsigned>& mols):
+    _D(D),
+    _species(species),
+    _comp(comp),
+    _mols(mols),
+    _lattice(_comp.getLattice()) {}
+  ~Diffuser() {}
+  void walk();
 private:
-  const double _hcpX;
-  const double _hcpO;
-  const double _hcpZ;
-  const int _cols;
-  const int _lays;
-  const int _rows;
-  const unsigned _voxs;
-  const double _lenX;
-  const double _lenY;
-  const double _lenZ;
-  const double _voxRadius;
-  const Vector _center;
-  std::vector<unsigned> _lattice;
+  double _D;
+  RandomLib::Random _rng;
+  Species& _species;
+  Compartment& _comp;
+  std::vector<unsigned>& _mols;
+  std::vector<unsigned>& _lattice;
 };
 
-#endif /* __Compartment_hpp */
+#endif /* __Diffuser_hpp */
 

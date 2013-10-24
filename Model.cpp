@@ -30,15 +30,11 @@
 
 #include <Model.hpp>
 
-void Model::initialize()
+void Model::run(const double interval)
 {
-}
-
-void Model::run(const double anInterval)
-{
-  const unsigned steps(anInterval/4.16667e-6);
+  const unsigned steps(interval/4.16667e-6);
   for(unsigned i(0); i !=steps; ++i)
     {
-      getStepper().step();
+      _stepper.step();
     }
 }

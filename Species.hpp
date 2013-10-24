@@ -29,54 +29,53 @@
 //
 
 
-#ifndef __Compartment_hpp
-#define __Compartment_hpp
+#ifndef __Species_hpp
+#define __Species_hpp
 
+#include <RandomLib/Random.hpp>
 #include <Common.hpp>
+#include <Diffuser.hpp>
+#include <Compartment.hpp>
 
-class Compartment
+class Species
 { 
 public: 
-  Compartment(const double voxRadius, const double lenX,
-              const double lenY, const double lenZ);
-  ~Compartment() {}
-  void populate();
-  std::vector<unsigned>& getLattice()
+  Species(const unsigned nmols, const double D, Compartment& comp):
+    _comp(comp),
+    _diffuser(D, *this, comp, _mols),
+    _lattice(comp.getLattice())
+  {
+    _mols.resize(nmols);
+  }
+  ~Species() {}
+  std::vector<unsigned>& getMols()
     {
-      return _lattice;
+      return _mols;
     }
-  int getCols()
+  void populate()
     {
-      return _cols;
+      for(unsigned short i(0),  j(_mols.size()); i != j; ++i)
+        {
+          unsigned coord(_rng.IntegerC(_lattice.size()-1));
+          while(_lattice[coord/WORD] & (1 << coord%WORD))
+            {
+              coord = _rng.IntegerC(_lattice.size()-1);
+            }
+          _mols[i] = coord;
+          _lattice[coord/WORD] |= 1 << coord%WORD;
+        }
     }
-  int getLays()
+  Diffuser& getDiffuser()
     {
-      return _lays;
+      return _diffuser;
     }
-  int getRows()
-    {
-      return _rows;
-    }
-  unsigned getVoxs()
-    {
-      return _voxs;
-    }
-  unsigned getTar(const unsigned, const unsigned) const;
 private:
-  const double _hcpX;
-  const double _hcpO;
-  const double _hcpZ;
-  const int _cols;
-  const int _lays;
-  const int _rows;
-  const unsigned _voxs;
-  const double _lenX;
-  const double _lenY;
-  const double _lenZ;
-  const double _voxRadius;
-  const Vector _center;
-  std::vector<unsigned> _lattice;
+  RandomLib::Random _rng;
+  Compartment& _comp;
+  Diffuser _diffuser;
+  std::vector<unsigned> _mols;
+  std::vector<unsigned>& _lattice;
 };
 
-#endif /* __Compartment_hpp */
+#endif /* __Species_hpp */
 

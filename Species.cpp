@@ -28,55 +28,5 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-
-#ifndef __Compartment_hpp
-#define __Compartment_hpp
-
-#include <Common.hpp>
-
-class Compartment
-{ 
-public: 
-  Compartment(const double voxRadius, const double lenX,
-              const double lenY, const double lenZ);
-  ~Compartment() {}
-  void populate();
-  std::vector<unsigned>& getLattice()
-    {
-      return _lattice;
-    }
-  int getCols()
-    {
-      return _cols;
-    }
-  int getLays()
-    {
-      return _lays;
-    }
-  int getRows()
-    {
-      return _rows;
-    }
-  unsigned getVoxs()
-    {
-      return _voxs;
-    }
-  unsigned getTar(const unsigned, const unsigned) const;
-private:
-  const double _hcpX;
-  const double _hcpO;
-  const double _hcpZ;
-  const int _cols;
-  const int _lays;
-  const int _rows;
-  const unsigned _voxs;
-  const double _lenX;
-  const double _lenY;
-  const double _lenZ;
-  const double _voxRadius;
-  const Vector _center;
-  std::vector<unsigned> _lattice;
-};
-
-#endif /* __Compartment_hpp */
+#include <Species.hpp>
 

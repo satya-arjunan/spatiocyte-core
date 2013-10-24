@@ -52,22 +52,6 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _center(lenX/2, lenY/2, lenZ/2)
 {
   _lattice.resize(_voxs/WORD, 0);
-  populate();
-}
-
-void Compartment::populate()
-{
-  _mols.resize(10000);
-  for(unsigned short i(0),  j(_mols.size()); i != j; ++i)
-    {
-      unsigned coord(_rng.IntegerC(_voxs-1));
-      while(_lattice[coord/WORD] & (1 << coord%WORD))
-        {
-          coord = _rng.IntegerC(_voxs-1);
-        }
-      _mols[i] = coord;
-      _lattice[coord/WORD] |= 1 << coord%WORD;
-    }
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const

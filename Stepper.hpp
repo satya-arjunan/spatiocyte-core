@@ -33,30 +33,20 @@
 #define __Stepper_hpp
 
 #include <Compartment.hpp>
+#include <Diffuser.hpp>
+#include <Species.hpp>
 
 class Stepper
 { 
 public: 
-  Stepper(Compartment& comp):
-    _lattice(comp.getLattice()),
-    _mols(comp.getMols()),
+  Stepper(Compartment& comp, Species& species):
     _comp(comp),
-    _cols(comp.getCols()),
-    _lays(comp.getLays()),
-    _rows(comp.getRows()),
-    _voxs(comp.getVoxs()) {}
+    _diffuser(species.getDiffuser()) {}
   virtual ~Stepper() {}
   virtual void step();
-  unsigned getTar(const unsigned, const unsigned) const;
 private:
-  std::vector<unsigned>& _lattice;
-  std::vector<unsigned>& _mols;
-  RandomLib::Random _rng;
   Compartment& _comp;
-  const int _cols;
-  const int _lays;
-  const int _rows;
-  const unsigned _voxs;
+  Diffuser& _diffuser;
 };
 
 #endif /* __Stepper_hpp */

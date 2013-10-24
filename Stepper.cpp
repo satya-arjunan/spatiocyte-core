@@ -33,15 +33,6 @@
 
 void Stepper::step()
 {
-  for(unsigned i(0); i != 10000; ++i)
-    { 
-      const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
-      if(!(_lattice[aTar/WORD] & (1 << aTar%WORD)))
-        {
-          _lattice[aTar/WORD] |= 1 << aTar%WORD;
-          _lattice[_mols[i]/WORD] &= ~(1 << _mols[i]%WORD);
-          _mols[i] = aTar;
-        }
-    }
+  _diffuser.walk();
 }
 

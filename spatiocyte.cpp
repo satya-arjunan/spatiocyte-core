@@ -9,9 +9,10 @@ int main()
   const double aVoxelRadius(2.5e-9);
   const double aLength(1e-6);
   Compartment aRootComp(aVoxelRadius, aLength, aLength, aLength);
-  Stepper aStepper(aRootComp);
+  Species A(10000, 1e-12, aRootComp);
+  A.populate();
+  Stepper aStepper(aRootComp, A);
   Model aModel(aStepper);
-  aModel.initialize();
   /*
   Species A;
   aRootComp.addSpecies(A);
