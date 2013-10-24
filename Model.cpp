@@ -32,7 +32,6 @@
 
 void Model::initialize()
 {
-  getStepper().initialize();
 }
 
 void Model::run(const double anInterval)

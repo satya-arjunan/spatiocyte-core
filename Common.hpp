@@ -28,6 +28,25 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#ifndef __Common_hpp
+#define __Common_hpp
+
+#include <iostream>
+#include <vector>
+
 #define TYPE unsigned
 #define WORD (sizeof(TYPE)*8)
 #define ADJS 12
+
+struct Vector
+{
+  Vector(const double a=0, const double b=0, const double c=0):
+    x(a),
+    y(b),
+    z(c) {}
+  double x;
+  double y;
+  double z;
+};
+
+#endif /* __Common_hpp */

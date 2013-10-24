@@ -32,35 +32,31 @@
 #ifndef __Stepper_hpp
 #define __Stepper_hpp
 
-#include <RandomLib/Random.hpp>
+#include <Compartment.hpp>
 
 class Stepper
 { 
 public: 
-  Stepper():
-    nMols(10000),
-    nDim(pow(11722464,1.0/3)),
-    nCols(nDim),
-    nLayers(nDim),
-    nRows(nDim),
-    nVoxels(nCols*nLayers*nRows) {}
+  Stepper(Compartment& comp):
+    _lattice(comp.getLattice()),
+    _mols(comp.getMols()),
+    _comp(comp),
+    _cols(comp.getCols()),
+    _lays(comp.getLays()),
+    _rows(comp.getRows()),
+    _voxs(comp.getVoxs()) {}
   virtual ~Stepper() {}
-  virtual void initialize();
   virtual void step();
-private:
-  void setOffsets(std::vector<int>&);
   unsigned getTar(const unsigned, const unsigned) const;
 private:
-  const short nMols;
-  const unsigned nDim;
-  const int nCols;
-  const int nLayers;
-  const int nRows;
-  const unsigned nVoxels;
-  std::vector<int> theOffsets;
-  RandomLib::Random theRng;
-  std::vector<unsigned> theLattice;
-  std::vector<unsigned> theMols;
+  std::vector<unsigned>& _lattice;
+  std::vector<unsigned>& _mols;
+  RandomLib::Random _rng;
+  Compartment& _comp;
+  const int _cols;
+  const int _lays;
+  const int _rows;
+  const unsigned _voxs;
 };
 
 #endif /* __Stepper_hpp */

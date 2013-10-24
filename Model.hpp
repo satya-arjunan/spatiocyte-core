@@ -42,7 +42,7 @@ public:
   ~Model() {}
   void initialize();
   void run(const double);
-  Stepper& getStepper()
+  Stepper& getStepper() const
     {
       return theStepper;
     }

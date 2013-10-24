@@ -1,16 +1,18 @@
 #include <iostream> 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <Compartment.hpp>
 #include <Stepper.hpp>
 #include <Model.hpp>
 
-int main ()
+int main()
 {
-  Stepper aStepper;
+  const double aVoxelRadius(2.5e-9);
+  const double aLength(1e-6);
+  Compartment aRootComp(aVoxelRadius, aLength, aLength, aLength);
+  Stepper aStepper(aRootComp);
   Model aModel(aStepper);
   aModel.initialize();
   /*
-  CompartmentProcess aRootComp;
-  aModel.addCompartment(aRootComp);
   Species A;
   aRootComp.addSpecies(A);
   aModel.addStepper(aStepper);
