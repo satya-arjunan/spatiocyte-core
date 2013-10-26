@@ -52,6 +52,7 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _center(lenX/2, lenY/2, lenZ/2)
 {
   _lattice.resize(_voxs/WORD, 0);
+  //_lattice.resize(_voxs, 0);
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
@@ -98,7 +99,32 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
       ret = _rows*_cols+_rows*layer+(1-layer)*col;
       break;
     }
-  if(ret < curr || ret >= _voxs-curr)
+  /*
+  int ret(0);
+  switch(aRand)
+    {
+    case 0:
+      ret = -_rows*_cols;
+      break;
+    case 1:
+      ret = -1;
+      break;
+    case 2:
+      ret = -_rows;
+      break;
+    case 3:
+      ret = _rows;
+      break;
+    case 4:
+      ret = 1;
+      break;
+    case 5:
+      ret = _rows*_cols;
+      break;
+    }
+    */
+
+  if(long(curr)+ret < 0 || ret+long(curr) >= _voxs)
     {
       return curr;
     }

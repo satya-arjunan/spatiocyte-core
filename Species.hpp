@@ -41,6 +41,7 @@ class Species
 { 
 public: 
   Species(const unsigned nmols, const double D, Compartment& comp):
+    _isCompVacant(false),
     _comp(comp),
     _diffuser(D, *this, comp, _mols),
     _lattice(comp.getLattice())
@@ -56,20 +57,34 @@ public:
     {
       for(unsigned short i(0),  j(_mols.size()); i != j; ++i)
         {
-          unsigned coord(_rng.IntegerC(_lattice.size()-1));
+          unsigned coord(_rng.IntegerC(_lattice.size()*WORD-1));
           while(_lattice[coord/WORD] & (1 << coord%WORD))
             {
               coord = _rng.IntegerC(_lattice.size()-1);
             }
           _mols[i] = coord;
           _lattice[coord/WORD] |= 1 << coord%WORD;
+          /*
+          unsigned coord(_rng.IntegerC(_lattice.size()-1));
+          while(_lattice[coord])
+            {
+              coord = _rng.IntegerC(_lattice.size()-1);
+            }
+          _mols[i] = coord;
+          _lattice[coord] = i+1;
+          */
         }
     }
   Diffuser& getDiffuser()
     {
       return _diffuser;
     }
+  bool getIsCompVacant() const
+    {
+      return _isCompVacant;
+    }
 private:
+  bool _isCompVacant;
   RandomLib::Random _rng;
   Compartment& _comp;
   Diffuser _diffuser;

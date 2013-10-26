@@ -41,6 +41,15 @@ void Diffuser::walk()
         _lattice[_mols[i]/WORD] &= ~(1 << _mols[i]%WORD);
         _mols[i] = aTar;
       }
+    /*
+    const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
+    if(!_lattice[aTar])
+      {
+        _lattice[aTar] = i+1;
+        _lattice[_mols[i]] = 0;
+        _mols[i] = aTar;
+      }
+      */
   }
 }
 

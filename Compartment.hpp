@@ -57,9 +57,17 @@ public:
     {
       return _rows;
     }
-  unsigned getVoxs()
+  unsigned getVoxs() const
     {
       return _voxs;
+    }
+  double getVoxRadius() const
+    {
+      return _voxRadius;
+    }
+  Vector getCenter() const
+    {
+      return _center;
     }
   unsigned getTar(const unsigned, const unsigned) const;
 private:

@@ -29,31 +29,57 @@
 //
 
 
-#include <iostream> 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#ifndef __VisualLogger_hpp
+#define __VisualLogger_hpp
+
+#include <fstream>
+#include <Species.hpp>
 #include <Compartment.hpp>
 #include <Stepper.hpp>
-#include <Model.hpp>
-#include <VisualLogger.hpp>
+#include <climits>
 
-int main()
+class Stepper;
+
+class VisualLogger
 {
-  const double aVoxelRadius(2.5e-9);
-  const double aLength(1e-6);
-  Compartment aRootComp(aVoxelRadius, aLength, aLength, aLength);
-  Species A(10000, 1e-12, aRootComp);
-  A.populate();
-  Stepper aStepper(aRootComp, A);
-  Model aModel(aStepper);
-  VisualLogger visualLogger(aRootComp, aStepper);
-  aStepper.setLogger(visualLogger);
-  visualLogger.addSpecies(A);
-  visualLogger.initialize();
+public:
+  VisualLogger(Compartment& comp, Stepper& stepper):
+    _marker(UINT_MAX),
+    _fileName("VisualLog.dat"),
+    _comp(comp),
+    _stepper(stepper) {}
+  virtual ~VisualLogger() {}
+  void initialize()
+    {
+      std::ostringstream fileName;
+      fileName << _fileName << std::ends;
+      _logFile.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
+      initializeLog();
+      logCompVacant();
+      logSpecies();
+      _logFile.flush();
+    }
+  void fire()
+    {
+      logSpecies();
+      _logFile.flush();
+    }
+  void addSpecies(Species& species)
+    {
+      _species.push_back(&species);
+    }
+protected:
+  virtual void initializeLog();
+  virtual void logCompVacant();
+  void logSpecies();
+  void logMolecules(const unsigned);
+protected:
+  unsigned _marker;
+  std::string _fileName;
+  std::ofstream _logFile;
+  Compartment& _comp;
+  Stepper& _stepper;
+  std::vector<Species*> _species;
+};
 
-  boost::posix_time::ptime start(
-                 boost::posix_time::microsec_clock::universal_time()); 
-  aModel.run(0.1);
-  boost::posix_time::ptime end(
-                 boost::posix_time::microsec_clock::universal_time());
-  std::cout << "duration:" << end-start << std::endl;
-}
+#endif /* __VisualLogger_hpp */

@@ -35,18 +35,29 @@
 #include <Compartment.hpp>
 #include <Diffuser.hpp>
 #include <Species.hpp>
+#include <VisualLogger.hpp>
+
+class VisualLogger;
 
 class Stepper
 { 
 public: 
   Stepper(Compartment& comp, Species& species):
+    _step(0),
     _comp(comp),
     _diffuser(species.getDiffuser()) {}
   virtual ~Stepper() {}
   virtual void step();
+  double getCurrentTime() const;
+  void setLogger(VisualLogger& visualLogger)
+    {
+      _visualLogger = &visualLogger;
+    }
 private:
+  double _step;
   Compartment& _comp;
   Diffuser& _diffuser;
+  VisualLogger* _visualLogger;
 };
 
 #endif /* __Stepper_hpp */
