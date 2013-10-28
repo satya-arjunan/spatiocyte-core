@@ -71,6 +71,8 @@ public:
     }
   unsigned getTar(const unsigned, const unsigned) const;
 private:
+  void setOffsets();
+private:
   const double _hcpX;
   const double _hcpO;
   const double _hcpZ;
@@ -84,6 +86,7 @@ private:
   const double _voxRadius;
   const Vector _center;
   std::vector<unsigned> _lattice;
+  std::vector<int> _offsets;
 };
 
 #endif /* __Compartment_hpp */

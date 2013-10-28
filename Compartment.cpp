@@ -52,9 +52,11 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _center(lenX/2, lenY/2, lenZ/2)
 {
   _lattice.resize(_voxs/WORD, 0);
+  setOffsets();
   //_lattice.resize(_voxs, 0);
 }
 
+/*
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 {
   const unsigned col((curr%(_rows*_cols)/_rows)%2);
@@ -122,7 +124,6 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
       ret = _rows*_cols;
       break;
     }
-    */
 
   if(long(curr)+ret < 0 || ret+long(curr) >= _voxs)
     {
@@ -130,6 +131,84 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
     }
   return ret+curr;
 }
+    */
+
+unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
+{
+  const long ret(curr+_offsets[aRand]);
+  if(ret < 0 || ret >= _voxs)
+    {
+      return curr;
+    }
+  return ret;
+}
+
+void Compartment::setOffsets()
+{
+  /*
+  _offsets.resize(ADJS);
+  _offsets[0] = -_rows*_cols;
+  _offsets[1] = -1;
+  _offsets[2] = -_rows;
+  _offsets[3] = +_rows;
+  _offsets[4] = 1;
+  _offsets[5] = _rows*_cols;
+  */
+  //col=even, layer=even
+  _offsets.resize(ADJS*4);
+  _offsets[0] = -1;
+  _offsets[1] = 1;
+  _offsets[2] = -_rows-1;
+  _offsets[3] = -_rows;
+  _offsets[4] = _rows-1;
+  _offsets[5] = _rows;
+  _offsets[6] = -_rows*_cols-_rows;
+  _offsets[7] = -_rows*_cols-1;
+  _offsets[8] = -_rows*_cols;
+  _offsets[9] = _rows*_cols-_rows;
+  _offsets[10] = _rows*_cols-1;
+  _offsets[11] = _rows*_cols;
 
 
+  //col=odd, layer=even +12 = %col*12
+  _offsets[12] = -1;
+  _offsets[13] = 1;
+  _offsets[14] = -_rows;
+  _offsets[15] = -_rows+1;
+  _offsets[16] = _rows;
+  _offsets[17] = _rows+1;
+  _offsets[18] = -_rows*_cols-_rows;
+  _offsets[19] = -_rows*_cols;
+  _offsets[20] = -_rows*_cols+1;
+  _offsets[21] = _rows*_cols-_rows;
+  _offsets[22] = _rows*_cols;
+  _offsets[23] = _rows*_cols+1;
 
+  //col=even, layer=odd +24 = %layer*24
+  _offsets[24] = -1;
+  _offsets[25] = 1;
+  _offsets[26] = -_rows;
+  _offsets[27] = -_rows+1;
+  _offsets[28] = _rows;
+  _offsets[29] = _rows+1;
+  _offsets[30] = -_rows*_cols;
+  _offsets[31] = -_rows*_cols+1;
+  _offsets[32] = -_rows*_cols+_rows;
+  _offsets[33] = _rows*_cols;
+  _offsets[34] = _rows*_cols+1;
+  _offsets[35] = _rows*_cols+_rows;
+
+  //col=odd, layer=odd +36 = %col*12 + %layer*24
+  _offsets[36] = -1;
+  _offsets[37] = 1;
+  _offsets[38] = -_rows;
+  _offsets[39] = -_rows+1;
+  _offsets[40] = _rows-1;
+  _offsets[41] = _rows;
+  _offsets[42] = -_rows*_cols-1;
+  _offsets[43] = -_rows*_cols+1;
+  _offsets[44] = -_rows*_cols+_rows;
+  _offsets[45] = _rows*_cols-1;
+  _offsets[46] = _rows*_cols;
+  _offsets[47] = _rows*_cols+_rows;
+}

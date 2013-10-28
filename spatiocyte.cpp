@@ -52,7 +52,7 @@ int main()
 
   boost::posix_time::ptime start(
                  boost::posix_time::microsec_clock::universal_time()); 
-  aModel.run(0.1);
+  aModel.run(0.01);
   boost::posix_time::ptime end(
                  boost::posix_time::microsec_clock::universal_time());
   std::cout << "duration:" << end-start << std::endl;

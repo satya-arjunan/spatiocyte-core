@@ -35,6 +35,7 @@ void Diffuser::walk()
   for(unsigned i(0); i != 10000; ++i)
   { 
     const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
+    //const unsigned aTar(_comp.getTar(_mols[i], 2));
     if(!(_lattice[aTar/WORD] & (1 << aTar%WORD)))
       {
         _lattice[aTar/WORD] |= 1 << aTar%WORD;

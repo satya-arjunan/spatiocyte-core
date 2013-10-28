@@ -35,7 +35,7 @@ void Stepper::step()
 {
   _diffuser.walk();
   _step += 1;
-  if(!(unsigned(_step)%10))
+  //if(!(unsigned(_step)%10))
     {
       _visualLogger->fire();
     }
