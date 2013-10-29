@@ -58,9 +58,10 @@ Compartment::Compartment(const double voxRadius, const double lenX,
 
 unsigned Compartment::getTar2(const unsigned curr, const unsigned aRand) const
 {
-  const unsigned col((curr%(_rows*_cols)/_rows)%2);
-  const unsigned layer((curr/(_rows*_cols))%2);
+  const bool col((curr%(_rows*_cols)/_rows)&1);
+  const bool layer((curr/(_rows*_cols))&1);
   int ret(0);
+  int x,y;
   switch(aRand)
     {
     case 0:
@@ -70,34 +71,47 @@ unsigned Compartment::getTar2(const unsigned curr, const unsigned aRand) const
       ret = 1;
       break;
     case 2:
-      ret = -_rows - 1 + (col-layer)*(col-layer);
+      //ret = -_rows - 1 + (col-layer)*(col-layer);
+      ret = (col^layer) -_rows - 1 ;
       break;
     case 3:
-      ret = -_rows + (col-layer)*(col-layer);
+      //ret = -_rows + (col-layer)*(col-layer);
+      ret = (col^layer) -_rows;
       break;
     case 4:
-      ret = _rows - 1 + (col-layer)*(col-layer);
+      //ret = _rows - 1 + (col-layer)*(col-layer);
+      ret = (col^layer) + _rows - 1;
       break;
     case 5:
-      ret = _rows + (col-layer)*(col-layer);
+      //ret = _rows + (col-layer)*(col-layer);
+      ret = (col^layer) + _rows;
       break;
     case 6:
-      ret = _rows*(layer-_cols-1) - col*layer;
+      //ret = _rows*(layer-_cols-1) - col*layer;
+      ret = _rows*(layer-_cols-1) - (col&layer);
+      //ret = -_rows*(_cols+!layer) - (col&layer);
       break;
     case 7:
-      ret = -_rows*_cols - 1 + 2*layer*(1-col) + col;
+      //ret = -_rows*_cols - 1 + 2*layer*(1-col) + col;
+      //ret = -_rows*_cols-!(col|layer)+(!col&layer);
+      ret = -_rows*_cols+!col*(layer-!layer);
       break;
     case 8:
-      ret = -_rows*_cols + layer*(_rows-col) + col;
+      //ret = -_rows*_cols + layer*(_rows-col) + col;
+      ret = _rows*(layer-_cols)+(col&!layer);
       break;
     case 9:
-      ret = _rows*(_cols-1+layer) - col*layer;
+      //ret = _rows*(_cols-1+layer) - col*layer;
+      //ret = _rows*(_cols-1+layer) - (col&layer);
+      ret = _rows*(_cols-!layer)-(col&layer);
       break;
     case 10:
-      ret = _rows*_cols + (1-col)*(2*layer-1);
+      //ret = _rows*_cols + (1-col)*(2*layer-1);
+      ret = _rows*_cols+!col*(layer-!layer);
       break;
     case 11:
-      ret = _rows*(_cols+layer) + (1-layer)*col;
+      //ret = _rows*(_cols+layer) + (1-layer)*col;
+      ret = _rows*(_cols+layer)+(col&!layer);
       break;
     }
   /*
@@ -159,16 +173,18 @@ void Compartment::setOffsets()
 
 
   /*
-  ret = -_rows*_cols + layer*_rows + col*(col-layer)
+      ret = _rows*_cols+_rows*layer+(col&!layer)
+      ret = _rows*(_cols+layer)+(col&!layer)
+
 
   00 = 0
-  _offsets[8] = -_rows*_cols;
+  _offsets[11] = _rows*_cols;
   01 = 1
-  _offsets[32] = -_rows*_cols+_rows;
+  _offsets[35] = _rows*_cols+_rows;
   10 = 1
-  _offsets[20] = -_rows*_cols+1;
+  _offsets[23] = _rows*_cols+1;
   11 = 2
-  _offsets[44] = -_rows*_cols+_rows;
+  _offsets[47] = _rows*_cols+_rows;
   */
 
 
@@ -182,7 +198,6 @@ void Compartment::setOffsets()
   _offsets[5] = _rows;
   _offsets[6] = -_rows*_cols-_rows;
   _offsets[7] = -_rows*_cols-1;
-
   _offsets[8] = -_rows*_cols;
   _offsets[9] = _rows*_cols-_rows;
   _offsets[10] = _rows*_cols-1;
@@ -198,7 +213,6 @@ void Compartment::setOffsets()
   _offsets[29] = _rows+1;
   _offsets[30] = -_rows*_cols;
   _offsets[31] = -_rows*_cols+1;
-
   _offsets[32] = -_rows*_cols+_rows;
   _offsets[33] = _rows*_cols;
   _offsets[34] = _rows*_cols+1;
@@ -213,7 +227,6 @@ void Compartment::setOffsets()
   _offsets[17] = _rows+1;
   _offsets[18] = -_rows*_cols-_rows;
   _offsets[19] = -_rows*_cols;
-
   _offsets[20] = -_rows*_cols+1;
   _offsets[21] = _rows*_cols-_rows;
   _offsets[22] = _rows*_cols;
@@ -229,7 +242,6 @@ void Compartment::setOffsets()
   _offsets[41] = _rows;
   _offsets[42] = -_rows*_cols-1;
   _offsets[43] = -_rows*_cols; //a
-
   _offsets[44] = -_rows*_cols+_rows;
   _offsets[45] = _rows*_cols-1;
   _offsets[46] = _rows*_cols;
