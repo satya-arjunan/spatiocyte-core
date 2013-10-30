@@ -41,7 +41,7 @@ int main()
   const double aVoxelRadius(2.5e-9);
   const double aLength(1e-6);
   Compartment aRootComp(aVoxelRadius, aLength, aLength, aLength);
-  Species A(100000, 1e-12, aRootComp);
+  Species A(10000, 1e-12, aRootComp);
   A.populate();
   Stepper aStepper(aRootComp, A);
   Model aModel(aStepper);
@@ -52,7 +52,7 @@ int main()
 
   boost::posix_time::ptime start(
                  boost::posix_time::microsec_clock::universal_time()); 
-  aModel.run(0.001);
+  aModel.run(0.1);
   boost::posix_time::ptime end(
                  boost::posix_time::microsec_clock::universal_time());
   std::cout << "duration:" << end-start << std::endl;

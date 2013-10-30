@@ -59,7 +59,7 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   //_lattice.resize(_voxs, 0);
 }
 
-unsigned Compartment::getTar3(const unsigned curr, const unsigned aRand) const
+unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 {
   const bool col((curr%(_rows*_cols)/_rows)&1);
   const bool lay((curr/(_rows*_cols))&1);
@@ -127,81 +127,6 @@ unsigned Compartment::getTar3(const unsigned curr, const unsigned aRand) const
 
 unsigned Compartment::getTar2(const unsigned curr, const unsigned aRand) const
 {
-  const unsigned clay(curr/_layVoxs);
-  const unsigned lastLay(curr-clay*_layVoxs);
-  const unsigned ccol(lastLay/_rows);
-  const unsigned crow(lastLay-ccol*_rows);
-  const bool col(ccol&1);
-  const bool lay(clay&1);
-  int ret(0);
-  int x,y;
-  switch(aRand)
-    {
-    case 0:
-      ret = -(crow > 0);
-      break;
-    case 1:
-      ret = (crow < _erow);
-      break;
-    case 2:
-      //ret = -_rows - 1 + (col-lay)*(col-lay);
-      ret = ((col^lay)-_rows-1)*((ccol>0)&((crow>0)|(col^lay)));
-      break;
-    case 3:
-      //ret = -_rows + (col-lay)*(col-lay);
-      ret = ((col^lay)-_rows)*((ccol>0)&((crow<_erow)|(col==lay)));;
-      break;
-    case 4:
-      //ret = _rows - 1 + (col-lay)*(col-lay);
-      ret = ((col^lay)+_rows-1)*((ccol<_ecol)&((crow>0)|(col^lay)));
-      break;
-    case 5:
-      //ret = _rows + (col-lay)*(col-lay);
-      ret = ((col^lay) + _rows)*((ccol<_ecol)&((crow<_erow)|(col==lay)));
-      break;
-    case 6:
-      //ret = _rows*(lay-_cols-1) - col*lay;
-      ret = (_rows*(lay-_cols-1)-(col&lay))*
-        ((lay&((crow>0)|(!col)))|((!lay)&(ccol>0)));
-      //ret = -_rows*(_cols+!lay) - (col&lay);
-      break;
-    case 7:
-      //ret = -_rows*_cols - 1 + 2*lay*(1-col) + col;
-      //ret = -_rows*_cols-!(col|lay)+(!col&lay);
-      ret = (-_rows*_cols+!col*(lay-!lay))*
-        ((lay&((crow<_erow)|col))|((!lay)&((crow>0)|col)));
-      break;
-    case 8:
-      //ret = -_rows*_cols + lay*(_rows-col) + col;
-      ret = (_rows*(lay-_cols)+(col&!lay))*
-        ((lay&(ccol<_ecol))|((!lay)&((crow<_erow)|(!col))));
-      break;
-    case 9:
-      //ret = _rows*(_cols-1+lay) - col*lay;
-      //ret = _rows*(_cols-1+lay) - (col&lay);
-      ret = (_rows*(_cols-!lay)-(col&lay))*
-        ((lay&((crow>0)|(!col)))|((!lay)&(ccol>0)));
-      break;
-    case 10:
-      //ret = _rows*_cols + (1-col)*(2*lay-1);
-      ret = (_rows*_cols+!col*(lay-!lay))*
-        ((lay&((crow<_erow)|col))|((!lay)&((crow>0)|col)));
-      break;
-    case 11:
-      //ret = _rows*(_cols+lay) + (1-lay)*col;
-      ret = (_rows*(_cols+lay)+(col&!lay))*
-        ((lay&(ccol<_ecol))|((!lay)&((crow<_erow)|(!col))));
-      break;
-    }
-  if(long(curr)+ret < 0 || ret+long(curr) >= _voxs)
-    {
-      return curr;
-    }
-  return ret+curr;
-}
-
-unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
-{
   const unsigned col((curr%(_rows*_cols)/_rows)%2);
   const unsigned lay((curr/(_rows*_cols))%2);
   const unsigned index(aRand+lay*24+col*12);
@@ -215,34 +140,6 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 
 void Compartment::setOffsets()
 {
-  /*
-  _offsets.resize(ADJS);
-  _offsets[0] = -_rows*_cols;
-  _offsets[1] = -1;
-  _offsets[2] = -_rows;
-  _offsets[3] = +_rows;
-  _offsets[4] = 1;
-  _offsets[5] = _rows*_cols;
-  */
-
-
-  /*
-      ret = _rows*_cols+_rows*lay+(col&!lay)
-      ret = _rows*(_cols+lay)+(col&!lay)
-
-
-
-  00 = 0
-  _offsets[6] = -_rows*_cols-_rows;
-  01 = 1
-  _offsets[30] = -_rows*_cols;
-  10 = 1
-  _offsets[18] = (-_rows*_cols-_rows)*(ccol >0);
-  11 = 2
-  _offsets[42] = (-_rows*_cols-1)*(crow > 0);
-  */
-
-
   //col=even, lay=even
   _offsets.resize(ADJS*4);
   _offsets[0] = -1;

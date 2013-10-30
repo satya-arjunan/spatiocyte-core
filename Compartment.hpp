@@ -71,7 +71,6 @@ public:
     }
   unsigned getTar(const unsigned, const unsigned) const;
   unsigned getTar2(const unsigned, const unsigned) const;
-  unsigned getTar3(const unsigned, const unsigned) const;
 private:
   void setOffsets();
 private:
