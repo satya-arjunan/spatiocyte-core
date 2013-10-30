@@ -63,12 +63,9 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 {
   const bool col((curr%_layVoxs/_rows)&1);
   const bool lay((curr/_layVoxs)&1);
-  int ret(0);
+  int ret(-1);
   switch(aRand)
     {
-    case 0:
-      ret = -1;
-      break;
     case 1:
       ret = 1;
       break;
