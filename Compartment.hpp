@@ -77,9 +77,9 @@ private:
   const double _hcpX;
   const double _hcpO;
   const double _hcpZ;
-  const int _cols;
-  const int _lays;
-  const int _rows;
+  const unsigned _cols;
+  const unsigned _lays;
+  const unsigned _rows;
   const unsigned _ecol;
   const unsigned _erow;
   const unsigned _layVoxs;

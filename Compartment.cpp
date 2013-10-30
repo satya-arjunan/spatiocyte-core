@@ -61,10 +61,9 @@ Compartment::Compartment(const double voxRadius, const double lenX,
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 {
-  const bool col((curr%(_rows*_cols)/_rows)&1);
-  const bool lay((curr/(_rows*_cols))&1);
+  const bool col((curr%_layVoxs/_rows)&1);
+  const bool lay((curr/_layVoxs)&1);
   int ret(0);
-  int x,y;
   switch(aRand)
     {
     case 0:
@@ -74,46 +73,33 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
       ret = 1;
       break;
     case 2:
-      //ret = -_rows - 1 + (col-lay)*(col-lay);
-      ret = (col^lay) -_rows - 1 ;
+      ret = (col^lay)-_rows-1 ;
       break;
     case 3:
-      //ret = -_rows + (col-lay)*(col-lay);
-      ret = (col^lay) -_rows;
+      ret = (col^lay)-_rows;
       break;
     case 4:
-      //ret = _rows - 1 + (col-lay)*(col-lay);
-      ret = (col^lay) + _rows - 1;
+      ret = (col^lay)+_rows-1;
       break;
     case 5:
-      //ret = _rows + (col-lay)*(col-lay);
-      ret = (col^lay) + _rows;
+      ret = (col^lay)+_rows;
       break;
     case 6:
-      //ret = _rows*(lay-_cols-1) - col*lay;
-      ret = _rows*(lay-_cols-1) - (col&lay);
-      //ret = -_rows*(_cols+!lay) - (col&lay);
+      ret = _rows*(lay-_cols-1)-(col&lay);
       break;
     case 7:
-      //ret = -_rows*_cols - 1 + 2*lay*(1-col) + col;
-      //ret = -_rows*_cols-!(col|lay)+(!col&lay);
-      ret = -_rows*_cols+!col*(lay-!lay);
+      ret = !col*(lay-!lay)-_rows*_cols;
       break;
     case 8:
-      //ret = -_rows*_cols + lay*(_rows-col) + col;
       ret = _rows*(lay-_cols)+(col&!lay);
       break;
     case 9:
-      //ret = _rows*(_cols-1+lay) - col*lay;
-      //ret = _rows*(_cols-1+lay) - (col&lay);
       ret = _rows*(_cols-!lay)-(col&lay);
       break;
     case 10:
-      //ret = _rows*_cols + (1-col)*(2*lay-1);
       ret = _rows*_cols+!col*(lay-!lay);
       break;
     case 11:
-      //ret = _rows*(_cols+lay) + (1-lay)*col;
       ret = _rows*(_cols+lay)+(col&!lay);
       break;
     }
