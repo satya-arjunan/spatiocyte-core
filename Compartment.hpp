@@ -71,6 +71,7 @@ public:
     }
   unsigned getTar(const unsigned, const unsigned) const;
   unsigned getTar2(const unsigned, const unsigned) const;
+  unsigned getTar3(const unsigned, const unsigned) const;
 private:
   void setOffsets();
 private:
@@ -80,6 +81,9 @@ private:
   const int _cols;
   const int _lays;
   const int _rows;
+  const unsigned _ecol;
+  const unsigned _erow;
+  const unsigned _layVoxs;
   const unsigned _voxs;
   const double _lenX;
   const double _lenY;

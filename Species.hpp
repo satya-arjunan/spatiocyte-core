@@ -55,7 +55,6 @@ public:
     }
   void populate()
     {
-      /*
       for(unsigned short i(0),  j(_mols.size()); i != j; ++i)
         {
           unsigned coord(_rng.IntegerC(_lattice.size()*WORD-1));
@@ -73,8 +72,9 @@ public:
             }
           _mols[i] = coord;
           _lattice[coord] = i+1;
-        }
           */ 
+        }
+      /*
       _mols[0] = 92;
       _mols[1] = 52;
       _mols[2] = 87;
@@ -83,6 +83,7 @@ public:
       _mols[5] = 51;
       _mols[6] = 86;
       _mols[7] = 46;
+      */
     }
   Diffuser& getDiffuser()
     {

@@ -32,22 +32,22 @@
 
 void Diffuser::walk()
 {
-  for(unsigned i(0); i != 8; ++i)
+  for(unsigned i(0); i != 100000; ++i)
   { 
-    //const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
-    const unsigned index(11);
+    //const unsigned aTar(_comp.getTar2(_mols[i], _rng.IntegerC(ADJS-1)));
+    const unsigned index(7);
+    /*
     const unsigned aTar(_comp.getTar(_mols[i], index));
     std::cout << "aTar1:" << aTar << std::endl;
-    const unsigned aTar2(_comp.getTar2(_mols[i], index));
-    std::cout << "aTar2:" << aTar2 << std::endl;
-    /*
+    */
+    const unsigned aTar(_comp.getTar2(_mols[i], index));
+    //std::cout << "aTar2:" << aTar2 << std::endl;
     if(!(_lattice[aTar/WORD] & (1 << aTar%WORD)))
       {
         _lattice[aTar/WORD] |= 1 << aTar%WORD;
         _lattice[_mols[i]/WORD] &= ~(1 << _mols[i]%WORD);
         _mols[i] = aTar;
       }
-      */
     /*
     const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
     if(!_lattice[aTar])
