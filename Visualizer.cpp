@@ -1,31 +1,31 @@
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
-//        This file is part of E-Cell Simulation Environment package
+//        This file is part of the Spatiocyte package
 //
-//                Copyright (C) 2006-2009 Keio University
+//        Copyright (C) 2006-2009 Keio University
+//        Copyright (C) 2010-2013 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
 //
-// E-Cell is free software; you can redistribute it and/or
+// Spatiocyte is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation; either
 // version 2 of the License, or (at your option) any later version.
 // 
-// E-Cell is distributed in the hope that it will be useful,
+// Spatiocyte is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the GNU General Public License for more details.
 // 
 // You should have received a copy of the GNU General Public
-// License along with E-Cell -- see the file COPYING.
+// License along with Spatiocyte -- see the file COPYING.
 // If not, write to the Free Software Foundation, Inc.,
 // 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // 
 //END_HEADER
 //
 // written by Satya Arjunan <satya.arjunan@gmail.com>
-// E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
 
@@ -147,12 +147,12 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theFile.read((char*) (&theLatticeType), sizeof(theLatticeType));
   theFile.read((char*) (&theMeanCount), sizeof(theMeanCount));
   theFile.read((char*) (&theStartCoord), sizeof(theStartCoord));
-  theFile.read((char*) (&theRowSize), sizeof(theRowSize));
-  theFile.read((char*) (&theLayerSize), sizeof(theLayerSize));
   theFile.read((char*) (&theColSize), sizeof(theColSize));
-  theFile.read((char*) (&theRealRowSize), sizeof(theRealRowSize));
-  theFile.read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
+  theFile.read((char*) (&theLayerSize), sizeof(theLayerSize));
+  theFile.read((char*) (&theRowSize), sizeof(theRowSize));
   theFile.read((char*) (&theRealColSize), sizeof(theRealColSize));
+  theFile.read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
+  theFile.read((char*) (&theRealRowSize), sizeof(theRealRowSize));
   theFile.read((char*) (&theLatticeSpSize), sizeof(theLatticeSpSize));
   theFile.read((char*) (&thePolymerSize), sizeof(thePolymerSize));
   theFile.read((char*) (&theReservedSize), sizeof(theReservedSize));
@@ -245,7 +245,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
     {
       theRadii[i] /= theVoxelRadius*2;
     }
-  theOriCol = theStartCoord/(theRowSize*theLayerSize);
+  theOriCol = theStartCoord/(theRowSize*theColSize);
   theSpeciesColor = new Color[theTotalSpeciesSize];
   theSpeciesVisibility = new bool[theTotalSpeciesSize];
   theXUpBound = new unsigned int[theTotalSpeciesSize];
@@ -364,9 +364,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   switch(theLatticeType)
     {
     case HCP_LATTICE: 
-      theHCPl = theRadius/sqrt(3); 
-      theHCPy = theRadius*sqrt(3);
-      theHCPx = theRadius*sqrt(8.0/3.0); // for division require .0
+      _hcpO = theRadius/sqrt(3); 
+      _hcpX = theRadius*sqrt(3);
+      _hcpZ = theRadius*sqrt(8.0/3.0); // for division require .0
       if(theMeanCount)
         {
           thePlot3DFunction = &GLScene::plotMean3DHCPMolecules;
@@ -1250,14 +1250,12 @@ void GLScene::plot3DHCPMolecules()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
-              layer =
-                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
-              row =
-                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-              x = col*theHCPx + theRadius;
+              layer = theCoords[j][k]/(theRowSize*theColSize)-theOriCol; 
+              col = (theCoords[j][k]%(theRowSize*theColSize))/theRowSize;
+              row = (theCoords[j][k]%(theRowSize*theColSize))%theRowSize;
+              y = theRadius + row*2*theRadius + theRadius*((layer+col)%2);
+              z = theRadius + layer*_hcpZ;
+              x = theRadius + col*_hcpX + _hcpO*(layer%2);
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
@@ -1369,14 +1367,12 @@ void GLScene::plotHCPPoints()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
-              layer =
-                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
-              row =
-                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-              x = col*theHCPx + theRadius;
+              layer = theCoords[j][k]/(theRowSize*theColSize)-theOriCol; 
+              col = (theCoords[j][k]%(theRowSize*theColSize))/theRowSize;
+              row = (theCoords[j][k]%(theRowSize*theColSize))%theRowSize;
+              y = theRadius + row*2*theRadius + theRadius*((layer+col)%2);
+              z = theRadius + layer*_hcpZ;
+              x = theRadius + col*_hcpX + _hcpO*(layer%2);
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);

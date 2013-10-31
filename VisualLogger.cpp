@@ -32,26 +32,26 @@
 
 void VisualLogger::initializeLog()
 {
-  const unsigned latticeType(1); //HCP
+  const unsigned latticeType(0); //HCP
   _logFile.write((char*)(&latticeType), sizeof(latticeType));
   const unsigned meanCount(0);
   _logFile.write((char*)(&meanCount), sizeof(meanCount));
   const unsigned startCoord(0);
   _logFile.write((char*)(&startCoord), sizeof(startCoord));
-  const unsigned rowSize(_comp.getRows());
-  _logFile.write((char*)(&rowSize), sizeof(rowSize));
-  const unsigned layerSize(_comp.getLays());
-  _logFile.write((char*)(&layerSize), sizeof(layerSize));
   const unsigned colSize(_comp.getCols());
   _logFile.write((char*)(&colSize), sizeof(colSize));
+  const unsigned layerSize(_comp.getLays());
+  _logFile.write((char*)(&layerSize), sizeof(layerSize));
+  const unsigned rowSize(_comp.getRows());
+  _logFile.write((char*)(&rowSize), sizeof(rowSize));
   const double voxRadius(_comp.getVoxRadius());
   Vector center(_comp.getCenter());
-  const double realRowSize(center.z*2/(voxRadius*2));
-  _logFile.write((char*)(&realRowSize), sizeof(realRowSize));
-  const double realLayerSize(center.y*2/(voxRadius*2));
-  _logFile.write((char*)(&realLayerSize), sizeof(realLayerSize));
   const double realColSize(center.x*2/(voxRadius*2));
   _logFile.write((char*)(&realColSize), sizeof(realColSize));
+  const double realLayerSize(center.y*2/(voxRadius*2));
+  _logFile.write((char*)(&realLayerSize), sizeof(realLayerSize));
+  const double realRowSize(center.z*2/(voxRadius*2));
+  _logFile.write((char*)(&realRowSize), sizeof(realRowSize));
   const unsigned latticeSpSize(_species.size());
   _logFile.write((char*)(&latticeSpSize), sizeof(latticeSpSize));
   const unsigned polymerSize(0);

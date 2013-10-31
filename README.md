@@ -21,7 +21,7 @@ A multithreaded standalone spatiocyte package.
     * $ make install
 
 3. Compile spatiocyte-core
-    * $ make (or 'make -jx' with x the number of cores)
+    * $ make (or 'make -jx' with x the number of available CPU cores)
 
 4. Run spatiocyte-core
     * $ ./spatiocyte-core
