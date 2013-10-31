@@ -28,8 +28,14 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-#include <Common.hpp>
 #include <Stepper.hpp>
+#include <Species.hpp>
+#include <VisualLogger.hpp>
+
+Stepper::Stepper(Compartment& comp, Species& species):
+  _step(0),
+  _comp(comp),
+  _diffuser(species.getDiffuser()) {}
 
 void Stepper::step()
 {

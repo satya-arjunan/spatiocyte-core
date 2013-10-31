@@ -29,4 +29,14 @@
 //
 
 #include <Species.hpp>
+#include <Compartment.hpp>
+
+Species::Species(const unsigned nmols, const double D, Compartment& comp):
+  _isCompVacant(false),
+  _comp(comp),
+  _diffuser(D, *this, comp, _mols),
+  _lattice(comp.getLattice())
+{
+  _mols.resize(nmols);
+}
 

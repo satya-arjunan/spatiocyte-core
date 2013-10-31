@@ -28,7 +28,32 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#include <sstream>
 #include <VisualLogger.hpp>
+#include <Compartment.hpp>
+#include <Stepper.hpp>
+
+void VisualLogger::initialize()
+{
+  std::ostringstream fileName;
+  fileName << _fileName << std::ends;
+  _logFile.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
+  initializeLog();
+  logCompVacant();
+  logSpecies();
+  _logFile.flush();
+}
+
+void VisualLogger::fire()
+{
+  logSpecies();
+  _logFile.flush();
+}
+
+void VisualLogger::addSpecies(Species& species)
+{
+  _species.push_back(&species);
+}
 
 void VisualLogger::initializeLog()
 {

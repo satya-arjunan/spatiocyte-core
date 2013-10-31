@@ -33,12 +33,8 @@
 #define __VisualLogger_hpp
 
 #include <fstream>
-#include <Species.hpp>
-#include <Compartment.hpp>
-#include <Stepper.hpp>
 #include <climits>
-
-class Stepper;
+#include <Common.hpp>
 
 class VisualLogger
 {
@@ -49,25 +45,9 @@ public:
     _comp(comp),
     _stepper(stepper) {}
   virtual ~VisualLogger() {}
-  void initialize()
-    {
-      std::ostringstream fileName;
-      fileName << _fileName << std::ends;
-      _logFile.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
-      initializeLog();
-      logCompVacant();
-      logSpecies();
-      _logFile.flush();
-    }
-  void fire()
-    {
-      logSpecies();
-      _logFile.flush();
-    }
-  void addSpecies(Species& species)
-    {
-      _species.push_back(&species);
-    }
+  void initialize();
+  void fire();
+  void addSpecies(Species& species);
 protected:
   virtual void initializeLog();
   virtual void logCompVacant();

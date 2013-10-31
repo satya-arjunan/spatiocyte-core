@@ -48,6 +48,7 @@ int main()
   VisualLogger visualLogger(aRootComp, aStepper);
   aStepper.setLogger(visualLogger);
   visualLogger.addSpecies(A);
+  visualLogger.addSpecies(aRootComp.getBoundary());
   visualLogger.initialize();
 
   boost::posix_time::ptime start(

@@ -29,6 +29,7 @@
 //
 
 #include <Model.hpp>
+#include <Stepper.hpp>
 
 void Model::run(const double interval)
 {

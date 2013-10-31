@@ -34,6 +34,12 @@
 #include <iostream>
 #include <vector>
 
+class Compartment;
+class Species;
+class VisualLogger;
+class Stepper;
+class Diffuser;
+
 #define TYPE unsigned
 #define WORD (sizeof(TYPE)*8)
 #define ADJS 12

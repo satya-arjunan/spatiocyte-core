@@ -35,19 +35,11 @@
 #include <RandomLib/Random.hpp>
 #include <Common.hpp>
 #include <Diffuser.hpp>
-#include <Compartment.hpp>
 
 class Species
 { 
 public: 
-  Species(const unsigned nmols, const double D, Compartment& comp):
-    _isCompVacant(false),
-    _comp(comp),
-    _diffuser(D, *this, comp, _mols),
-    _lattice(comp.getLattice())
-  {
-    _mols.resize(nmols);
-  }
+  Species(const unsigned nmols, const double D, Compartment& comp);
   ~Species() {}
   std::vector<unsigned>& getMols()
     {

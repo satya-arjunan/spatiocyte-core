@@ -28,8 +28,10 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-#include <Compartment.hpp>
 #include <math.h>
+#include <Compartment.hpp>
+#include <Species.hpp>
+
 
 Compartment::Compartment(const double voxRadius, const double lenX,
                          const double lenY, const double lenZ):
@@ -52,12 +54,25 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _lenY(lenY),
   _lenZ(lenZ),
   _voxRadius(voxRadius),
-  _center(lenX/2, lenY/2, lenZ/2)
+  _center(lenX/2, lenY/2, lenZ/2),
+  _boundary(0, 0, *this)
 {
   std::cout << "rows:" << _rows << " cols:" << _cols << " lays:" <<
     _lays << std::endl;
   _lattice.resize(ceil(double(_voxs)/WORD), 0);
+  setBoundary();
   //_lattice.resize(_voxs, 0);
+}
+
+void Compartment::setBoundary()
+{
+  std::vector<unsigned>& mols(_boundary.getMols());
+  for(unsigned i(0); i != _layVoxs; ++i)
+    {
+      unsigned coord(i);
+      _lattice[coord/WORD] |= 1 << coord%WORD;
+      mols.push_back(coord);
+    }
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const

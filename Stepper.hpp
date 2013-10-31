@@ -32,20 +32,12 @@
 #ifndef __Stepper_hpp
 #define __Stepper_hpp
 
-#include <Compartment.hpp>
-#include <Diffuser.hpp>
-#include <Species.hpp>
-#include <VisualLogger.hpp>
-
-class VisualLogger;
+#include <Common.hpp>
 
 class Stepper
 { 
 public: 
-  Stepper(Compartment& comp, Species& species):
-    _step(0),
-    _comp(comp),
-    _diffuser(species.getDiffuser()) {}
+  Stepper(Compartment& comp, Species& species);
   virtual ~Stepper() {}
   virtual void step();
   double getCurrentTime() const;

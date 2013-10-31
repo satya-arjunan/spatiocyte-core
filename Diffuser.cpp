@@ -29,6 +29,15 @@
 //
 
 #include <Diffuser.hpp>
+#include <Compartment.hpp>
+
+Diffuser::Diffuser(const double D, Species& species, Compartment& comp,
+                   std::vector<unsigned>& mols):
+  _D(D),
+  _species(species),
+  _comp(comp),
+  _mols(mols),
+  _lattice(_comp.getLattice()) {}
 
 void Diffuser::walk()
 {

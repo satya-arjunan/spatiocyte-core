@@ -33,7 +33,7 @@
 #define __Diffuser_hpp
 
 #include <RandomLib/Random.hpp>
-#include <Compartment.hpp>
+#include <Common.hpp>
 
 class Species;
 
@@ -41,12 +41,7 @@ class Diffuser
 { 
 public: 
   Diffuser(const double D, Species& species, Compartment& comp,
-           std::vector<unsigned>& mols):
-    _D(D),
-    _species(species),
-    _comp(comp),
-    _mols(mols),
-    _lattice(_comp.getLattice()) {}
+           std::vector<unsigned>& mols);
   ~Diffuser() {}
   void walk();
 private:

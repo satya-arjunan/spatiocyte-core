@@ -33,6 +33,7 @@
 #define __Compartment_hpp
 
 #include <Common.hpp>
+#include <Species.hpp>
 
 class Compartment
 { 
@@ -69,7 +70,13 @@ public:
     {
       return _center;
     }
+  Species& getBoundary()
+    {
+      return _boundary;
+    }
   unsigned getTar(const unsigned, const unsigned) const;
+private:
+  void setBoundary();
 private:
   const double _hcpX;
   const double _hcpO;
@@ -87,6 +94,7 @@ private:
   const double _voxRadius;
   const Vector _center;
   std::vector<unsigned> _lattice;
+  Species _boundary;
 };
 
 #endif /* __Compartment_hpp */

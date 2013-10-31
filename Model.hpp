@@ -32,7 +32,7 @@
 #ifndef __Model_hpp
 #define __Model_hpp
 
-#include <Stepper.hpp>
+#include <Common.hpp>
 
 class Model
 { 
