@@ -3,11 +3,10 @@ spatiocyte-core
 
 A multithreaded standalone spatiocyte package.
 
+1. Get spatiocyte-core
+    * $ git clone https://github.com/satya-arjunan/spatiocyte-core.git
 
-Compiling
-~~~~~~~~~
-
-1. Install Randomlib
+2. Install Randomlib from http://sourceforge.net/projects/randomlib/files/distrib/
     * $ tar xzvf RandomLib-1.8.tar.gz 
     * $ cd RandomLib-1.8
     * $ mkdir BUILD
@@ -21,11 +20,11 @@ Compiling
     * $ cd ..
     * $ make install
 
-2. Compile spatiocyte-core
+3. Compile spatiocyte-core
     * $ make (or 'make -jx' with x the number of cores)
 
+4. Run spatiocyte-core
+    * $ ./spatiocyte-core
 
-Running
-~~~~~~~
-You can spatiocyte-core by:
-  * $ ./spatiocyte-core
+5. Visualize logged data
+    * $ ./visualizer
