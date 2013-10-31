@@ -36,14 +36,14 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _hcpX(voxRadius*sqrt(3)),
   _hcpO(voxRadius/sqrt(3)), //protruding lenX at an odd numbered lay
   _hcpZ(voxRadius*sqrt(8.0/3)),
+  _cols(rint(lenX/_hcpX)),
+  _lays(rint(lenZ/_hcpZ)),
+  _rows(rint(lenY/voxRadius/2)),
   /*
-  _cols((int)rint(lenX/_hcpX)),
-  _lays((int)rint(lenZ/_hcpZ)),
-  _rows((int)rint(lenY/voxRadius/2)),
-  */
   _cols(227),
   _lays(227),
   _rows(227),
+  */
   _ecol(_cols-1),
   _erow(_rows-1),
   _layVoxs(_cols*_rows),
@@ -54,8 +54,9 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _voxRadius(voxRadius),
   _center(lenX/2, lenY/2, lenZ/2)
 {
+  std::cout << "rows:" << _rows << " cols:" << _cols << " lays:" <<
+    _lays << std::endl;
   _lattice.resize(ceil(double(_voxs)/WORD), 0);
-  setOffsets();
   //_lattice.resize(_voxs, 0);
 }
 
@@ -108,81 +109,3 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 }
 
 
-unsigned Compartment::getTar2(const unsigned curr, const unsigned aRand) const
-{
-  const unsigned col((curr%(_rows*_cols)/_rows)%2);
-  const unsigned lay((curr/(_rows*_cols))%2);
-  const unsigned index(aRand+lay*24+col*12);
-  const long ret(curr+_offsets[index]);
-  if(ret < 0 || ret >= _voxs)
-    {
-      return curr;
-    }
-  return ret;
-}
-
-void Compartment::setOffsets()
-{
-  //col=even, lay=even
-  _offsets.resize(ADJS*4);
-  _offsets[0] = -1;
-  _offsets[1] = 1;
-  _offsets[2] = -_rows-1;
-  _offsets[3] = -_rows;
-  _offsets[4] = _rows-1;
-  _offsets[5] = _rows;
-
-  _offsets[6] = -_rows*_cols-_rows;
-  _offsets[7] = -_rows*_cols-1;
-  _offsets[8] = -_rows*_cols;
-  _offsets[9] = _rows*_cols-_rows;
-  _offsets[10] = _rows*_cols-1;
-  _offsets[11] = _rows*_cols;
-
-
-  //col=even, lay=odd +24 = %lay*24
-  _offsets[24] = -1;
-  _offsets[25] = 1;
-  _offsets[26] = -_rows;
-  _offsets[27] = -_rows+1;
-  _offsets[28] = _rows;
-  _offsets[29] = _rows+1;
-
-  _offsets[30] = -_rows*_cols;
-  _offsets[31] = -_rows*_cols+1;
-  _offsets[32] = -_rows*_cols+_rows;
-  _offsets[33] = _rows*_cols;
-  _offsets[34] = _rows*_cols+1;
-  _offsets[35] = _rows*_cols+_rows;
-
-  //col=odd, lay=even +12 = %col*12
-  _offsets[12] = -1;
-  _offsets[13] = 1;
-  _offsets[14] = -_rows;
-  _offsets[15] = -_rows+1;
-  _offsets[16] = _rows;
-  _offsets[17] = _rows+1;
-
-  _offsets[18] = -_rows*_cols-_rows;
-  _offsets[19] = -_rows*_cols;
-  _offsets[20] = -_rows*_cols+1;
-  _offsets[21] = _rows*_cols-_rows;
-  _offsets[22] = _rows*_cols;
-  _offsets[23] = _rows*_cols+1;
-
-
-  //col=odd, lay=odd +36 = %col*12 + %lay*24
-  _offsets[36] = -1;
-  _offsets[37] = 1;
-  _offsets[38] = -_rows-1;
-  _offsets[39] = -_rows;
-  _offsets[40] = _rows-1;
-  _offsets[41] = _rows;
-
-  _offsets[42] = -_rows*_cols-1;
-  _offsets[43] = -_rows*_cols; //a
-  _offsets[44] = -_rows*_cols+_rows;
-  _offsets[45] = _rows*_cols-1;
-  _offsets[46] = _rows*_cols;
-  _offsets[47] = _rows*_cols+_rows;
-}
