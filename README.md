@@ -1,5 +1,8 @@
-spatiocyte-core: The multithreaded standalone spatiocyte
-========================================================
+spatiocyte-core
+===============
+
+A multithreaded standalone spatiocyte package.
+
 
 Compiling
 ~~~~~~~~~
@@ -22,6 +25,7 @@ Compiling
 2. Compile spatiocyte-core
 
 * $ make (or 'make -jx' with x the number of cores)
+
 
 Running
 ~~~~~~~
