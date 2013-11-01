@@ -89,8 +89,8 @@ void Compartment::setBoundary()
           populateMol(mols, i*_layVoxs+j*_rows+_rows-1);
         }
     }
-  std::cout << "boundary size:" << mols.size() << " actual size:" <<
-  _layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
+  //std::cout << "boundary size:" << mols.size() << " actual size:" <<
+  //_layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
@@ -99,6 +99,8 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
   const bool lay((curr/_layVoxs)&1);
   switch(aRand)
     {
+    case 0:
+      return curr-1;
     case 1:
       return curr+1;
     case 2:
@@ -119,10 +121,9 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
       return curr+_rows*(_cols-!lay)-(col&lay);
     case 10:
       return curr+_rows*_cols+!col*(lay-!lay);
-    case 11:
+    default:
       return curr+_rows*(_cols+lay)+(col&!lay);
     }
-  return curr-1;
 }
 
 
