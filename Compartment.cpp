@@ -41,11 +41,6 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _cols(rint(lenX/_hcpX)+2),
   _lays(rint(lenZ/_hcpZ)+2),
   _rows(rint(lenY/voxRadius/2)+2),
-  /*
-  _cols(227),
-  _lays(227),
-  _rows(227),
-  */
   _ecol(_cols-1),
   _erow(_rows-1),
   _layVoxs(_cols*_rows),
@@ -64,46 +59,38 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   //_lattice.resize(_voxs, 0);
 }
 
+void Compartment::populateMol(std::vector<unsigned>& mols, const unsigned idx)
+{
+  _lattice[idx/WORD] |= 1 << idx%WORD;
+  mols.push_back(idx);
+}
+
 void Compartment::setBoundary()
 {
   std::vector<unsigned>& mols(_boundary.getMols());
-
   //row_col xy-plane
   for(unsigned i(0); i != _layVoxs; ++i)
     {
-      unsigned coord(i);
-      _lattice[coord/WORD] |= 1 << coord%WORD;
-      mols.push_back(coord);
-      coord = _voxs-1-i;
-      _lattice[coord/WORD] |= 1 << coord%WORD;
-      mols.push_back(coord);
+      populateMol(mols, i);
+      populateMol(mols, _voxs-1-i);
     }
-
   for(unsigned i(1); i != _lays-1; ++i)
     {
       //layer_row yz-plane
       for(unsigned j(0); j != _rows; ++j)
         {
-          unsigned coord(i*_layVoxs+j);
-          _lattice[coord/WORD] |= 1 << coord%WORD;
-          mols.push_back(coord);
-          coord = i*_layVoxs+j+_rows*(_cols-1);
-          _lattice[coord/WORD] |= 1 << coord%WORD;
-          mols.push_back(coord);
+          populateMol(mols, i*_layVoxs+j);
+          populateMol(mols, i*_layVoxs+j+_rows*(_cols-1));
         }
       //layer_col xz-plane
       for(unsigned j(1); j != _cols-1; ++j)
         {
-          unsigned coord(i*_layVoxs+j*_rows);
-          _lattice[coord/WORD] |= 1 << coord%WORD;
-          mols.push_back(coord);
-          coord = i*_layVoxs+j*_rows+_rows-1;
-          _lattice[coord/WORD] |= 1 << coord%WORD;
-          mols.push_back(coord);
+          populateMol(mols, i*_layVoxs+j*_rows);
+          populateMol(mols, i*_layVoxs+j*_rows+_rows-1);
         }
     }
-  //std::cout << "boundary size:" << mols.size() << " actual size:" <<
-  //_layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
+  std::cout << "boundary size:" << mols.size() << " actual size:" <<
+  _layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const

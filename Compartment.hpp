@@ -77,6 +77,7 @@ public:
   unsigned getTar(const unsigned, const unsigned) const;
 private:
   void setBoundary();
+  void populateMol(std::vector<unsigned>&, const unsigned);
 private:
   const double _hcpX;
   const double _hcpO;
