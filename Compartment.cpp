@@ -38,9 +38,9 @@ Compartment::Compartment(const double voxRadius, const double lenX,
   _hcpX(voxRadius*sqrt(3)),
   _hcpO(voxRadius/sqrt(3)), //protruding lenX at an odd numbered lay
   _hcpZ(voxRadius*sqrt(8.0/3)),
-  _cols(rint(lenX/_hcpX)),
-  _lays(rint(lenZ/_hcpZ)),
-  _rows(rint(lenY/voxRadius/2)),
+  _cols(rint(lenX/_hcpX)+2),
+  _lays(rint(lenZ/_hcpZ)+2),
+  _rows(rint(lenY/voxRadius/2)+2),
   /*
   _cols(227),
   _lays(227),
@@ -67,60 +67,75 @@ Compartment::Compartment(const double voxRadius, const double lenX,
 void Compartment::setBoundary()
 {
   std::vector<unsigned>& mols(_boundary.getMols());
+
+  //row_col xy-plane
   for(unsigned i(0); i != _layVoxs; ++i)
     {
       unsigned coord(i);
       _lattice[coord/WORD] |= 1 << coord%WORD;
       mols.push_back(coord);
+      coord = _voxs-1-i;
+      _lattice[coord/WORD] |= 1 << coord%WORD;
+      mols.push_back(coord);
     }
+
+  for(unsigned i(1); i != _lays-1; ++i)
+    {
+      //layer_row yz-plane
+      for(unsigned j(0); j != _rows; ++j)
+        {
+          unsigned coord(i*_layVoxs+j);
+          _lattice[coord/WORD] |= 1 << coord%WORD;
+          mols.push_back(coord);
+          coord = i*_layVoxs+j+_rows*(_cols-1);
+          _lattice[coord/WORD] |= 1 << coord%WORD;
+          mols.push_back(coord);
+        }
+      //layer_col xz-plane
+      for(unsigned j(1); j != _cols-1; ++j)
+        {
+          unsigned coord(i*_layVoxs+j*_rows);
+          _lattice[coord/WORD] |= 1 << coord%WORD;
+          mols.push_back(coord);
+          coord = i*_layVoxs+j*_rows+_rows-1;
+          _lattice[coord/WORD] |= 1 << coord%WORD;
+          mols.push_back(coord);
+        }
+    }
+  //std::cout << "boundary size:" << mols.size() << " actual size:" <<
+  //_layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
 }
 
 unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
 {
   const bool col((curr%_layVoxs/_rows)&1);
   const bool lay((curr/_layVoxs)&1);
-  int ret(-1);
   switch(aRand)
     {
     case 1:
-      ret = 1;
-      break;
+      return curr+1;
     case 2:
-      ret = (col^lay)-_rows-1 ;
-      break;
+      return curr+(col^lay)-_rows-1 ;
     case 3:
-      ret = (col^lay)-_rows;
-      break;
+      return curr+(col^lay)-_rows;
     case 4:
-      ret = (col^lay)+_rows-1;
-      break;
+      return curr+(col^lay)+_rows-1;
     case 5:
-      ret = (col^lay)+_rows;
-      break;
+      return curr+(col^lay)+_rows;
     case 6:
-      ret = _rows*(lay-_cols-1)-(col&lay);
-      break;
+      return curr+_rows*(lay-_cols-1)-(col&lay);
     case 7:
-      ret = !col*(lay-!lay)-_rows*_cols;
-      break;
+      return curr+!col*(lay-!lay)-_rows*_cols;
     case 8:
-      ret = _rows*(lay-_cols)+(col&!lay);
-      break;
+      return curr+_rows*(lay-_cols)+(col&!lay);
     case 9:
-      ret = _rows*(_cols-!lay)-(col&lay);
-      break;
+      return curr+_rows*(_cols-!lay)-(col&lay);
     case 10:
-      ret = _rows*_cols+!col*(lay-!lay);
-      break;
+      return curr+_rows*_cols+!col*(lay-!lay);
     case 11:
-      ret = _rows*(_cols+lay)+(col&!lay);
-      break;
+      return curr+_rows*(_cols+lay)+(col&!lay);
     }
-  if(long(curr)+ret < 0 || ret+long(curr) >= _voxs)
-    {
-      return curr;
-    }
-  return ret+curr;
+  return curr-1;
 }
 
 

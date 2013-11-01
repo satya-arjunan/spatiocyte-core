@@ -34,4 +34,4 @@ $(VISUALIZER):
 		$(CXX) $(CXXFLAGS) $(IFLAGS) -c -o $@ $<
 
 clean:
-		rm -f $(SPATIOCYTE_CORE) $(VISUALIZER)
+		rm -f $(SPATIOCYTE_CORE) $(VISUALIZER) *.o
