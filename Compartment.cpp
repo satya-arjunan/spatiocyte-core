@@ -99,8 +99,6 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
   const bool lay((curr/_layVoxs)&1);
   switch(aRand)
     {
-    case 0:
-      return curr-1;
     case 1:
       return curr+1;
     case 2:
@@ -121,9 +119,10 @@ unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
       return curr+_rows*(_cols-!lay)-(col&lay);
     case 10:
       return curr+_rows*_cols+!col*(lay-!lay);
-    default:
+    case 11:
       return curr+_rows*(_cols+lay)+(col&!lay);
     }
+  return curr-1;
 }
 
 
