@@ -64,8 +64,8 @@ private:
   const unsigned nvox_;
   const Vector length_;
   const Vector center_;
-  Species boundary_;
   std::vector<unsigned> lattice_;
+  Species boundary_;
 };
 
 #endif /* __Compartment_hpp */

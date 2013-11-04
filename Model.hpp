@@ -46,9 +46,9 @@ public:
   Compartment& get_comp();
   Stepper& get_stepper();
 private:
-  Compartment comp_;
-  Stepper stepper_;
   std::vector<Species*> species_;
+  Stepper stepper_;
+  Compartment comp_; //must declare this at the end after initializing others
 };
 
 #endif /* __Model_hpp */

@@ -38,7 +38,7 @@
 class Diffuser
 { 
 public: 
-  Diffuser(const double, Species&, Compartment&, std::vector<unsigned>&);
+  Diffuser(const double, Species&);
   ~Diffuser() {}
   void walk();
 private:

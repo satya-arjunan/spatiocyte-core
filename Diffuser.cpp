@@ -31,13 +31,12 @@
 #include <Diffuser.hpp>
 #include <Compartment.hpp>
 
-Diffuser::Diffuser(const double D, Species& species, Compartment& comp,
-                   std::vector<unsigned>& mols):
+Diffuser::Diffuser(const double D, Species& species):
   D_(D),
   species_(species),
-  comp_(comp),
-  mols_(mols),
-  lattice_(comp.get_lattice()) {}
+  comp_(species_.get_comp()),
+  mols_(species_.get_mols()),
+  lattice_(comp_.get_lattice()) {}
 
 void Diffuser::walk()
 {

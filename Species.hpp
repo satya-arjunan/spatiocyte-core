@@ -44,16 +44,18 @@ public:
   ~Species() {}
   void populate();
   bool is_comp_vacant() const;
+  unsigned get_id() const;
   Diffuser& get_diffuser();
+  Compartment& get_comp();
   std::vector<unsigned>& get_mols();
 private:
   const bool is_comp_vacant_;
-  const unsigned id_;
   Compartment& comp_;
-  Diffuser diffuser_;
   RandomLib::Random rng_;
   std::vector<unsigned>& lattice_;
   std::vector<unsigned> mols_;
+  const unsigned id_;
+  Diffuser diffuser_;
 };
 
 #endif /* __Species_hpp */

@@ -35,12 +35,13 @@
 Species::Species(const unsigned nmols, const double D, Model& model,
                  Compartment& comp, const bool is_comp_vacant):
   is_comp_vacant_(is_comp_vacant),
-  id_(model.push_species(*this)),
   comp_(comp),
-  diffuser_(D, *this, comp_, mols_),
-  lattice_(comp_.get_lattice())
+  lattice_(comp_.get_lattice()),
+  id_(model.push_species(*this)),
+  diffuser_(D, *this)
 {
   mols_.resize(nmols);
+  std::cout << "getID:" << get_id() << std::endl;
 }
 
 void Species::populate()
@@ -62,9 +63,19 @@ bool Species::is_comp_vacant() const
   return is_comp_vacant_;
 }
 
+unsigned Species::get_id() const
+{
+  return id_;
+}
+
 Diffuser& Species::get_diffuser()
 {
   return diffuser_;
+}
+
+Compartment& Species::get_comp()
+{
+  return comp_;
 }
 
 std::vector<unsigned>& Species::get_mols()
