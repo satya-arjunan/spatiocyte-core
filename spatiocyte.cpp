@@ -50,7 +50,7 @@ int main()
 
   boost::posix_time::ptime start(
                  boost::posix_time::microsec_clock::universal_time()); 
-  //model.run(0.001);
+  //model.run(0.01);
   model.run(0.1);
   boost::posix_time::ptime end(
                  boost::posix_time::microsec_clock::universal_time());

@@ -30,16 +30,16 @@
 
 #include <Stepper.hpp>
 #include <Diffuser.hpp>
-//#include <VisualLogger.hpp>
+#include <VisualLogger.hpp>
 
 void Stepper::step()
 {
   diffuser_->walk();
   /*
-  _step += 1;
+  time_ += 1;
   //if(!(unsigned(_step)%10))
     {
-      _visualLogger->fire();
+      visual_logger_->fire();
     }
     */
 }
