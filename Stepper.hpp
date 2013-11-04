@@ -37,19 +37,16 @@
 class Stepper
 { 
 public: 
-  Stepper(Compartment& comp, Species& species);
-  virtual ~Stepper() {}
-  virtual void step();
-  double getCurrentTime() const;
-  void setLogger(VisualLogger& visualLogger)
-    {
-      _visualLogger = &visualLogger;
-    }
+  Stepper() {}
+   ~Stepper() {}
+  void step();
+  void set_diffuser(Diffuser&);
+  void set_visual_logger(VisualLogger&);
+  double get_current_time() const;
 private:
-  double _step;
-  Compartment& _comp;
-  Diffuser& _diffuser;
-  VisualLogger* _visualLogger;
+  double time_;
+  Diffuser* diffuser_;
+  VisualLogger* visual_logger_;
 };
 
 #endif /* __Stepper_hpp */

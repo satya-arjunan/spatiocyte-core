@@ -29,125 +29,135 @@
 //
 
 #include <sstream>
+#include <climits>
 #include <VisualLogger.hpp>
-#include <Compartment.hpp>
+#include <Model.hpp>
 #include <Stepper.hpp>
+#include <Compartment.hpp>
+
+
+VisualLogger::VisualLogger(Model& model):
+  marker_(UINT_MAX),
+  filename_("VisualLog.dat"),
+  comp_(model.get_comp()),
+  stepper_(model.get_stepper()) {}
+
+void VisualLogger::fire()
+{
+  log_species();
+  logfile_.flush();
+}
 
 void VisualLogger::initialize()
 {
   std::ostringstream fileName;
-  fileName << _fileName << std::ends;
-  _logFile.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
-  initializeLog();
-  logCompVacant();
-  logSpecies();
-  _logFile.flush();
+  fileName << filename_ << std::ends;
+  logfile_.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
+  initialize_log();
+  log_comp_vacant();
+  log_species();
+  logfile_.flush();
 }
 
-void VisualLogger::fire()
+void VisualLogger::push_species(Species& species)
 {
-  logSpecies();
-  _logFile.flush();
+  species_.push_back(&species);
 }
 
-void VisualLogger::addSpecies(Species& species)
-{
-  _species.push_back(&species);
-}
-
-void VisualLogger::initializeLog()
+void VisualLogger::initialize_log()
 {
   const unsigned latticeType(0); //HCP
-  _logFile.write((char*)(&latticeType), sizeof(latticeType));
+  logfile_.write((char*)(&latticeType), sizeof(latticeType));
   const unsigned meanCount(0);
-  _logFile.write((char*)(&meanCount), sizeof(meanCount));
+  logfile_.write((char*)(&meanCount), sizeof(meanCount));
   const unsigned startCoord(0);
-  _logFile.write((char*)(&startCoord), sizeof(startCoord));
-  const unsigned colSize(_comp.getCols());
-  _logFile.write((char*)(&colSize), sizeof(colSize));
-  const unsigned layerSize(_comp.getLays());
-  _logFile.write((char*)(&layerSize), sizeof(layerSize));
-  const unsigned rowSize(_comp.getRows());
-  _logFile.write((char*)(&rowSize), sizeof(rowSize));
-  const double voxRadius(_comp.getVoxRadius());
-  Vector center(_comp.getCenter());
+  logfile_.write((char*)(&startCoord), sizeof(startCoord));
+  const unsigned colSize(comp_.get_ncol());
+  logfile_.write((char*)(&colSize), sizeof(colSize));
+  const unsigned layerSize(comp_.get_nlay());
+  logfile_.write((char*)(&layerSize), sizeof(layerSize));
+  const unsigned rowSize(comp_.get_nrow());
+  logfile_.write((char*)(&rowSize), sizeof(rowSize));
+  const double voxRadius(comp_.get_vox_radius());
+  Vector center(comp_.get_center());
   const double realColSize(center.x*2/(voxRadius*2));
-  _logFile.write((char*)(&realColSize), sizeof(realColSize));
+  logfile_.write((char*)(&realColSize), sizeof(realColSize));
   const double realLayerSize(center.y*2/(voxRadius*2));
-  _logFile.write((char*)(&realLayerSize), sizeof(realLayerSize));
+  logfile_.write((char*)(&realLayerSize), sizeof(realLayerSize));
   const double realRowSize(center.z*2/(voxRadius*2));
-  _logFile.write((char*)(&realRowSize), sizeof(realRowSize));
-  const unsigned latticeSpSize(_species.size());
-  _logFile.write((char*)(&latticeSpSize), sizeof(latticeSpSize));
+  logfile_.write((char*)(&realRowSize), sizeof(realRowSize));
+  const unsigned latticeSpSize(species_.size());
+  logfile_.write((char*)(&latticeSpSize), sizeof(latticeSpSize));
   const unsigned polymerSize(0);
-  _logFile.write((char*)(&polymerSize), sizeof(polymerSize));
+  logfile_.write((char*)(&polymerSize), sizeof(polymerSize));
   const unsigned reservedSize(0);
-  _logFile.write((char*)(&reservedSize), sizeof(reservedSize));
+  logfile_.write((char*)(&reservedSize), sizeof(reservedSize));
   const unsigned offLatticeSpSize(0);
-  _logFile.write((char*)(&offLatticeSpSize), sizeof(offLatticeSpSize));
-  _logFile.write((char*)(&_marker), sizeof(_marker));
-  _logFile.write((char*)(&voxRadius), sizeof(voxRadius));
-  for(unsigned i(0); i != _species.size(); ++i)
+  logfile_.write((char*)(&offLatticeSpSize), sizeof(offLatticeSpSize));
+  logfile_.write((char*)(&marker_), sizeof(marker_));
+  logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
+  for(unsigned i(0); i != species_.size(); ++i)
     {
       std::string string("Hello");
       const unsigned stringSize(string.size());
-      _logFile.write((char*)(&stringSize), sizeof(stringSize));
-      _logFile.write(string.c_str(), stringSize);
-      _logFile.write((char*)(&voxRadius), sizeof(voxRadius));
+      logfile_.write((char*)(&stringSize), sizeof(stringSize));
+      logfile_.write(string.c_str(), stringSize);
+      logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
     }
 }
 
-void VisualLogger::logMolecules(const unsigned index)
+void VisualLogger::log_comp_vacant()
 {
-  Species& species(*_species[index]);
-  //No need to log lipid or non diffusing vacant molecules since we have
-  //already logged them once during initialization:
-  if(species.getIsCompVacant())
+  const double currentTime(stepper_.get_current_time());
+  logfile_.write((char*)(&currentTime), sizeof(currentTime));
+  for(unsigned i(0); i != species_.size(); ++i)
     {
-      return;
-    }
-  _logFile.write((char*)(&index), sizeof(index));
-  const std::vector<unsigned>& mols(species.getMols());
-  const unsigned size(mols.size());
-  _logFile.write((char*)(&size), sizeof(size)); 
-  for(unsigned i(0); i != mols.size(); ++i)
-    {
-      _logFile.write((char*)(&mols[i]), sizeof(mols[i]));
-    }
-}  
-
-void VisualLogger::logSpecies()
-{
-  const double currentTime(_stepper.getCurrentTime());
-  _logFile.write((char*)(&currentTime), sizeof(currentTime));
-  for(unsigned i(0); i != _species.size(); ++i)
-    {
-      logMolecules(i);
-    }
-  _logFile.write((char*)(&_marker), sizeof(_marker));
-  _logFile.write((char*)(&_marker), sizeof(_marker));
-}
-
-void VisualLogger::logCompVacant()
-{
-  const double currentTime(_stepper.getCurrentTime());
-  _logFile.write((char*)(&currentTime), sizeof(currentTime));
-  for(unsigned i(0); i != _species.size(); ++i)
-    {
-      if(_species[i]->getIsCompVacant())
+      if(species_[i]->is_comp_vacant())
         {
-          Species& species(*_species[i]);
+          Species& species(*species_[i]);
           //The species index in the process:
-          _logFile.write((char*)(&i), sizeof(i)); 
-          const std::vector<unsigned>& mols(species.getMols());
+          logfile_.write((char*)(&i), sizeof(i)); 
+          const std::vector<unsigned>& mols(species.get_mols());
           const unsigned size(mols.size());
-          _logFile.write((char*)(&size), sizeof(size)); 
+          logfile_.write((char*)(&size), sizeof(size)); 
           for(unsigned i(0); i != mols.size(); ++i)
             {
-              _logFile.write((char*)(&mols[i]), sizeof(mols[i]));
+              logfile_.write((char*)(&mols[i]), sizeof(mols[i]));
             }
         }
     }
-  _logFile.write((char*)(&_marker), sizeof(_marker));
-  _logFile.write((char*)(&_marker), sizeof(_marker));
+  logfile_.write((char*)(&marker_), sizeof(marker_));
+  logfile_.write((char*)(&marker_), sizeof(marker_));
 }
+
+void VisualLogger::log_species()
+{
+  const double currentTime(stepper_.get_current_time());
+  logfile_.write((char*)(&currentTime), sizeof(currentTime));
+  for(unsigned i(0); i != species_.size(); ++i)
+    {
+      log_mols(i);
+    }
+  logfile_.write((char*)(&marker_), sizeof(marker_));
+  logfile_.write((char*)(&marker_), sizeof(marker_));
+}
+
+void VisualLogger::log_mols(const unsigned index)
+{
+  Species& species(*species_[index]);
+  //No need to log lipid or non diffusing vacant molecules since we have
+  //already logged them once during initialization:
+  if(species.is_comp_vacant())
+    {
+      return;
+    }
+  logfile_.write((char*)(&index), sizeof(index));
+  const std::vector<unsigned>& mols(species.get_mols());
+  const unsigned size(mols.size());
+  logfile_.write((char*)(&size), sizeof(size)); 
+  for(unsigned i(0); i != mols.size(); ++i)
+    {
+      logfile_.write((char*)(&mols[i]), sizeof(mols[i]));
+    }
+}  
+

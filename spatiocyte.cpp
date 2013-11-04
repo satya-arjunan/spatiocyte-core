@@ -31,30 +31,27 @@
 
 #include <iostream> 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <Compartment.hpp>
-#include <Stepper.hpp>
 #include <Model.hpp>
 #include <VisualLogger.hpp>
 
 int main()
 {
-  const double aVoxelRadius(2.5e-9);
-  const double aLength(1e-6);
-  Compartment aRootComp(aVoxelRadius, aLength, aLength, aLength);
-  Species A(10000, 1e-12, aRootComp);
+  const double vox_radius(2.5e-9);
+  const double length(1e-6);
+  Model model(vox_radius, length, length, length);
+  Species A(10000, 1e-12, model, model.get_comp());
   A.populate();
-  Stepper aStepper(aRootComp, A);
-  Model aModel(aStepper);
-  VisualLogger visualLogger(aRootComp, aStepper);
-  aStepper.setLogger(visualLogger);
-  visualLogger.addSpecies(A);
-  //visualLogger.addSpecies(aRootComp.getBoundary());
-  visualLogger.initialize();
+  VisualLogger visual_logger(model);
+  model.get_stepper().set_diffuser(A.get_diffuser());
+  model.get_stepper().set_visual_logger(visual_logger);
+  visual_logger.push_species(A);
+  visual_logger.push_species(model.get_comp().get_boundary());
+  visual_logger.initialize();
 
   boost::posix_time::ptime start(
                  boost::posix_time::microsec_clock::universal_time()); 
-  //aModel.run(0.001);
-  aModel.run(0.1);
+  //model.run(0.001);
+  model.run(0.1);
   boost::posix_time::ptime end(
                  boost::posix_time::microsec_clock::universal_time());
   std::cout << "duration:" << end-start << std::endl;

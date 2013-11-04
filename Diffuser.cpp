@@ -33,24 +33,23 @@
 
 Diffuser::Diffuser(const double D, Species& species, Compartment& comp,
                    std::vector<unsigned>& mols):
-  _D(D),
-  _species(species),
-  _comp(comp),
-  _mols(mols),
-  _lattice(_comp.getLattice()) {}
+  D_(D),
+  species_(species),
+  comp_(comp),
+  mols_(mols),
+  lattice_(comp.get_lattice()) {}
 
 void Diffuser::walk()
 {
-  for(unsigned i(0), n(_mols.size()); i != n; ++i)
-  { 
-    const unsigned aTar(_comp.getTar(_mols[i], _rng.IntegerC(ADJS-1)));
-    if(!(_lattice[aTar/WORD] & (1 << aTar%WORD)))
-      {
-        _lattice[aTar/WORD] |= 1 << aTar%WORD;
-        _lattice[_mols[i]/WORD] &= ~(1 << _mols[i]%WORD);
-        _mols[i] = aTar;
-      }
-  }
+  for(unsigned i(0), n(mols_.size()); i != n; ++i)
+    { 
+      const unsigned vdx(comp_.get_tar(mols_[i], rng_.IntegerC(ADJS-1)));
+      if(!(lattice_[vdx/WORD] & (1 << vdx%WORD)))
+        {
+          lattice_[vdx/WORD] |= 1 << vdx%WORD;
+          lattice_[mols_[i]/WORD] &= ~(1 << mols_[i]%WORD);
+          mols_[i] = vdx;
+        }
+    }
 }
-
 

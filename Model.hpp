@@ -33,16 +33,22 @@
 #define __Model_hpp
 
 #include <Common.hpp>
+#include <Compartment.hpp>
+#include <Stepper.hpp>
 
 class Model
 { 
 public: 
-  Model(Stepper& stepper):
-    _stepper(stepper) {}
+  Model(const double, const double, const double, const double);
   ~Model() {}
   void run(const double);
+  unsigned push_species(Species&);
+  Compartment& get_comp();
+  Stepper& get_stepper();
 private:
-  Stepper& _stepper;
+  Compartment comp_;
+  Stepper stepper_;
+  std::vector<Species*> species_;
 };
 
 #endif /* __Model_hpp */

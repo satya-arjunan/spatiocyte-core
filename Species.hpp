@@ -39,40 +39,21 @@
 class Species
 { 
 public: 
-  Species(const unsigned nmols, const double D, Compartment& comp);
+  Species(const unsigned, const double, Model&, Compartment&,
+          const bool is_comp_vacant=false);
   ~Species() {}
-  std::vector<unsigned>& getMols()
-    {
-      return _mols;
-    }
-  void populate()
-    {
-      for(unsigned short i(0),  j(_mols.size()); i != j; ++i)
-        {
-          unsigned coord(_rng.IntegerC(_lattice.size()*WORD-1));
-          while(_lattice[coord/WORD] & (1 << coord%WORD))
-            {
-              coord = _rng.IntegerC(_lattice.size()-1);
-            }
-          _mols[i] = coord;
-          _lattice[coord/WORD] |= 1 << coord%WORD;
-        }
-    }
-  Diffuser& getDiffuser()
-    {
-      return _diffuser;
-    }
-  bool getIsCompVacant() const
-    {
-      return _isCompVacant;
-    }
+  void populate();
+  bool is_comp_vacant() const;
+  Diffuser& get_diffuser();
+  std::vector<unsigned>& get_mols();
 private:
-  bool _isCompVacant;
-  RandomLib::Random _rng;
-  Compartment& _comp;
-  Diffuser _diffuser;
-  std::vector<unsigned> _mols;
-  std::vector<unsigned>& _lattice;
+  const bool is_comp_vacant_;
+  const unsigned id_;
+  Compartment& comp_;
+  Diffuser diffuser_;
+  RandomLib::Random rng_;
+  std::vector<unsigned>& lattice_;
+  std::vector<unsigned> mols_;
 };
 
 #endif /* __Species_hpp */

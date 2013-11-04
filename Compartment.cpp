@@ -33,96 +33,130 @@
 #include <Species.hpp>
 
 
-Compartment::Compartment(const double voxRadius, const double lenX,
-                         const double lenY, const double lenZ):
-  _hcpX(voxRadius*sqrt(3)),
-  _hcpO(voxRadius/sqrt(3)), //protruding lenX at an odd numbered lay
-  _hcpZ(voxRadius*sqrt(8.0/3)),
-  _cols(rint(lenX/_hcpX)+2),
-  _lays(rint(lenZ/_hcpZ)+2),
-  _rows(rint(lenY/voxRadius/2)+2),
-  _ecol(_cols-1),
-  _erow(_rows-1),
-  _layVoxs(_cols*_rows),
-  _voxs(_cols*_lays*_rows),
-  _lenX(lenX),
-  _lenY(lenY),
-  _lenZ(lenZ),
-  _voxRadius(voxRadius),
-  _center(lenX/2, lenY/2, lenZ/2),
-  _boundary(0, 0, *this)
+Compartment::Compartment(const double vox_radius, const double len_x,
+                         const double len_y, const double len_z,
+                         Model& model):
+  hcpx_(vox_radius*sqrt(3)),
+  hcpo_(vox_radius/sqrt(3)), //protruding length_x at an odd numbered layer
+  hcpz_(vox_radius*sqrt(8.0/3)),
+  vox_radius_(vox_radius),
+  ncol_(rint(len_x/hcpx_)+2),
+  nlay_(rint(len_z/hcpz_)+2),
+  nrow_(rint(len_y/vox_radius_/2)+2),
+  ncolrow_(ncol_*nrow_),
+  nvox_(ncolrow_*nlay_),
+  length_(len_x, len_y, len_z),
+  center_(len_x/2, len_y/2, len_z/2),
+  boundary_(0, 0, model, *this, true)
 {
-  std::cout << "rows:" << _rows << " cols:" << _cols << " lays:" <<
-    _lays << std::endl;
-  _lattice.resize(ceil(double(_voxs)/WORD), 0);
-  setBoundary();
-  //_lattice.resize(_voxs, 0);
+  lattice_.resize(ceil(double(nvox_)/WORD), 0);
+  set_boundary();
+  std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ <<
+    std::endl;
 }
 
-void Compartment::populateMol(std::vector<unsigned>& mols, const unsigned idx)
+unsigned Compartment::get_ncol() const
 {
-  _lattice[idx/WORD] |= 1 << idx%WORD;
-  mols.push_back(idx);
+  return ncol_;
 }
 
-void Compartment::setBoundary()
+unsigned Compartment::get_nlay() const
 {
-  std::vector<unsigned>& mols(_boundary.getMols());
-  //row_col xy-plane
-  for(unsigned i(0); i != _layVoxs; ++i)
+  return nlay_;
+}
+
+unsigned Compartment::get_nrow() const
+{
+  return nrow_;
+}
+
+unsigned Compartment::get_nvox() const
+{
+  return nvox_;
+}
+
+unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
+{
+  const bool odd_col((vdx%ncolrow_/nrow_)&1);
+  const bool odd_lay((vdx/ncolrow_)&1);
+  switch(nrand)
     {
-      populateMol(mols, i);
-      populateMol(mols, _voxs-1-i);
+    case 1:
+      return vdx+1;
+    case 2:
+      return vdx+(odd_col^odd_lay)-nrow_-1 ;
+    case 3:
+      return vdx+(odd_col^odd_lay)-nrow_;
+    case 4:
+      return vdx+(odd_col^odd_lay)+nrow_-1;
+    case 5:
+      return vdx+(odd_col^odd_lay)+nrow_;
+    case 6:
+      return vdx+nrow_*(odd_lay-ncol_-1)-(odd_col&odd_lay);
+    case 7:
+      return vdx+!odd_col*(odd_lay-!odd_lay)-ncolrow_;
+    case 8:
+      return vdx+nrow_*(odd_lay-ncol_)+(odd_col&!odd_lay);
+    case 9:
+      return vdx+nrow_*(ncol_-!odd_lay)-(odd_col&odd_lay);
+    case 10:
+      return vdx+ncolrow_+!odd_col*(odd_lay-!odd_lay);
+    case 11:
+      return vdx+nrow_*(ncol_+odd_lay)+(odd_col&!odd_lay);
     }
-  for(unsigned i(1); i != _lays-1; ++i)
+  return vdx-1;
+}
+
+double Compartment::get_vox_radius() const
+{
+  return vox_radius_;
+}
+
+const Vector& Compartment::get_center() const
+{
+  return center_;
+}
+
+Species& Compartment::get_boundary()
+{
+  return boundary_;
+}
+
+std::vector<unsigned>& Compartment::get_lattice()
+{
+  return lattice_;
+}
+
+void Compartment::set_boundary()
+{
+  //row_col xy-plane
+  for(unsigned i(0); i != ncolrow_; ++i)
+    {
+      populate_mol(i);
+      populate_mol(nvox_-1-i);
+    }
+  for(unsigned i(1); i != nlay_-1; ++i)
     {
       //layer_row yz-plane
-      for(unsigned j(0); j != _rows; ++j)
+      for(unsigned j(0); j != nrow_; ++j)
         {
-          populateMol(mols, i*_layVoxs+j);
-          populateMol(mols, i*_layVoxs+j+_rows*(_cols-1));
+          populate_mol(i*ncolrow_+j);
+          populate_mol(i*ncolrow_+j+nrow_*(ncol_-1));
         }
       //layer_col xz-plane
-      for(unsigned j(1); j != _cols-1; ++j)
+      for(unsigned j(1); j != ncol_-1; ++j)
         {
-          populateMol(mols, i*_layVoxs+j*_rows);
-          populateMol(mols, i*_layVoxs+j*_rows+_rows-1);
+          populate_mol(i*ncolrow_+j*nrow_);
+          populate_mol(i*ncolrow_+j*nrow_+nrow_-1);
         }
     }
   //std::cout << "boundary size:" << mols.size() << " actual size:" <<
-  //_layVoxs*2 + _rows*(_lays-2)*2 + (_cols-2)*(_lays-2)*2 << std::endl;
+  //ncolrow_*2 + nrow_*(nlay_-2)*2 + (ncol_-2)*(nlay_-2)*2 << std::endl;
 }
 
-unsigned Compartment::getTar(const unsigned curr, const unsigned aRand) const
+void Compartment::populate_mol(const unsigned vdx)
 {
-  const bool col((curr%_layVoxs/_rows)&1);
-  const bool lay((curr/_layVoxs)&1);
-  switch(aRand)
-    {
-    case 1:
-      return curr+1;
-    case 2:
-      return curr+(col^lay)-_rows-1 ;
-    case 3:
-      return curr+(col^lay)-_rows;
-    case 4:
-      return curr+(col^lay)+_rows-1;
-    case 5:
-      return curr+(col^lay)+_rows;
-    case 6:
-      return curr+_rows*(lay-_cols-1)-(col&lay);
-    case 7:
-      return curr+!col*(lay-!lay)-_rows*_cols;
-    case 8:
-      return curr+_rows*(lay-_cols)+(col&!lay);
-    case 9:
-      return curr+_rows*(_cols-!lay)-(col&lay);
-    case 10:
-      return curr+_rows*_cols+!col*(lay-!lay);
-    case 11:
-      return curr+_rows*(_cols+lay)+(col&!lay);
-    }
-  return curr-1;
+  lattice_[vdx/WORD] |= 1 << vdx%WORD;
+  boundary_.get_mols().push_back(vdx);
 }
-
 

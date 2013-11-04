@@ -35,22 +35,19 @@
 #include <RandomLib/Random.hpp>
 #include <Common.hpp>
 
-class Species;
-
 class Diffuser
 { 
 public: 
-  Diffuser(const double D, Species& species, Compartment& comp,
-           std::vector<unsigned>& mols);
+  Diffuser(const double, Species&, Compartment&, std::vector<unsigned>&);
   ~Diffuser() {}
   void walk();
 private:
-  double _D;
-  RandomLib::Random _rng;
-  Species& _species;
-  Compartment& _comp;
-  std::vector<unsigned>& _mols;
-  std::vector<unsigned>& _lattice;
+  double D_;
+  Species& species_;
+  Compartment& comp_;
+  std::vector<unsigned>& mols_;
+  std::vector<unsigned>& lattice_;
+  RandomLib::Random rng_;
 };
 
 #endif /* __Diffuser_hpp */

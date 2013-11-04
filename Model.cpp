@@ -29,13 +29,33 @@
 //
 
 #include <Model.hpp>
-#include <Stepper.hpp>
+
+Model::Model(const double vox_radius, const double len_x, const double len_y,
+             const double len_z):
+  comp_(vox_radius, len_x, len_y, len_z, *this) {}
 
 void Model::run(const double interval)
 {
   const unsigned steps(interval/4.16667e-6);
-  for(unsigned i(0); i !=steps; ++i)
+  for(unsigned i(0); i != steps; ++i)
     {
-      _stepper.step();
+      stepper_.step();
     }
 }
+
+unsigned Model::push_species(Species& species)
+{
+  species_.push_back(&species);
+  return species_.size();
+}
+
+Compartment& Model::get_comp()
+{
+  return comp_;
+}
+
+Stepper& Model::get_stepper()
+{
+  return stepper_;
+}
+

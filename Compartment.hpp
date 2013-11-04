@@ -38,64 +38,34 @@
 class Compartment
 { 
 public: 
-  Compartment(const double voxRadius, const double lenX,
-              const double lenY, const double lenZ);
+  Compartment(const double, const double, const double, const double, Model&);
   ~Compartment() {}
-  void populate();
-  std::vector<unsigned>& getLattice()
-    {
-      return _lattice;
-    }
-  int getCols()
-    {
-      return _cols;
-    }
-  int getLays()
-    {
-      return _lays;
-    }
-  int getRows()
-    {
-      return _rows;
-    }
-  unsigned getVoxs() const
-    {
-      return _voxs;
-    }
-  double getVoxRadius() const
-    {
-      return _voxRadius;
-    }
-  Vector getCenter() const
-    {
-      return _center;
-    }
-  Species& getBoundary()
-    {
-      return _boundary;
-    }
-  unsigned getTar(const unsigned, const unsigned) const;
+  unsigned get_ncol() const;
+  unsigned get_nlay() const;
+  unsigned get_nrow() const;
+  unsigned get_nvox() const;
+  unsigned get_tar(const unsigned, const unsigned) const;
+  double get_vox_radius() const;
+  const Vector& get_center() const;
+  Species& get_boundary();
+  std::vector<unsigned>& get_lattice();
 private:
-  void setBoundary();
-  void populateMol(std::vector<unsigned>&, const unsigned);
+  void set_boundary();
+  void populate_mol(const unsigned);
 private:
-  const double _hcpX;
-  const double _hcpO;
-  const double _hcpZ;
-  const unsigned _cols;
-  const unsigned _lays;
-  const unsigned _rows;
-  const unsigned _ecol;
-  const unsigned _erow;
-  const unsigned _layVoxs;
-  const unsigned _voxs;
-  const double _lenX;
-  const double _lenY;
-  const double _lenZ;
-  const double _voxRadius;
-  const Vector _center;
-  std::vector<unsigned> _lattice;
-  Species _boundary;
+  const double hcpx_;
+  const double hcpo_;
+  const double hcpz_;
+  const double vox_radius_;
+  const unsigned ncol_;
+  const unsigned nlay_;
+  const unsigned nrow_;
+  const unsigned ncolrow_;
+  const unsigned nvox_;
+  const Vector length_;
+  const Vector center_;
+  Species boundary_;
+  std::vector<unsigned> lattice_;
 };
 
 #endif /* __Compartment_hpp */

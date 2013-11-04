@@ -33,33 +33,28 @@
 #define __VisualLogger_hpp
 
 #include <fstream>
-#include <climits>
 #include <Common.hpp>
 
 class VisualLogger
 {
 public:
-  VisualLogger(Compartment& comp, Stepper& stepper):
-    _marker(UINT_MAX),
-    _fileName("VisualLog.dat"),
-    _comp(comp),
-    _stepper(stepper) {}
-  virtual ~VisualLogger() {}
-  void initialize();
+  VisualLogger(Model&);
+  ~VisualLogger() {}
   void fire();
-  void addSpecies(Species& species);
-protected:
-  virtual void initializeLog();
-  virtual void logCompVacant();
-  void logSpecies();
-  void logMolecules(const unsigned);
-protected:
-  unsigned _marker;
-  std::string _fileName;
-  std::ofstream _logFile;
-  Compartment& _comp;
-  Stepper& _stepper;
-  std::vector<Species*> _species;
+  void initialize();
+  void push_species(Species&);
+private:
+  void initialize_log();
+  void log_comp_vacant();
+  void log_species();
+  void log_mols(const unsigned);
+private:
+  unsigned marker_;
+  std::string filename_;
+  std::ofstream logfile_;
+  Compartment& comp_;
+  Stepper& stepper_;
+  std::vector<Species*> species_;
 };
 
 #endif /* __VisualLogger_hpp */

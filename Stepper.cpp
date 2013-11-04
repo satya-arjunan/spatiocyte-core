@@ -29,17 +29,12 @@
 //
 
 #include <Stepper.hpp>
-#include <Species.hpp>
-#include <VisualLogger.hpp>
-
-Stepper::Stepper(Compartment& comp, Species& species):
-  _step(0),
-  _comp(comp),
-  _diffuser(species.getDiffuser()) {}
+#include <Diffuser.hpp>
+//#include <VisualLogger.hpp>
 
 void Stepper::step()
 {
-  _diffuser.walk();
+  diffuser_->walk();
   /*
   _step += 1;
   //if(!(unsigned(_step)%10))
@@ -49,7 +44,18 @@ void Stepper::step()
     */
 }
 
-double Stepper::getCurrentTime() const
+void Stepper::set_diffuser(Diffuser& diffuser)
 {
-  return _step;
+  diffuser_ = &diffuser;
 }
+
+void Stepper::set_visual_logger(VisualLogger& visual_logger)
+{
+  visual_logger_ = &visual_logger;
+}
+
+double Stepper::get_current_time() const
+{
+  return time_;
+}
+

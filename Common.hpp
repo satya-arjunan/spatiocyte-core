@@ -35,10 +35,11 @@
 #include <vector>
 
 class Compartment;
-class Species;
-class VisualLogger;
-class Stepper;
 class Diffuser;
+class Model;
+class Species;
+class Stepper;
+class VisualLogger;
 
 #define TYPE unsigned
 #define WORD (sizeof(TYPE)*8)

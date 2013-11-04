@@ -30,13 +30,44 @@
 
 #include <Species.hpp>
 #include <Compartment.hpp>
+#include <Model.hpp>
 
-Species::Species(const unsigned nmols, const double D, Compartment& comp):
-  _isCompVacant(false),
-  _comp(comp),
-  _diffuser(D, *this, comp, _mols),
-  _lattice(comp.getLattice())
+Species::Species(const unsigned nmols, const double D, Model& model,
+                 Compartment& comp, const bool is_comp_vacant):
+  is_comp_vacant_(is_comp_vacant),
+  id_(model.push_species(*this)),
+  comp_(comp),
+  diffuser_(D, *this, comp_, mols_),
+  lattice_(comp_.get_lattice())
 {
-  _mols.resize(nmols);
+  mols_.resize(nmols);
 }
 
+void Species::populate()
+{
+  for(unsigned i(0), j(mols_.size()); i != j; ++i)
+    {
+      unsigned vdx(rng_.IntegerC(lattice_.size()*WORD-1));
+      while(lattice_[vdx/WORD] & (1 << vdx%WORD))
+        {
+          vdx = rng_.IntegerC(lattice_.size()-1);
+        }
+      mols_[i] = vdx;
+      lattice_[vdx/WORD] |= 1 << vdx%WORD;
+    }
+}
+
+bool Species::is_comp_vacant() const
+{
+  return is_comp_vacant_;
+}
+
+Diffuser& Species::get_diffuser()
+{
+  return diffuser_;
+}
+
+std::vector<unsigned>& Species::get_mols()
+{
+  return mols_;
+}
