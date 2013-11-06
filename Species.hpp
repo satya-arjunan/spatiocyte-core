@@ -56,6 +56,9 @@ private:
   std::vector<unsigned> mols_;
   const unsigned id_;
   Diffuser diffuser_;
+  const unsigned nbit_;
+  const unsigned vac_id_;
+  const unsigned vac_xor_;
 };
 
 #endif /* __Species_hpp */

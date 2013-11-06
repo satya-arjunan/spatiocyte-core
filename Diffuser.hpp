@@ -48,6 +48,10 @@ private:
   std::vector<unsigned>& mols_;
   std::vector<unsigned>& lattice_;
   RandomLib::Random rng_;
+  unsigned nbit_;
+  unsigned one_nbit_;
+  unsigned vac_id_;
+  unsigned vac_xor_;
 };
 
 #endif /* __Diffuser_hpp */

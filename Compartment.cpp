@@ -55,7 +55,8 @@ Compartment::Compartment(const double vox_radius, const double len_x,
 void Compartment::initialize()
 {
   nbit_ = model_.get_nbit();
-  lattice_.resize(ceil(double(nvox_)/WORD), 0);
+  sur_xor_ = surface_.get_id()^volume_.get_id();
+  lattice_.resize(ceil(double(nvox_)*nbit_/WORD), 0);
   set_surface();
   std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ <<
     std::endl;
@@ -162,7 +163,7 @@ void Compartment::set_surface()
 
 void Compartment::populate_mol(const unsigned vdx)
 {
-  lattice_[vdx/WORD] |= surface_.get_id() << vdx%WORD;
+  lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
   surface_.get_mols().push_back(vdx);
 }
 

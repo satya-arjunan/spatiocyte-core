@@ -36,17 +36,28 @@ Diffuser::Diffuser(const double D, Species& species):
   species_(species),
   comp_(species_.get_comp()),
   mols_(species_.get_mols()),
-  lattice_(comp_.get_lattice()) {}
+  lattice_(comp_.get_lattice()),
+  /*
+  nbit_(species_.get_comp().get_nbit()),
+  one_nbit_(pow(2, nbit_)-1),
+  vac_id_(species_.get_vac_id()),
+  vac_xor_(vac_id_^species_.get_id()) {}
+  */
+  nbit_(2),
+  one_nbit_(pow(2, nbit_)-1),
+  vac_id_(0),
+  vac_xor_(vac_id_^2) {}
 
 void Diffuser::walk()
 {
   for(unsigned i(0), n(mols_.size()); i != n; ++i)
     { 
       const unsigned vdx(comp_.get_tar(mols_[i], rng_.IntegerC(ADJS-1)));
-      if(!(lattice_[vdx/WORD] & (1 << vdx%WORD)))
+      //if((lattice_[vdx/WORD] & (1 << vdx%WORD)) == 0)
+      if(vac_id_ == ((lattice_[vdx*nbit_/WORD] >> vdx*nbit_%WORD) & one_nbit_))
         {
-          lattice_[vdx/WORD] |= 1 << vdx%WORD;
-          lattice_[mols_[i]/WORD] &= ~(1 << mols_[i]%WORD);
+          lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
+          lattice_[mols_[i]*nbit_/WORD] ^= vac_xor_ << mols_[i]*nbit_%WORD;
           mols_[i] = vdx;
         }
     }

@@ -70,6 +70,7 @@ private:
   Species volume_;
   Species surface_;
   unsigned nbit_;
+  unsigned sur_xor_;
 };
 
 #endif /* __Compartment_hpp */

@@ -38,7 +38,10 @@ Species::Species(const unsigned nmols, const double D, Model& model,
   comp_(comp),
   lattice_(comp_.get_lattice()),
   id_(model.push_species(*this)),
-  diffuser_(D, *this)
+  diffuser_(D, *this),
+  nbit_(2),
+  vac_id_(0),
+  vac_xor_(vac_id_^2)
 {
   mols_.resize(nmols);
   std::cout << "getID:" << get_id() << std::endl;
@@ -48,13 +51,13 @@ void Species::populate()
 {
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
-      unsigned vdx(rng_.IntegerC(lattice_.size()*WORD-1));
-      while(lattice_[vdx/WORD] & (1 << vdx%WORD))
+      unsigned vdx(rng_.IntegerC(lattice_.size()/nbit_*WORD-1));
+      while(lattice_[vdx*nbit_/WORD] & (1 << vdx*nbit_%WORD))
         {
           vdx = rng_.IntegerC(lattice_.size()-1);
         }
       mols_[i] = vdx;
-      lattice_[vdx/WORD] |= 1 << vdx%WORD;
+      lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
     }
 }
 
