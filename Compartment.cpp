@@ -31,6 +31,7 @@
 #include <math.h>
 #include <Compartment.hpp>
 #include <Species.hpp>
+#include <Model.hpp>
 
 
 Compartment::Compartment(const double vox_radius, const double len_x,
@@ -47,10 +48,15 @@ Compartment::Compartment(const double vox_radius, const double len_x,
   nvox_(ncolrow_*nlay_),
   length_(len_x, len_y, len_z),
   center_(len_x/2, len_y/2, len_z/2),
-  boundary_(0, 0, model, *this, true)
+  model_(model),
+  volume_(0, 0, model, *this, true),
+  surface_(0, 0, model, *this, true) {}
+
+void Compartment::initialize()
 {
+  nbit_ = model_.get_nbit();
   lattice_.resize(ceil(double(nvox_)/WORD), 0);
-  set_boundary();
+  set_surface();
   std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ <<
     std::endl;
 }
@@ -117,9 +123,9 @@ const Vector& Compartment::get_center() const
   return center_;
 }
 
-Species& Compartment::get_boundary()
+Species& Compartment::get_surface()
 {
-  return boundary_;
+  return surface_;
 }
 
 std::vector<unsigned>& Compartment::get_lattice()
@@ -127,7 +133,7 @@ std::vector<unsigned>& Compartment::get_lattice()
   return lattice_;
 }
 
-void Compartment::set_boundary()
+void Compartment::set_surface()
 {
   //row_col xy-plane
   for(unsigned i(0); i != ncolrow_; ++i)
@@ -150,13 +156,13 @@ void Compartment::set_boundary()
           populate_mol(i*ncolrow_+j*nrow_+nrow_-1);
         }
     }
-  //std::cout << "boundary size:" << mols.size() << " actual size:" <<
+  //std::cout << "surface size:" << mols.size() << " actual size:" <<
   //ncolrow_*2 + nrow_*(nlay_-2)*2 + (ncol_-2)*(nlay_-2)*2 << std::endl;
 }
 
 void Compartment::populate_mol(const unsigned vdx)
 {
-  lattice_[vdx/WORD] |= 1 << vdx%WORD;
-  boundary_.get_mols().push_back(vdx);
+  lattice_[vdx/WORD] |= surface_.get_id() << vdx%WORD;
+  surface_.get_mols().push_back(vdx);
 }
 

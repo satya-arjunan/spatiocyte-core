@@ -34,6 +34,13 @@ Model::Model(const double vox_radius, const double len_x, const double len_y,
              const double len_z):
   comp_(vox_radius, len_x, len_y, len_z, *this) {}
 
+void Model::initialize()
+{
+  nbit_ = rint(log(species_.size())/log(2.0));
+  std::cout << "nbit:" << nbit_ << " size:" << species_.size() << std::endl;
+  comp_.initialize();
+}
+
 void Model::run(const double interval)
 {
   const unsigned steps(interval/4.16667e-6);
@@ -43,10 +50,15 @@ void Model::run(const double interval)
     }
 }
 
+unsigned Model::get_nbit() const
+{
+  return nbit_;
+}
+
 unsigned Model::push_species(Species& species)
 {
   species_.push_back(&species);
-  return species_.size();
+  return species_.size()-1;
 }
 
 Compartment& Model::get_comp()
@@ -57,5 +69,10 @@ Compartment& Model::get_comp()
 Stepper& Model::get_stepper()
 {
   return stepper_;
+}
+
+std::vector<Species*>& Model::get_species()
+{
+  return species_;
 }
 

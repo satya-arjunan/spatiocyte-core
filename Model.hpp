@@ -41,14 +41,18 @@ class Model
 public: 
   Model(const double, const double, const double, const double);
   ~Model() {}
+  void initialize();
   void run(const double);
+  unsigned get_nbit() const;
   unsigned push_species(Species&);
   Compartment& get_comp();
   Stepper& get_stepper();
+  std::vector<Species*>& get_species();
 private:
   std::vector<Species*> species_;
   Stepper stepper_;
   Compartment comp_; //must declare this at the end after initializing others
+  unsigned nbit_;
 };
 
 #endif /* __Model_hpp */

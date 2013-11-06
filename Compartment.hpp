@@ -40,6 +40,7 @@ class Compartment
 public: 
   Compartment(const double, const double, const double, const double, Model&);
   ~Compartment() {}
+  void initialize();
   unsigned get_ncol() const;
   unsigned get_nlay() const;
   unsigned get_nrow() const;
@@ -47,10 +48,10 @@ public:
   unsigned get_tar(const unsigned, const unsigned) const;
   double get_vox_radius() const;
   const Vector& get_center() const;
-  Species& get_boundary();
+  Species& get_surface();
   std::vector<unsigned>& get_lattice();
 private:
-  void set_boundary();
+  void set_surface();
   void populate_mol(const unsigned);
 private:
   const double hcpx_;
@@ -65,7 +66,10 @@ private:
   const Vector length_;
   const Vector center_;
   std::vector<unsigned> lattice_;
-  Species boundary_;
+  Model& model_;
+  Species volume_;
+  Species surface_;
+  unsigned nbit_;
 };
 
 #endif /* __Compartment_hpp */
