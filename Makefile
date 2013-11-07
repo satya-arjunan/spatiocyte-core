@@ -12,7 +12,7 @@ SRC=\
 
 IFLAGS = -I. -I$(HOME)/root/include
 LDFLAGS = -L$(HOME)/root/lib -lRandom
-CXXFLAGS = -O3 -march=corei7
+CXXFLAGS = -O3 -march=native
 CXX = g++
 GUILIBS = $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
 GUIFLAGS = $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2) -I.
