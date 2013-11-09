@@ -50,6 +50,7 @@ public:
   const Vector& get_center() const;
   Species& get_surface();
   Species& get_volume();
+  Model& get_model();
   const std::string& get_name() const;
   std::vector<unsigned>& get_lattice();
 private:

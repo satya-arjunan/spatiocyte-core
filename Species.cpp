@@ -37,19 +37,24 @@
 Species::Species(const std::string name, const unsigned nmols, const double D,
                  Model& model, Compartment& comp, Species& vacant,
                  const bool is_comp_vacant):
-  name_(get_parsed_name(name, comp, vacant, is_comp_vacant)),
-  vacant_(vacant),
+  name_(get_init_name(name, comp, vacant, is_comp_vacant)),
   comp_(comp),
+  vacant_(vacant),
   is_comp_vacant_(is_comp_vacant),
   lattice_(comp_.get_lattice()),
   id_(model.push_species(*this)),
-  diffuser_(D, *this),
-  nbit_(2),
-  vac_id_(0),
-  vac_xor_(vac_id_^2)
+  vac_id_(vacant_.get_id()),
+  vac_xor_(vac_id_^id_),
+  diffuser_(D, *this)
 {
   std::cout << get_name_id() << std::endl;
   mols_.resize(nmols);
+}
+
+void Species::initialize()
+{
+  nbit_ = comp_.get_model().get_nbit();
+  diffuser_.initialize();
 }
 
 void Species::populate()
@@ -76,6 +81,16 @@ unsigned Species::get_id() const
   return id_;
 }
 
+unsigned Species::get_vac_id() const
+{
+  return vac_id_;
+}
+
+unsigned Species::get_vac_xor() const
+{
+  return vac_xor_;
+}
+
 Diffuser& Species::get_diffuser()
 {
   return diffuser_;
@@ -96,10 +111,10 @@ const std::string Species::get_name_id() const
   std::stringstream sid;
   sid << get_id();
   return std::string(get_name()+":"+sid.str());
-  //return std::string(get_name()+":id:"+std::to_string(get_id()));
+  //return std::string(get_name()+":id:"+std::to_string(get_id())); c++11
 }
 
-const std::string Species::get_parsed_name(const std::string name,
+const std::string Species::get_init_name(const std::string name,
                                            const Compartment& comp, 
                                            const Species& vacant,
                                            const bool is_comp_vacant) const

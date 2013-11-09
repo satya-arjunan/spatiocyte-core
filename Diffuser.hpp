@@ -40,6 +40,7 @@ class Diffuser
 public: 
   Diffuser(const double, Species&);
   ~Diffuser() {}
+  void initialize();
   void walk();
 private:
   double D_;
@@ -47,11 +48,11 @@ private:
   Compartment& comp_;
   std::vector<unsigned>& mols_;
   std::vector<unsigned>& lattice_;
+  const unsigned vac_id_;
+  const unsigned vac_xor_;
   RandomLib::Random rng_;
   unsigned nbit_;
   unsigned one_nbit_;
-  unsigned vac_id_;
-  unsigned vac_xor_;
 };
 
 #endif /* __Diffuser_hpp */

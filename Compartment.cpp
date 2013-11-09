@@ -136,6 +136,11 @@ Species& Compartment::get_volume()
   return volume_;
 }
 
+Model& Compartment::get_model()
+{
+  return model_;
+}
+
 const std::string& Compartment::get_name() const
 {
   return name_;

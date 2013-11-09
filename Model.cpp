@@ -39,6 +39,10 @@ void Model::initialize()
   nbit_ = rint(log(species_.size())/log(2.0));
   std::cout << "nbit:" << nbit_ << " size:" << species_.size() << std::endl;
   comp_.initialize();
+  for(unsigned i(0), n(species_.size()); i != n; ++i)
+    {
+      species_[i]->initialize();
+    }
 }
 
 void Model::run(const double interval)

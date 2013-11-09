@@ -30,6 +30,7 @@
 
 #include <Diffuser.hpp>
 #include <Compartment.hpp>
+#include <Model.hpp>
 
 Diffuser::Diffuser(const double D, Species& species):
   D_(D),
@@ -37,16 +38,14 @@ Diffuser::Diffuser(const double D, Species& species):
   comp_(species_.get_comp()),
   mols_(species_.get_mols()),
   lattice_(comp_.get_lattice()),
-  /*
-  nbit_(species_.get_comp().get_nbit()),
-  one_nbit_(pow(2, nbit_)-1),
   vac_id_(species_.get_vac_id()),
-  vac_xor_(vac_id_^species_.get_id()) {}
-  */
-  nbit_(2),
-  one_nbit_(pow(2, nbit_)-1),
-  vac_id_(0),
-  vac_xor_(vac_id_^2) {}
+  vac_xor_(species_.get_vac_xor()) {}
+
+void Diffuser::initialize()
+{
+  nbit_ = species_.get_comp().get_model().get_nbit();
+  one_nbit_ = pow(2, nbit_)-1;
+}
 
 void Diffuser::walk()
 {
