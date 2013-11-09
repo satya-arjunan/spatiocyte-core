@@ -98,9 +98,9 @@ void VisualLogger::initialize_log()
   logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
   for(unsigned i(0); i != species_.size(); ++i)
     {
-      const unsigned stringSize(species_[i]->get_full_name().size());
+      const unsigned stringSize(species_[i]->get_name_id().size());
       logfile_.write((char*)(&stringSize), sizeof(stringSize));
-      logfile_.write(species_[i]->get_full_name().c_str(), stringSize);
+      logfile_.write(species_[i]->get_name_id().c_str(), stringSize);
       logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
     }
 }

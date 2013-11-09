@@ -39,7 +39,7 @@
 class Species
 { 
 public: 
-  Species(std::string, const unsigned, const double, Model&, Compartment&,
+  Species(const std::string, const unsigned, const double, Model&, Compartment&,
           Species& vacant, const bool is_comp_vacant=false);
   ~Species() {}
   void populate();
@@ -48,12 +48,14 @@ public:
   Diffuser& get_diffuser();
   Compartment& get_comp();
   const std::string& get_name() const;
-  const std::string& get_full_name() const;
+  const std::string get_name_id() const;
   std::vector<unsigned>& get_mols();
+private:
+  const std::string get_parsed_name(const std::string, const Compartment&,
+                                    const Species&, const bool) const;
 private:
   Species& vacant_;
   const std::string name_;
-  const std::string full_name_;
   const bool is_comp_vacant_;
   Compartment& comp_;
   RandomLib::Random rng_;
