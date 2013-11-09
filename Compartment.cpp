@@ -34,9 +34,10 @@
 #include <Model.hpp>
 
 
-Compartment::Compartment(const double vox_radius, const double len_x,
-                         const double len_y, const double len_z,
-                         Model& model):
+Compartment::Compartment(std::string name, const double vox_radius,
+                         const double len_x, const double len_y,
+                         const double len_z, Model& model):
+  name_(name),
   hcpx_(vox_radius*sqrt(3)),
   hcpo_(vox_radius/sqrt(3)), //protruding length_x at an odd numbered layer
   hcpz_(vox_radius*sqrt(8.0/3)),
@@ -49,8 +50,8 @@ Compartment::Compartment(const double vox_radius, const double len_x,
   length_(len_x, len_y, len_z),
   center_(len_x/2, len_y/2, len_z/2),
   model_(model),
-  volume_(0, 0, model, *this, true),
-  surface_(0, 0, model, *this, true) {}
+  volume_("volume", 0, 0, model, *this, volume_, true),
+  surface_("surface", 0, 0, model, *this, surface_, true) {}
 
 void Compartment::initialize()
 {
@@ -58,8 +59,9 @@ void Compartment::initialize()
   sur_xor_ = surface_.get_id()^volume_.get_id();
   lattice_.resize(ceil(double(nvox_)*nbit_/WORD), 0);
   set_surface();
-  std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ <<
-    std::endl;
+  std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ << 
+    " latticeSize:" << lattice_.size() << " memory:" << 
+    lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
 }
 
 unsigned Compartment::get_ncol() const
@@ -127,6 +129,16 @@ const Vector& Compartment::get_center() const
 Species& Compartment::get_surface()
 {
   return surface_;
+}
+
+Species& Compartment::get_volume()
+{
+  return volume_;
+}
+
+const std::string& Compartment::get_name() const
+{
+  return name_;
 }
 
 std::vector<unsigned>& Compartment::get_lattice()

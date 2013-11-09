@@ -182,12 +182,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
     {
       unsigned int aStringSize;
       theFile.read((char*) (&aStringSize), sizeof(aStringSize));
-      theSpeciesNameList[i] = new char[aStringSize];
-      char* buffer;
-      buffer = new char[aStringSize+1];
-      theFile.read(buffer, aStringSize);
-      buffer[aStringSize] = '\0';
-      sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
+      theSpeciesNameList[i] = new char[aStringSize+1];
+      theFile.read(theSpeciesNameList[i], aStringSize);
+      theSpeciesNameList[i][aStringSize] = '\0';
       theFile.read((char*) (&theRadii[i]), sizeof(theRadii[i]));
       std::cout << theSpeciesNameList[i] << " radius:" <<
         theRadii[i] << std::endl;

@@ -32,7 +32,7 @@
 
 Model::Model(const double vox_radius, const double len_x, const double len_y,
              const double len_z):
-  comp_(vox_radius, len_x, len_y, len_z, *this) {}
+  comp_("root", vox_radius, len_x, len_y, len_z, *this) {}
 
 void Model::initialize()
 {

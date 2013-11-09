@@ -38,7 +38,7 @@
 class Compartment
 { 
 public: 
-  Compartment(const double, const double, const double, const double, Model&);
+  Compartment(std::string, const double, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
   unsigned get_ncol() const;
@@ -49,11 +49,14 @@ public:
   double get_vox_radius() const;
   const Vector& get_center() const;
   Species& get_surface();
+  Species& get_volume();
+  const std::string& get_name() const;
   std::vector<unsigned>& get_lattice();
 private:
   void set_surface();
   void populate_mol(const unsigned);
 private:
+  const std::string name_;
   const double hcpx_;
   const double hcpo_;
   const double hcpz_;

@@ -32,10 +32,14 @@
 #include <Compartment.hpp>
 #include <Model.hpp>
 
-Species::Species(const unsigned nmols, const double D, Model& model,
-                 Compartment& comp, const bool is_comp_vacant):
-  is_comp_vacant_(is_comp_vacant),
+Species::Species(std::string name, const unsigned nmols, const double D,
+                 Model& model, Compartment& comp, Species& vacant,
+                 const bool is_comp_vacant):
+  name_(name),
+  full_name_(comp.get_name()+"/"+vacant.get_name()+"/"+name_),
+  vacant_(vacant),
   comp_(comp),
+  is_comp_vacant_(is_comp_vacant),
   lattice_(comp_.get_lattice()),
   id_(model.push_species(*this)),
   diffuser_(D, *this),
@@ -43,8 +47,8 @@ Species::Species(const unsigned nmols, const double D, Model& model,
   vac_id_(0),
   vac_xor_(vac_id_^2)
 {
+  std::cout << get_full_name() << ": " << get_id() << std::endl;
   mols_.resize(nmols);
-  std::cout << "getID:" << get_id() << std::endl;
 }
 
 void Species::populate()
@@ -79,6 +83,16 @@ Diffuser& Species::get_diffuser()
 Compartment& Species::get_comp()
 {
   return comp_;
+}
+
+const std::string& Species::get_name() const
+{
+  return name_;
+}
+
+const std::string& Species::get_full_name() const
+{
+  return full_name_;
 }
 
 std::vector<unsigned>& Species::get_mols()

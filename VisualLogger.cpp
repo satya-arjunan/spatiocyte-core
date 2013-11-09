@@ -98,10 +98,9 @@ void VisualLogger::initialize_log()
   logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
   for(unsigned i(0); i != species_.size(); ++i)
     {
-      std::string string("Hello");
-      const unsigned stringSize(string.size());
+      const unsigned stringSize(species_[i]->get_full_name().size());
       logfile_.write((char*)(&stringSize), sizeof(stringSize));
-      logfile_.write(string.c_str(), stringSize);
+      logfile_.write(species_[i]->get_full_name().c_str(), stringSize);
       logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
     }
 }

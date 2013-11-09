@@ -39,7 +39,8 @@ int main()
   const double vox_radius(2.5e-9);
   const double length(1e-6);
   Model model(vox_radius, length, length, length);
-  Species A(10000, 1e-12, model, model.get_comp());
+  Species A("A", 10000, 1e-12, model, model.get_comp(),
+            model.get_comp().get_volume());
   model.initialize();
   A.populate();
   VisualLogger visual_logger(model);
@@ -51,7 +52,7 @@ int main()
 
   boost::posix_time::ptime start(
                  boost::posix_time::microsec_clock::universal_time()); 
-  //model.run(0.01);
+  //model.run(0.001);
   model.run(0.1);
   boost::posix_time::ptime end(
                  boost::posix_time::microsec_clock::universal_time());
