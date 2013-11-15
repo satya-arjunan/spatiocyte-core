@@ -48,12 +48,11 @@ public:
   unsigned get_id() const;
   unsigned get_vac_id() const;
   unsigned get_vac_xor() const;
-  unsigned get_vdx(const unsigned) const;
   Diffuser& get_diffuser();
   Compartment& get_comp();
   const std::string& get_name() const;
   const std::string get_name_id() const;
-  std::vector<Coord>& get_mols();
+  std::vector<unsigned>& get_mols();
 private:
   const std::string get_init_name(const std::string, const Compartment&,
                                   const Species&, const bool) const;
@@ -66,7 +65,7 @@ private:
   const unsigned id_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
-  std::vector<Coord> mols_;
+  std::vector<unsigned> mols_;
   Diffuser diffuser_;
   RandomLib::Random rng_;
   unsigned nbit_;

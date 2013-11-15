@@ -56,8 +56,7 @@ void Diffuser::walk()
 {
   for(unsigned i(0), n(mols_.size()); i != n; ++i)
     { 
-      const Coord coord(comp_.get_tar(mols_[i], rng_.IntegerC(ADJS-1)));
-      const unsigned vdx(coord.l*47066+coord.c*202+coord.r);
+      const unsigned vdx(comp_.get_tar(mols_[i], rng_.IntegerC(ADJS-1)));
       /*
       if(vac_id_ == ((lattice_[vdx*nbit_/WORD] >> vdx*nbit_%WORD) & one_nbit_))
         {
@@ -69,9 +68,8 @@ void Diffuser::walk()
       if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
         {
           lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
-          const unsigned curr_vdx(mols_[i].l*47066+mols_[i].c*202+mols_[i].r);
-          lattice_[curr_vdx*2/WORD] ^= 2 << curr_vdx*2%WORD;
-          mols_[i] = coord;
+          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+          mols_[i] = vdx;
         }
     }
 }

@@ -116,12 +116,12 @@ void VisualLogger::log_comp_vacant()
           Species& species(*species_[i]);
           //The species index in the process:
           logfile_.write((char*)(&i), sizeof(i)); 
-          const unsigned size(species.get_mols().size());
+          const std::vector<unsigned>& mols(species.get_mols());
+          const unsigned size(mols.size());
           logfile_.write((char*)(&size), sizeof(size)); 
-          for(unsigned i(0), n(species.get_mols().size()); i != n; ++i)
+          for(unsigned i(0); i != mols.size(); ++i)
             {
-              const unsigned vdx(species.get_vdx(i));
-              logfile_.write((char*)(&vdx), sizeof(vdx));
+              logfile_.write((char*)(&mols[i]), sizeof(mols[i]));
             }
         }
     }
@@ -151,12 +151,12 @@ void VisualLogger::log_mols(const unsigned index)
       return;
     }
   logfile_.write((char*)(&index), sizeof(index));
-  const unsigned size(species.get_mols().size());
+  const std::vector<unsigned>& mols(species.get_mols());
+  const unsigned size(mols.size());
   logfile_.write((char*)(&size), sizeof(size)); 
-  for(unsigned i(0), n(species.get_mols().size()); i != n; ++i)
+  for(unsigned i(0); i != mols.size(); ++i)
     {
-      const unsigned vdx(species.get_vdx(i));
-      logfile_.write((char*)(&vdx), sizeof(vdx));
+      logfile_.write((char*)(&mols[i]), sizeof(mols[i]));
     }
 }  
 
