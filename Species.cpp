@@ -66,7 +66,7 @@ void Species::populate()
         {
           vdx = rng_.IntegerC(lattice_.size()-1);
         }
-      mols_[i] = vdx;
+      mols_[i] = comp_.get_coord(vdx);
       lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
     }
 }
@@ -89,6 +89,11 @@ unsigned Species::get_vac_id() const
 unsigned Species::get_vac_xor() const
 {
   return vac_xor_;
+}
+
+unsigned Species::get_vdx(const unsigned index) const
+{
+  return comp_.get_vdx(mols_[index]);
 }
 
 Diffuser& Species::get_diffuser()
@@ -126,7 +131,7 @@ const std::string Species::get_init_name(const std::string name,
   return std::string(vacant.get_name()+"/"+name);
 }
 
-std::vector<unsigned>& Species::get_mols()
+std::vector<Coord>& Species::get_mols()
 {
   return mols_;
 }

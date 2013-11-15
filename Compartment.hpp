@@ -46,7 +46,9 @@ public:
   unsigned get_nlay() const;
   unsigned get_nrow() const;
   unsigned get_nvox() const;
-  unsigned get_tar(const unsigned, const unsigned) const;
+  unsigned get_vdx(const Coord) const;
+  Coord get_coord(const unsigned) const;
+  Coord get_tar(Coord, const unsigned) const;
   double get_vox_radius() const;
   const Vector& get_center() const;
   Species& get_surface();

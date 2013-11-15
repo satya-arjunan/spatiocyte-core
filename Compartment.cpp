@@ -115,7 +115,6 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
     }
   return vdx-1;
 }
-*/
 unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
 {
   const bool odd_col((vdx%47066/202)&1);
@@ -146,6 +145,81 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
       return vdx+202*(233+odd_lay)+(odd_col&!odd_lay);
     }
   return vdx-1;
+}
+*/
+
+unsigned Compartment::get_vdx(const Coord coord) const
+{
+  return coord.l*ncolrow_+coord.c*nrow_+coord.r;
+}
+
+Coord Compartment::get_coord(const unsigned vdx) const
+{
+  Coord coord;
+  coord.l = vdx/ncolrow_;
+  coord.c = vdx%ncolrow_/nrow_;
+  coord.r = vdx%ncolrow_%nrow_;
+  return coord;
+}
+
+Coord Compartment::get_tar(Coord coord, const unsigned nrand) const
+{
+  const bool odd_lay(coord.l&1);
+  const bool odd_col(coord.c&1);
+  switch(nrand)
+    {
+    case 0:
+      --coord.r;
+      break;
+    case 1:
+      ++coord.r;
+      break;
+    case 2:
+      --coord.c;
+      coord.r += (odd_col^odd_lay)-1;
+      break;
+    case 3:
+      --coord.c;
+      coord.r += (odd_col^odd_lay);
+      break;
+    case 4:
+      ++coord.c;
+      coord.r += (odd_col^odd_lay)-1;
+      break;
+    case 5:
+      ++coord.c;
+      coord.r += (odd_col^odd_lay);
+      break;
+    case 6:
+      --coord.l;
+      coord.c -= !odd_lay;
+      coord.r -= (odd_col&odd_lay);
+      break;
+    case 7:
+      --coord.l;
+      coord.r += !odd_col*(odd_lay-!odd_lay); //optimize this further
+      break;
+    case 8:
+      --coord.l;
+      coord.c += odd_lay;
+      coord.r += (odd_col&!odd_lay);
+      break;
+    case 9:
+      ++coord.l;
+      coord.c -= !odd_lay;
+      coord.r -= (odd_col&odd_lay);
+      break;
+    case 10:
+      ++coord.l;
+      coord.r += !odd_col*(odd_lay-!odd_lay);  //optimize this further
+      break;
+    case 11:
+      ++coord.l;
+      coord.c += !odd_lay;
+      coord.r += (odd_col&!odd_lay);
+      break;
+    }
+  return coord;
 }
 
 double Compartment::get_vox_radius() const
@@ -213,6 +287,117 @@ void Compartment::set_surface()
 void Compartment::populate_mol(const unsigned vdx)
 {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  surface_.get_mols().push_back(vdx);
+  surface_.get_mols().push_back(get_coord(vdx));
 }
 
+
+/*
+case 0:
+  00
+  _offsets[0] = -1;
+  01
+  _offsets[24] = -1;
+  10
+  _offsets[12] = -1;
+  11
+  _offsets[36] = -1;
+case 1:
+  00
+  _offsets[1] = 1;
+  01
+  _offsets[25] = 1;
+  10
+  _offsets[13] = 1;
+  11
+  _offsets[37] = 1;
+case 2:
+  00
+  _offsets[2] = -_rows-1;
+  01
+  _offsets[26] = -_rows;
+  10
+  _offsets[14] = -_rows;
+  11
+  _offsets[38] = -_rows-1;
+case 3:
+  00
+  _offsets[3] = -_rows;
+  01
+  _offsets[27] = -_rows+1;
+  10
+  _offsets[15] = -_rows+1;
+  11
+  _offsets[39] = -_rows;
+case 4:
+  00
+  _offsets[4] = _rows-1;
+  01
+  _offsets[28] = _rows;
+  10
+  _offsets[16] = _rows;
+  11
+  _offsets[40] = _rows-1;
+case 5:
+  00
+  _offsets[5] = _rows;
+  01
+  _offsets[29] = _rows+1;
+  10
+  _offsets[17] = _rows+1;
+  11
+  _offsets[41] = _rows;
+case 6:
+  00
+  _offsets[6] = -_rows*_cols-_rows;
+  01
+  _offsets[30] = -_rows*_cols;
+  10
+  _offsets[18] = -_rows*_cols-_rows;
+  11
+  _offsets[42] = -_rows*_cols-1;
+case 7:
+  00
+  _offsets[7] = -_rows*_cols-1;
+  01
+  _offsets[31] = -_rows*_cols+1;
+  10
+  _offsets[19] = -_rows*_cols;
+  11
+  _offsets[43] = -_rows*_cols; //a
+case 8:
+  00
+  _offsets[8] = -_rows*_cols;
+  01
+  _offsets[32] = -_rows*_cols+_rows;
+  10
+  _offsets[20] = -_rows*_cols+1;
+  11
+  _offsets[44] = -_rows*_cols+_rows;
+case 9:
+  00
+  _offsets[9] = _rows*_cols-_rows;
+  01
+  _offsets[33] = _rows*_cols;
+  10
+  _offsets[21] = _rows*_cols-_rows;
+  11
+  _offsets[45] = _rows*_cols-1;
+case 10:
+  00
+  _offsets[10] = _rows*_cols-1;
+  01
+  _offsets[34] = _rows*_cols+1;
+  10
+  _offsets[22] = _rows*_cols;
+  11
+  _offsets[46] = _rows*_cols;
+case 11:
+  00
+  _offsets[11] = _rows*_cols;
+  01
+  _offsets[35] = _rows*_cols+_rows;
+  10
+  _offsets[23] = _rows*_cols+1;
+  11
+  _offsets[47] = _rows*_cols+_rows;
+  */

@@ -36,6 +36,9 @@
 
 int main()
 {
+  Coord coord;
+  std::cout << "unsigned:" << sizeof(unsigned) << " coord:" << sizeof(coord) <<
+    std::endl;
   const double vox_radius(2.5e-9);
   const double length(1e-6);
   Model model(vox_radius, length, length, length);

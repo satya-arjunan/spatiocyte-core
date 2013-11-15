@@ -56,4 +56,11 @@ struct Vector
   double z;
 };
 
+struct Coord
+{
+  unsigned l:10;
+  unsigned c:10;
+  unsigned r:12;
+};
+
 #endif /* __Common_hpp */
