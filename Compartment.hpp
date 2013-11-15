@@ -38,7 +38,8 @@
 class Compartment
 { 
 public: 
-  Compartment(std::string, const double, const double, const double, const double, Model&);
+  Compartment(std::string, const double, const double, const double,
+              const double, Model&);
   ~Compartment() {}
   void initialize();
   unsigned get_ncol() const;

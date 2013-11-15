@@ -12,7 +12,8 @@ SRC=\
 
 IFLAGS = -I. -I$(HOME)/root/include
 LDFLAGS = -L$(HOME)/root/lib -lRandom
-CXXFLAGS = -O3 -march=native
+CXXFLAGS = -O3 -march=native -Werror -Wfatal-errors -Wall
+CXXEFLAGS = -Wextra
 CXX = g++
 GUILIBS = $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
 GUIFLAGS = $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2) -I.
@@ -25,7 +26,7 @@ VISUALIZER = visualizer
 all: $(SPATIOCYTE_CORE) $(VISUALIZER)
 
 $(SPATIOCYTE_CORE): $(OBJECTS)
-		$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
+		$(CXX) $(CXXFLAGS) $(CXXEFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
 
 $(VISUALIZER):
 		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(GUIFLAGS) -o $@ $(VIS).cpp $(GUILIBS)
