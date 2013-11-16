@@ -116,6 +116,40 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
   return vdx-1;
 }
 */
+/*
+unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
+{
+  const bool odd_col((vdx%47066/202)&1);
+  const bool odd_lay((vdx/47066)&1);
+  unsigned value(0);
+  switch(nrand)
+    {
+    case 1:
+      return vdx+1;
+    case 2:
+      value = -1;
+    case 3:
+      return vdx+(odd_col^odd_lay)-202+value;
+    case 4:
+      value = -1;
+    case 5:
+      return vdx+(odd_col^odd_lay)+202+value;
+    case 6:
+      value = 94132;
+    case 7:
+      return vdx+value-47066-(odd_col&odd_lay)-202*(!odd_lay);
+    case 8:
+      value = 94132;
+    case 9:
+      return vdx+value-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+    case 10:
+      value = 94132;
+    case 11:
+      return vdx+value-47066+(odd_col&!odd_lay)+202*odd_lay;
+    }
+  return vdx-1;
+}
+*/
 unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
 {
   const bool odd_col((vdx%47066/202)&1);
