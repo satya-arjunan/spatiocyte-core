@@ -133,17 +133,23 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
     case 5:
       return vdx+(odd_col^odd_lay)+202;
     case 6:
-      return vdx+202*(odd_lay-233-1)-(odd_col&odd_lay);
+      //return vdx+202*(odd_lay-233-1)-(odd_col&odd_lay);
+      return vdx-47066-(odd_col&odd_lay)-202*(!odd_lay);
     case 7:
-      return vdx+!odd_col*(odd_lay-!odd_lay)-47066;
+      //return vdx+!odd_col*(odd_lay-!odd_lay)-47066;
+      return vdx-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 8:
-      return vdx+202*(odd_lay-233)+(odd_col&!odd_lay);
+      //return vdx+202*(odd_lay-233)+(odd_col&!odd_lay);
+      return vdx-47066+(odd_col&!odd_lay)+202*odd_lay;
     case 9:
-      return vdx+202*(233-!odd_lay)-(odd_col&odd_lay);
+      //return vdx+202*(233-!odd_lay)-(odd_col&odd_lay);
+      return vdx+47066-(odd_col&odd_lay)+202*(!odd_lay);
     case 10:
-      return vdx+47066+!odd_col*(odd_lay-!odd_lay);
+      //return vdx+47066+!odd_col*(odd_lay-!odd_lay);
+      return vdx+47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 11:
-      return vdx+202*(233+odd_lay)+(odd_col&!odd_lay);
+      //return vdx+202*(233+odd_lay)+(odd_col&!odd_lay);
+      return vdx+47066+(odd_col&!odd_lay)+202*odd_lay;
     }
   return vdx-1;
 }
