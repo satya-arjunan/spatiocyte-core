@@ -42,10 +42,13 @@ Compartment::Compartment(std::string name, const double vox_radius,
   hcpo_(vox_radius/sqrt(3)), //protruding length_x at an odd numbered layer
   hcpz_(vox_radius*sqrt(8.0/3)),
   vox_radius_(vox_radius),
+  /*
   ncol_(rint(len_x/hcpx_)+2),
   nlay_(rint(len_z/hcpz_)+2),
   nrow_(rint(len_y/vox_radius_/2)+2),
+  nrowm_(nrow-1);
   ncolrow_(ncol_*nrow_),
+  */
   nvox_(ncolrow_*nlay_),
   length_(len_x, len_y, len_z),
   center_(len_x/2, len_y/2, len_z/2),
@@ -150,6 +153,7 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
   return vdx-1;
 }
 */
+/*
 unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
 {
   const bool odd_col((vdx%47066/202)&1);
@@ -159,34 +163,101 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
     case 1:
       return vdx+1;
     case 2:
-      return vdx+(odd_col^odd_lay)-202-1 ;
+      return vdx+(odd_col^odd_lay)-nrowm_;
+    case 3:
+      return vdx+(odd_col^odd_lay)-nrow_;
+    case 4:
+      return vdx+(odd_col^odd_lay)+nrowm_;
+    case 5:
+      return vdx+(odd_col^odd_lay)+nrow_;
+    case 6:
+      return vdx-ncolrow_-(odd_col&odd_lay)-nrow_*(!odd_lay);
+    case 7:
+      return vdx-ncolrow_-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+    case 8:
+      return vdx-ncolrow_+(odd_col&!odd_lay)+nrow_*odd_lay;
+    case 9:
+      return vdx+ncolrow_-(odd_col&odd_lay)+nrow_*(!odd_lay);
+    case 10:
+      return vdx+ncolrow_-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+    case 11:
+      return vdx+ncolrow_+(odd_col&!odd_lay)+nrow_*odd_lay;
+    }
+  return vdx-1;
+}
+*/
+/*
+unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
+{
+  const bool odd_col((vdx%47066/202)&1);
+  const bool odd_lay((vdx/47066)&1);
+  switch(nrand)
+    {
+    case 1:
+      return vdx+1;
+    case 2:
+      return vdx+(odd_col^odd_lay)-201;
     case 3:
       return vdx+(odd_col^odd_lay)-202;
     case 4:
-      return vdx+(odd_col^odd_lay)+202-1;
+      return vdx+(odd_col^odd_lay)+201;
+    case 5:
+      return vdx+(odd_col^odd_lay)+202;
+    case 6:
+      return vdx-47066-(odd_col&odd_lay)-(202&(-!odd_lay));
+    case 7:
+      return vdx-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+    case 8:
+      return vdx-47066+(odd_col&!odd_lay)+(202&(-odd_lay));
+    case 9:
+      return vdx+47066-(odd_col&odd_lay)-(202&(-!odd_lay));
+    case 10:
+      return vdx+47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+    case 11:
+      return vdx+47066+(odd_col&!odd_lay)+(202&(-odd_lay));
+    }
+  return vdx-1;
+}
+*/
+
+unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
+{
+  const bool odd_col((vdx%47066/202)&1);
+  const bool odd_lay((vdx/47066)&1);
+  switch(nrand)
+    {
+    case 1:
+      return vdx+1;
+    case 2:
+      return vdx+(odd_col^odd_lay)-203;
+    case 3:
+      return vdx+(odd_col^odd_lay)-202;
+    case 4:
+      return vdx+(odd_col^odd_lay)+201;
     case 5:
       return vdx+(odd_col^odd_lay)+202;
     case 6:
       //return vdx+202*(odd_lay-233-1)-(odd_col&odd_lay);
-      return vdx-47066-(odd_col&odd_lay)-202*(!odd_lay);
+      return vdx-47066-(odd_col&odd_lay)-(202&(-!odd_lay));
     case 7:
       //return vdx+!odd_col*(odd_lay-!odd_lay)-47066;
       return vdx-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 8:
       //return vdx+202*(odd_lay-233)+(odd_col&!odd_lay);
-      return vdx-47066+(odd_col&!odd_lay)+202*odd_lay;
+      return vdx-47066+(odd_col&!odd_lay)+(202&(-odd_lay));
     case 9:
       //return vdx+202*(233-!odd_lay)-(odd_col&odd_lay);
-      return vdx+47066-(odd_col&odd_lay)+202*(!odd_lay);
+      return vdx+47066-(odd_col&odd_lay)-(202&(-!odd_lay));
     case 10:
       //return vdx+47066+!odd_col*(odd_lay-!odd_lay);
       return vdx+47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 11:
       //return vdx+202*(233+odd_lay)+(odd_col&!odd_lay);
-      return vdx+47066+(odd_col&!odd_lay)+202*odd_lay;
+      return vdx+47066+(odd_col&!odd_lay)+(202&(-odd_lay));
     }
   return vdx-1;
 }
+
 
 double Compartment::get_vox_radius() const
 {

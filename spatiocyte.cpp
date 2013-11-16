@@ -34,6 +34,12 @@
 #include <Model.hpp>
 #include <VisualLogger.hpp>
 
+const unsigned Compartment::ncol_ = 233;
+const unsigned Compartment::nlay_ = 247;
+const unsigned Compartment::nrow_ = 202;
+const unsigned Compartment::nrowm_ = 201;
+const unsigned Compartment::ncolrow_ = 47066;
+
 int main()
 {
   const double vox_radius(2.5e-9);

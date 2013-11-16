@@ -63,10 +63,11 @@ private:
   const double hcpo_;
   const double hcpz_;
   const double vox_radius_;
-  const unsigned ncol_;
-  const unsigned nlay_;
-  const unsigned nrow_;
-  const unsigned ncolrow_;
+  const static unsigned ncol_;
+  const static unsigned nlay_;
+  const static unsigned nrow_;
+  const static unsigned nrowm_;
+  const static unsigned ncolrow_;
   const unsigned nvox_;
   const Vector length_;
   const Vector center_;
