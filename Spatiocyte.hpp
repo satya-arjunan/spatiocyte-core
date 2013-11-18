@@ -32,4 +32,4 @@
 #define LENGTH_X 1e-6
 #define LENGTH_Y 1e-6
 #define LENGTH_Z 1e-6
-#define SPECIES_MAX 4
+#define SPECIES_MAX 2
