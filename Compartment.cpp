@@ -34,87 +34,70 @@
 #include <Model.hpp>
 
 
-Compartment::Compartment(std::string name, const double vox_radius,
-                         const double len_x, const double len_y,
-                         const double len_z, Model& model):
-  name_(name),
-  hcpx_(vox_radius*sqrt(3)),
-  hcpo_(vox_radius/sqrt(3)), //protruding length_x at an odd numbered layer
-  hcpz_(vox_radius*sqrt(8.0/3)),
-  vox_radius_(vox_radius),
-  /*
-  ncol_(rint(len_x/hcpx_)+2),
-  nlay_(rint(len_z/hcpz_)+2),
-  nrow_(rint(len_y/vox_radius_/2)+2),
-  nrowm_(nrow-1);
-  ncolrow_(ncol_*nrow_),
-  */
-  nvox_(ncolrow_*nlay_),
-  length_(len_x, len_y, len_z),
-  center_(len_x/2, len_y/2, len_z/2),
-  model_(model),
-  volume_("volume", 0, 0, model, *this, volume_, true),
-  surface_("surface", 0, 0, model, *this, surface_, true) {}
+Compartment::Compartment(std::string name, const double len_x,
+                         const double len_y, const double len_z, Model& model)
+  : name_(name),
+    length_(len_x, len_y, len_z),
+    center_(len_x/2, len_y/2, len_z/2),
+    model_(model),
+    volume_species_("volume", 0, 0, model, *this, volume_species_, true),
+    surface_species_("surface", 0, 0, model, *this, surface_species_, true) {}
 
-void Compartment::initialize()
-{
+void Compartment::initialize() {
   nbit_ = model_.get_nbit();
-  sur_xor_ = surface_.get_id()^volume_.get_id();
-  lattice_.resize(ceil(double(nvox_)*nbit_/WORD), 0);
+  sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
+  lattice_.resize(ceil(double(NUM_VOXEL)*nbit_/WORD), 0);
   set_surface();
-  std::cout << "nrow:" << nrow_ << " ncol:" << ncol_ << " nlay:" << nlay_ << 
+  std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" << NUM_LAY << 
     " latticeSize:" << lattice_.size() << " memory:" << 
     lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
 }
 
-unsigned Compartment::get_ncol() const
-{
-  return ncol_;
+unsigned Compartment::get_num_col() const {
+  return NUM_COL;
 }
 
-unsigned Compartment::get_nlay() const
-{
-  return nlay_;
+unsigned Compartment::get_num_lay() const {
+  return NUM_LAY;
 }
 
-unsigned Compartment::get_nrow() const
-{
-  return nrow_;
+unsigned Compartment::get_num_row() const {
+  return NUM_ROW;
 }
 
-unsigned Compartment::get_nvox() const
-{
-  return nvox_;
+unsigned Compartment::get_num_voxel() const {
+  return NUM_VOXEL;
 }
+
 /*
 unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
 {
-  const bool odd_col((vdx%ncolrow_/nrow_)&1);
-  const bool odd_lay((vdx/ncolrow_)&1);
+  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
+  const bool odd_lay((vdx/NUM_COLROW)&1);
   switch(nrand)
     {
     case 1:
       return vdx+1;
     case 2:
-      return vdx+(odd_col^odd_lay)-nrow_-1 ;
+      return vdx+(odd_col^odd_lay)-NUM_ROW-1 ;
     case 3:
-      return vdx+(odd_col^odd_lay)-nrow_;
+      return vdx+(odd_col^odd_lay)-NUM_ROW;
     case 4:
-      return vdx+(odd_col^odd_lay)+nrow_-1;
+      return vdx+(odd_col^odd_lay)+NUM_ROW-1;
     case 5:
-      return vdx+(odd_col^odd_lay)+nrow_;
+      return vdx+(odd_col^odd_lay)+NUM_ROW;
     case 6:
-      return vdx+nrow_*(odd_lay-ncol_-1)-(odd_col&odd_lay);
+      return vdx+NUM_ROW*(odd_lay-NUM_COL-1)-(odd_col&odd_lay);
     case 7:
-      return vdx+!odd_col*(odd_lay-!odd_lay)-ncolrow_;
+      return vdx+!odd_col*(odd_lay-!odd_lay)-NUM_COLROW;
     case 8:
-      return vdx+nrow_*(odd_lay-ncol_)+(odd_col&!odd_lay);
+      return vdx+NUM_ROW*(odd_lay-NUM_COL)+(odd_col&!odd_lay);
     case 9:
-      return vdx+nrow_*(ncol_-!odd_lay)-(odd_col&odd_lay);
+      return vdx+NUM_ROW*(NUM_COL-!odd_lay)-(odd_col&odd_lay);
     case 10:
-      return vdx+ncolrow_+!odd_col*(odd_lay-!odd_lay);
+      return vdx+NUM_COLROW+!odd_col*(odd_lay-!odd_lay);
     case 11:
-      return vdx+nrow_*(ncol_+odd_lay)+(odd_col&!odd_lay);
+      return vdx+NUM_ROW*(NUM_COL+odd_lay)+(odd_col&!odd_lay);
     }
   return vdx-1;
 }
@@ -165,23 +148,23 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
     case 2:
       return vdx+(odd_col^odd_lay)-nrowm_;
     case 3:
-      return vdx+(odd_col^odd_lay)-nrow_;
+      return vdx+(odd_col^odd_lay)-NUM_ROW;
     case 4:
       return vdx+(odd_col^odd_lay)+nrowm_;
     case 5:
-      return vdx+(odd_col^odd_lay)+nrow_;
+      return vdx+(odd_col^odd_lay)+NUM_ROW;
     case 6:
-      return vdx-ncolrow_-(odd_col&odd_lay)-nrow_*(!odd_lay);
+      return vdx-NUM_COLROW-(odd_col&odd_lay)-NUM_ROW*(!odd_lay);
     case 7:
-      return vdx-ncolrow_-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+      return vdx-NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 8:
-      return vdx-ncolrow_+(odd_col&!odd_lay)+nrow_*odd_lay;
+      return vdx-NUM_COLROW+(odd_col&!odd_lay)+NUM_ROW*odd_lay;
     case 9:
-      return vdx+ncolrow_-(odd_col&odd_lay)+nrow_*(!odd_lay);
+      return vdx+NUM_COLROW-(odd_col&odd_lay)+NUM_ROW*(!odd_lay);
     case 10:
-      return vdx+ncolrow_-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+      return vdx+NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 11:
-      return vdx+ncolrow_+(odd_col&!odd_lay)+nrow_*odd_lay;
+      return vdx+NUM_COLROW+(odd_col&!odd_lay)+NUM_ROW*odd_lay;
     }
   return vdx-1;
 }
@@ -220,110 +203,86 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
 }
 */
 
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
-{
-  const bool odd_col((vdx%47066/202)&1);
-  const bool odd_lay((vdx/47066)&1);
+unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
+  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
+  const bool odd_lay((vdx/NUM_COLROW)&1);
   switch(nrand)
     {
     case 1:
       return vdx+1;
     case 2:
-      return vdx+(odd_col^odd_lay)-203;
+      return vdx+(odd_col^odd_lay)-NUM_ROW-1;
     case 3:
-      return vdx+(odd_col^odd_lay)-202;
+      return vdx+(odd_col^odd_lay)-NUM_ROW;
     case 4:
-      return vdx+(odd_col^odd_lay)+201;
+      return vdx+(odd_col^odd_lay)+NUM_ROW-1;
     case 5:
-      return vdx+(odd_col^odd_lay)+202;
+      return vdx+(odd_col^odd_lay)+NUM_ROW;
     case 6:
-      //return vdx+202*(odd_lay-233-1)-(odd_col&odd_lay);
-      return vdx-47066-(odd_col&odd_lay)-(202&(-!odd_lay));
+      return vdx-NUM_COLROW-(odd_col&odd_lay)-(NUM_ROW&(-!odd_lay));
     case 7:
-      //return vdx+!odd_col*(odd_lay-!odd_lay)-47066;
-      return vdx-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+      return vdx-NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 8:
-      //return vdx+202*(odd_lay-233)+(odd_col&!odd_lay);
-      return vdx-47066+(odd_col&!odd_lay)+(202&(-odd_lay));
+      return vdx-NUM_COLROW+(odd_col&!odd_lay)+(NUM_ROW&(-odd_lay));
     case 9:
-      //return vdx+202*(233-!odd_lay)-(odd_col&odd_lay);
-      return vdx+47066-(odd_col&odd_lay)-(202&(-!odd_lay));
+      return vdx+NUM_COLROW-(odd_col&odd_lay)-(NUM_ROW&(-!odd_lay));
     case 10:
-      //return vdx+47066+!odd_col*(odd_lay-!odd_lay);
-      return vdx+47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
+      return vdx+NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
     case 11:
-      //return vdx+202*(233+odd_lay)+(odd_col&!odd_lay);
-      return vdx+47066+(odd_col&!odd_lay)+(202&(-odd_lay));
+      return vdx+NUM_COLROW+(odd_col&!odd_lay)+(NUM_ROW&(-odd_lay));
     }
   return vdx-1;
 }
 
-
-double Compartment::get_vox_radius() const
-{
-  return vox_radius_;
-}
-
-const Vector& Compartment::get_center() const
-{
+const Vector& Compartment::get_center() const {
   return center_;
 }
 
-Species& Compartment::get_surface()
-{
-  return surface_;
+Species& Compartment::get_surface_species() {
+  return surface_species_;
 }
 
-Species& Compartment::get_volume()
-{
-  return volume_;
+Species& Compartment::get_volume_species() {
+  return volume_species_;
 }
 
-Model& Compartment::get_model()
-{
+Model& Compartment::get_model() {
   return model_;
 }
 
-const std::string& Compartment::get_name() const
-{
+const std::string& Compartment::get_name() const {
   return name_;
 }
 
-std::vector<unsigned>& Compartment::get_lattice()
-{
+std::vector<unsigned>& Compartment::get_lattice() {
   return lattice_;
 }
 
-void Compartment::set_surface()
-{
+void Compartment::set_surface() {
   //row_col xy-plane
-  for(unsigned i(0); i != ncolrow_; ++i)
-    {
+  for (unsigned i(0); i != NUM_COLROW; ++i) {
       populate_mol(i);
-      populate_mol(nvox_-1-i);
+      populate_mol(NUM_VOXEL-1-i);
     }
-  for(unsigned i(1); i != nlay_-1; ++i)
-    {
+  for (unsigned i(1); i != NUM_LAY-1; ++i) {
       //layer_row yz-plane
-      for(unsigned j(0); j != nrow_; ++j)
-        {
-          populate_mol(i*ncolrow_+j);
-          populate_mol(i*ncolrow_+j+nrow_*(ncol_-1));
+      for (unsigned j(0); j != NUM_ROW; ++j) {
+          populate_mol(i*NUM_COLROW+j);
+          populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
         }
       //layer_col xz-plane
-      for(unsigned j(1); j != ncol_-1; ++j)
-        {
-          populate_mol(i*ncolrow_+j*nrow_);
-          populate_mol(i*ncolrow_+j*nrow_+nrow_-1);
+      for (unsigned j(1); j != NUM_COL-1; ++j) {
+          populate_mol(i*NUM_COLROW+j*NUM_ROW);
+          populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
         }
     }
   //std::cout << "surface size:" << mols.size() << " actual size:" <<
-  //ncolrow_*2 + nrow_*(nlay_-2)*2 + (ncol_-2)*(nlay_-2)*2 << std::endl;
+  //NUM_COLROW*2 + NUM_ROW*(NUM_LAY-2)*2 + (NUM_COL-2)*(NUM_LAY-2)*2 <<
+  //std::endl;
 }
 
-void Compartment::populate_mol(const unsigned vdx)
-{
+void Compartment::populate_mol(const unsigned vdx) {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  surface_.get_mols().push_back(vdx);
+  surface_species_.get_mols().push_back(vdx);
 }
 

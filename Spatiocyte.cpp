@@ -28,39 +28,30 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-
 #include <iostream> 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <Spatiocyte.hpp>
 #include <Model.hpp>
 #include <VisualLogger.hpp>
 
-const unsigned Compartment::ncol_ = 233;
-const unsigned Compartment::nlay_ = 247;
-const unsigned Compartment::nrow_ = 202;
-const unsigned Compartment::nrowm_ = 201;
-const unsigned Compartment::ncolrow_ = 47066;
-
-int main()
-{
-  const double vox_radius(2.5e-9);
-  const double length(1e-6);
-  Model model(vox_radius, length, length, length);
+int main() {
+  Model model;
   Species A("A", 10000, 1e-12, model, model.get_comp(),
-            model.get_comp().get_volume());
+            model.get_comp().get_volume_species());
   model.initialize();
   A.populate();
   VisualLogger visual_logger(model);
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);
   visual_logger.push_species(A);
-  visual_logger.push_species(model.get_comp().get_surface());
+  visual_logger.push_species(model.get_comp().get_surface_species());
   visual_logger.initialize();
 
   boost::posix_time::ptime start(
-                 boost::posix_time::microsec_clock::universal_time()); 
+      boost::posix_time::microsec_clock::universal_time()); 
   //model.run(0.001);
   model.run(0.1);
   boost::posix_time::ptime end(
-                 boost::posix_time::microsec_clock::universal_time());
+      boost::posix_time::microsec_clock::universal_time());
   std::cout << "duration:" << end-start << std::endl;
 }

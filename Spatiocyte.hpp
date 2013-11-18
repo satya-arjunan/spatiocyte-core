@@ -28,31 +28,8 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-
-#ifndef __Model_hpp
-#define __Model_hpp
-
-#include <Common.hpp>
-#include <Compartment.hpp>
-#include <Stepper.hpp>
-
-class Model {
- public: 
-  Model();
-  ~Model() {}
-  void initialize();
-  void run(const double);
-  unsigned get_nbit() const;
-  unsigned push_species(Species&);
-  Compartment& get_comp();
-  Stepper& get_stepper();
-  std::vector<Species*>& get_species();
- private:
-  const unsigned nbit_;
-  std::vector<Species*> species_;
-  Stepper stepper_;
-  Compartment comp_; //must declare this at the end after initializing others
-};
-
-#endif /* __Model_hpp */
-
+#define VOXEL_RADIUS 2.5e-9
+#define LENGTH_X 1e-6
+#define LENGTH_Y 1e-6
+#define LENGTH_Z 1e-6
+#define SPECIES_MAX 4

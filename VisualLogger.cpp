@@ -30,6 +30,7 @@
 
 #include <sstream>
 #include <climits>
+#include <Spatiocyte.hpp>
 #include <VisualLogger.hpp>
 #include <Model.hpp>
 #include <Stepper.hpp>
@@ -72,13 +73,13 @@ void VisualLogger::initialize_log()
   logfile_.write((char*)(&meanCount), sizeof(meanCount));
   const unsigned startCoord(0);
   logfile_.write((char*)(&startCoord), sizeof(startCoord));
-  const unsigned colSize(comp_.get_ncol());
+  const unsigned colSize(comp_.get_num_col());
   logfile_.write((char*)(&colSize), sizeof(colSize));
-  const unsigned layerSize(comp_.get_nlay());
+  const unsigned layerSize(comp_.get_num_lay());
   logfile_.write((char*)(&layerSize), sizeof(layerSize));
-  const unsigned rowSize(comp_.get_nrow());
+  const unsigned rowSize(comp_.get_num_row());
   logfile_.write((char*)(&rowSize), sizeof(rowSize));
-  const double voxRadius(comp_.get_vox_radius());
+  const double voxRadius(VOXEL_RADIUS);
   Vector center(comp_.get_center());
   const double realColSize(center.x*2/(voxRadius*2));
   logfile_.write((char*)(&realColSize), sizeof(realColSize));

@@ -32,49 +32,46 @@
 #ifndef __Compartment_hpp
 #define __Compartment_hpp
 
+#include <Spatiocyte.hpp>
 #include <Common.hpp>
 #include <Species.hpp>
 
-class Compartment
-{ 
-public: 
-  Compartment(std::string, const double, const double, const double,
-              const double, Model&);
+#define HCP_X double(VOXEL_RADIUS*1.7320508075688772)
+#define HCP_Z double(VOXEL_RADIUS*1.632993161855452)
+#define NUM_COL unsigned(LENGTH_X/HCP_X+3)
+#define NUM_LAY unsigned(LENGTH_Z/HCP_Z+3)
+//#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+3) //correct version
+#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+2)
+#define NUM_COLROW unsigned(NUM_COL*NUM_ROW)
+#define NUM_VOXEL unsigned(NUM_COLROW*NUM_LAY)
+
+class Compartment { 
+ public: 
+  Compartment(std::string, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
-  unsigned get_ncol() const;
-  unsigned get_nlay() const;
-  unsigned get_nrow() const;
-  unsigned get_nvox() const;
+  unsigned get_num_col() const;
+  unsigned get_num_lay() const;
+  unsigned get_num_row() const;
+  unsigned get_num_voxel() const;
   unsigned get_tar(const unsigned, const unsigned) const;
-  double get_vox_radius() const;
   const Vector& get_center() const;
-  Species& get_surface();
-  Species& get_volume();
+  Species& get_surface_species();
+  Species& get_volume_species();
   Model& get_model();
   const std::string& get_name() const;
   std::vector<unsigned>& get_lattice();
-private:
+ private:
   void set_surface();
   void populate_mol(const unsigned);
-private:
+ private:
   const std::string name_;
-  const double hcpx_;
-  const double hcpo_;
-  const double hcpz_;
-  const double vox_radius_;
-  const static unsigned ncol_;
-  const static unsigned nlay_;
-  const static unsigned nrow_;
-  const static unsigned nrowm_;
-  const static unsigned ncolrow_;
-  const unsigned nvox_;
   const Vector length_;
   const Vector center_;
   std::vector<unsigned> lattice_;
   Model& model_;
-  Species volume_;
-  Species surface_;
+  Species volume_species_;
+  Species surface_species_;
   unsigned nbit_;
   unsigned sur_xor_;
 };

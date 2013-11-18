@@ -2,7 +2,7 @@ VIS=\
 		Visualizer
 
 SRC=\
-		spatiocyte\
+		Spatiocyte\
 		Model\
 		Stepper\
 		Compartment\
