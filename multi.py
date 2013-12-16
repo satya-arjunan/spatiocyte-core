@@ -1,6 +1,6 @@
 import subprocess
 
-nSessions = 3
+nSessions = 2
 
 for i in xrange(nSessions):
   subprocess.Popen(["./spatiocyte-core"])
