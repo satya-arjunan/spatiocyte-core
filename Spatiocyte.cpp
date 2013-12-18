@@ -36,10 +36,10 @@
 
 int main() {
   Model model;
-  Species A("A", 10000, 1e-12, model, model.get_comp(),
+  Species A("A", 1e-12, model, model.get_comp(),
             model.get_comp().get_volume_species());
   model.initialize();
-  A.populate();
+  A.populate(10000);
   VisualLogger visual_logger(model);
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);

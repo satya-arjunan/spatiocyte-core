@@ -34,9 +34,8 @@
 #include <iostream>
 #include <string>
 
-Species::Species(const std::string name, const unsigned nmols, const double D,
-                 Model& model, Compartment& comp, Species& vacant,
-                 const bool is_comp_vacant):
+Species::Species(const std::string name, const double D, Model& model,
+                 Compartment& comp, Species& vacant, const bool is_comp_vacant):
   name_(get_init_name(name, comp, vacant, is_comp_vacant)),
   comp_(comp),
   vacant_(vacant),
@@ -47,8 +46,9 @@ Species::Species(const std::string name, const unsigned nmols, const double D,
   vac_xor_(vac_id_^id_),
   diffuser_(D, *this)
 {
+  nbox_ = 1;
   std::cout << get_name_id() << std::endl;
-  mols_.resize(nmols);
+  mols_.resize(nbox_);
 }
 
 void Species::initialize()
@@ -57,16 +57,17 @@ void Species::initialize()
   diffuser_.initialize();
 }
 
-void Species::populate()
+void Species::populate(const unsigned nmols)
 {
-  for(unsigned i(0), j(mols_.size()); i != j; ++i)
+  nboxdiv_ = lattice_.size()*WORD/nbit_/nbox_;
+  for(unsigned i(0), j(nmols); i != j; ++i)
     {
-      unsigned vdx(rng_.IntegerC(lattice_.size()/nbit_*WORD-1));
+      unsigned vdx(rng_.IntegerC(lattice_.size()*WORD/nbit_-1));
       while(lattice_[vdx*nbit_/WORD] & (1 << vdx*nbit_%WORD))
         {
-          vdx = rng_.IntegerC(lattice_.size()-1);
+          vdx = rng_.IntegerC(lattice_.size()*WORD/nbit_-1);
         }
-      mols_[i] = vdx;
+      mols_[vdx/nboxdiv_].push_back(vdx);
       lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
     }
 }
@@ -89,6 +90,11 @@ unsigned Species::get_vac_id() const
 unsigned Species::get_vac_xor() const
 {
   return vac_xor_;
+}
+
+unsigned Species::get_nboxdiv() const
+{
+  return nboxdiv_;
 }
 
 Diffuser& Species::get_diffuser()
@@ -126,7 +132,7 @@ const std::string Species::get_init_name(const std::string name,
   return std::string(vacant.get_name()+"/"+name);
 }
 
-std::vector<unsigned>& Species::get_mols()
+std::vector<std::vector<unsigned> >& Species::get_mols()
 {
   return mols_;
 }

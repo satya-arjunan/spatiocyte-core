@@ -40,16 +40,16 @@ Compartment::Compartment(std::string name, const double len_x,
     length_(len_x, len_y, len_z),
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
-    volume_species_("volume", 0, 0, model, *this, volume_species_, true),
-    surface_species_("surface", 0, 0, model, *this, surface_species_, true) {}
+    volume_species_("volume", 0, model, *this, volume_species_, true),
+    surface_species_("surface", 0, model, *this, surface_species_, true) {}
 
 void Compartment::initialize() {
   nbit_ = model_.get_nbit();
   sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
   lattice_.resize(ceil(double(NUM_VOXEL)*nbit_/WORD), 0);
   set_surface();
-  std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" << NUM_LAY << 
-    " latticeSize:" << lattice_.size() << " memory:" << 
+  std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
+    NUM_LAY << " latticeSize:" << lattice_.size() << " memory:" << 
     lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
 }
 
@@ -259,6 +259,7 @@ std::vector<unsigned>& Compartment::get_lattice() {
 }
 
 void Compartment::set_surface() {
+  surface_species_.get_mols().resize(1);
   //row_col xy-plane
   for (unsigned i(0); i != NUM_COLROW; ++i) {
       populate_mol(i);
@@ -283,6 +284,6 @@ void Compartment::set_surface() {
 
 void Compartment::populate_mol(const unsigned vdx) {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  surface_species_.get_mols().push_back(vdx);
+  surface_species_.get_mols()[0].push_back(vdx);
 }
 

@@ -46,13 +46,14 @@ private:
   double D_;
   Species& species_;
   Compartment& comp_;
-  std::vector<unsigned>& mols_;
+  std::vector<std::vector<unsigned> >& mols_;
   std::vector<unsigned>& lattice_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
   RandomLib::Random rng_;
   unsigned nbit_;
   unsigned one_nbit_;
+  unsigned nboxdiv_;
 };
 
 #endif /* __Diffuser_hpp */
