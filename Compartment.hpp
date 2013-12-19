@@ -64,6 +64,7 @@ class Compartment {
  private:
   void set_surface();
   void populate_mol(const unsigned);
+  void setOffsets();
  private:
   const std::string name_;
   const Vector length_;
@@ -74,6 +75,7 @@ class Compartment {
   Species surface_species_;
   unsigned nbit_;
   unsigned sur_xor_;
+  std::vector<int> offsets_;
 };
 
 #endif /* __Compartment_hpp */
