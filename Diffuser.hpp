@@ -51,7 +51,7 @@ private:
   std::vector<unsigned>& lattice_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
-  CRandomSFMT rng_;
+  Random rng_;
   RandomLib::Random rng2_;
   unsigned nbit_;
   unsigned one_nbit_;

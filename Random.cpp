@@ -1,81 +1,37 @@
-/*****************************   sfmt.cpp   ***********************************
-* Authors:
-* Mutsuo Saito (Hiroshima University)
-* Makoto Matsumoto (Hiroshima University)
-* Agner Fog (Technical University of Denmark)
-* Date created:  2006
-* Last modified: 2009-02-08
-* Project:       randomc
-* Platform:      This C++ version requires an x86 family microprocessor 
-*                with the SSE2 or later instruction set and a compiler 
-*                that supports intrinsic functions.
-* Source URL:    www.agner.org/random
-* Source URL for original C language implementation:
-*                www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/index.html
-*
-* Description:
-* "SIMD-oriented Fast Mersenne Twister" (SFMT) random number generator.
-* The SFMT random number generator is a modification of the Mersenne Twister 
-* with improved randomness and speed, adapted to the SSE2 instruction set.
-* The SFMT was invented by Mutsuo Saito and Makoto Matsumoto.
-* The present C++ implementation is by Agner Fog.
-*
-* Class description and member functions: See sfmt.h
-*
-* Example:
-* ========
-* The file EX-RAN.CPP contains an example of how to generate random numbers.
-*
-* Library version:
-* ================
-* An optimized version of this random number generator is provided as function
-* libraries in randoma.zip. These function libraries are coded in assembly
-* language and support only x86 platforms, including 32-bit and 64-bit
-* Windows, Linux, BSD, Mac OS-X (Intel based). Use randoma.h from randoma.zip
-*
-*
-* Further documentation:
-* ======================
-* See the file ran-instructions.pdf for detailed instructions and documentation
-*
-*
-* Copyright notice
-* ================
-* GNU General Public License http://www.gnu.org/licenses/gpl.html
-* This C++ implementation of SFMT contains parts of the original C code
-* which was published under the following BSD license, which is therefore
-* in effect in addition to the GNU General Public License.
-*
-Copyright (c) 2006, 2007 by Mutsuo Saito, Makoto Matsumoto and Hiroshima University.
-Copyright (c) 2008 by Agner Fog.
-All rights reserved.
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions are met:
-    > Redistributions of source code must retain the above copyright notice, 
-      this list of conditions and the following disclaimer.
-    > Redistributions in binary form must reproduce the above copyright notice, 
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-    > Neither the name of the Hiroshima University nor the names of its 
-      contributors may be used to endorse or promote products derived from 
-      this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*******************************************************************************/
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//
+//        This file is part of the Spatiocyte package
+//
+//        Copyright (C) 2006-2009 Keio University
+//        Copyright (C) 2010-2014 RIKEN
+//
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//
+//
+// Spatiocyte is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+// 
+// Spatiocyte is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public
+// License along with Spatiocyte -- see the file COPYING.
+// If not, write to the Free Software Foundation, Inc.,
+// 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+// 
+//END_HEADER
+//
+// written by Satya Arjunan <satya.arjunan@gmail.com>
+// based on the SFMT code by Agner Fog
+//
 
 #include <Random.hpp>
 
-
-void CRandomSFMT::RandomInit(int seed) {
+void Random::RandomInit(int seed) {
    // Re-seed
    uint32_t i;                         // Loop counter
    uint32_t y = seed;                  // Temporary
@@ -95,8 +51,7 @@ void CRandomSFMT::RandomInit(int seed) {
    Init2();
 }
 
-
-// Functions used by CRandomSFMT::RandomInitByArray
+// Functions used by Random::RandomInitByArray
 static uint32_t func1(uint32_t x) {
     return (x ^ (x >> 27)) * 1664525U;
 }
@@ -105,7 +60,7 @@ static uint32_t func2(uint32_t x) {
     return (x ^ (x >> 27)) * 1566083941U;
 }
 
-void CRandomSFMT::RandomInitByArray(int const seeds[], int NumSeeds) {
+void Random::RandomInitByArray(int const seeds[], int NumSeeds) {
    // Seed by more than 32 bits
    uint32_t i, j, count, r, lag;
 
@@ -185,7 +140,7 @@ void CRandomSFMT::RandomInitByArray(int const seeds[], int NumSeeds) {
 }
 
 
-void CRandomSFMT::Init2() {
+void Random::Init2() {
    // Various initializations and period certification
    uint32_t i, j, temp;
 
@@ -240,7 +195,7 @@ __m128i const &c, __m128i const &d, __m128i const &mask) {
     return z2;
 }
 
-void CRandomSFMT::Generate() {
+void Random::Generate() {
    // Fill state array with new random numbers
    int i;
    __m128i r, r1, r2;
@@ -262,7 +217,7 @@ void CRandomSFMT::Generate() {
    ix = 0;
 }
 
-uint32_t CRandomSFMT::BRandom() {
+uint32_t Random::BRan() {
    // Output 32 random bits
    uint32_t y;
 
@@ -274,7 +229,7 @@ uint32_t CRandomSFMT::BRandom() {
    return y;
 }
 
-uint32_t CRandomSFMT::MotherBits() {
+uint32_t Random::MotherBits() {
    // Get random bits from Mother-Of-All generator
    uint64_t sum;
    sum = 
@@ -291,7 +246,7 @@ uint32_t CRandomSFMT::MotherBits() {
    return MotherState[0];
 }
 
-int  CRandomSFMT::IRandom (int min, int max) {
+int  Random::IRan (int min, int max) {
    // Output random integer in the interval min <= x <= max
    // Slightly inaccurate if (max-min+1) is not a power of 2
    if (max <= min) {
@@ -303,13 +258,13 @@ int  CRandomSFMT::IRandom (int min, int max) {
    uint32_t iran;                      // Longran / 2^32
 
    interval = (uint32_t)(max - min + 1);
-   longran  = (uint64_t)BRandom() * interval;
+   longran  = (uint64_t)BRan() * interval;
    iran = (uint32_t)(longran >> 32);
    // Convert back to signed and return result
    return (int32_t)iran + min;
 }
 
-int  CRandomSFMT::IRandomX (int min, int max) {
+int  Random::IRanX (int min, int max) {
    // Output random integer in the interval min <= x <= max
    // Each output value has exactly the same probability.
    // This is obtained by rejecting certain bit values so that the number
@@ -337,7 +292,7 @@ int  CRandomSFMT::IRandomX (int min, int max) {
       LastInterval = interval;
    }
    do { // Rejection loop
-      longran  = (uint64_t)BRandom() * interval;
+      longran  = (uint64_t)BRan() * interval;
       iran = (uint32_t)(longran >> 32);
       remainder = (uint32_t)longran;
    } while (remainder > RLimit);
@@ -345,7 +300,7 @@ int  CRandomSFMT::IRandomX (int min, int max) {
    return (int32_t)iran + min;
 }
 
-double CRandomSFMT::Random() {
+double Random::Ran() {
    // Output random floating point number
    if (ix >= SFMT_N*4-1) {
       // Make sure we have at least two 32-bit numbers
@@ -355,13 +310,15 @@ double CRandomSFMT::Random() {
    ix += 2;
    if (UseMother) {
       // We need 53 bits from Mother-Of-All generator
-      // Use the regular 32 bits and the the carry bits rotated
+      // Use the regular 32 bits and the carry bits rotated
       uint64_t r2 = (uint64_t)MotherBits() << 32;
       r2 |= (MotherState[4] << 16) | (MotherState[4] >> 16);
       r += r2;
    }
    // 53 bits resolution:
-   // return (int64_t)(r >> 11) * (1./(67108864.0*134217728.0)); // (r >> 11)*2^(-53)
+   // return (int64_t)(r >> 11) * (1./(67108864.0*134217728.0)); 
+   // (r >> 11)*2^(-53)
    // 52 bits resolution for compatibility with assembly version:
-   return (int64_t)(r >> 12) * (1./(67108864.0*67108864.0));  // (r >> 12)*2^(-52)
+   // (r >> 12)*2^(-52)
+   return (int64_t)(r >> 12) * (1./(67108864.0*67108864.0));
 }
