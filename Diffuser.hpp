@@ -33,6 +33,7 @@
 #define __Diffuser_hpp
 
 #include <RandomLib/Random.hpp>
+#include <Random.hpp>
 #include <Common.hpp>
 
 class Diffuser
@@ -50,7 +51,8 @@ private:
   std::vector<unsigned>& lattice_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
-  RandomLib::Random rng_;
+  CRandomSFMT rng_;
+  RandomLib::Random rng2_;
   unsigned nbit_;
   unsigned one_nbit_;
 };

@@ -31,6 +31,7 @@
 #include <Diffuser.hpp>
 #include <Compartment.hpp>
 #include <Model.hpp>
+#include <time.h>
 
 Diffuser::Diffuser(const double D, Species& species):
   D_(D),
@@ -39,7 +40,8 @@ Diffuser::Diffuser(const double D, Species& species):
   mols_(species_.get_mols()),
   lattice_(comp_.get_lattice()),
   vac_id_(species_.get_vac_id()),
-  vac_xor_(species_.get_vac_xor()) {}
+  vac_xor_(species_.get_vac_xor()),
+  rng_(time(0)) {}
 
 void Diffuser::initialize()
 {
@@ -56,7 +58,8 @@ void Diffuser::walk()
 {
   for(unsigned i(0), n(mols_.size()); i != n; ++i)
     { 
-      const unsigned vdx(comp_.get_tar(mols_[i], rng_.IntegerC(ADJS-1)));
+      //const unsigned vdx(comp_.get_tar(mols_[i], rng2_.IntegerC(ADJS-1)));
+      const unsigned vdx(comp_.get_tar(mols_[i], rng_.IRandom(0, ADJS-1)));
       /*
       if(vac_id_ == ((lattice_[vdx*nbit_/WORD] >> vdx*nbit_%WORD) & one_nbit_))
         {

@@ -8,11 +8,13 @@ SRC=\
 		Compartment\
 		Species\
 		Diffuser\
-		VisualLogger
+		VisualLogger\
+		Random
 
 IFLAGS = -I. -I$(HOME)/root/include
 LDFLAGS = -L$(HOME)/root/lib -lRandom
-CXXFLAGS = -O3 -march=native -mavx -Werror -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
+#CXXFLAGS = -O3 -march=native -mavx -Werror -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
+CXXFLAGS = -O3 -march=native -mavx -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
 CXXEFLAGS = -Wextra 
 CXX = g++
 GUILIBS = $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
