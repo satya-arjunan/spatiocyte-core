@@ -36,7 +36,6 @@ void Random::RandomInit(int seed) {
    uint32_t i;                         // Loop counter
    uint32_t y = seed;                  // Temporary
    uint32_t statesize = SFMT_N*4;      // Size of state vector
-   if (UseMother) statesize += 5;      // Add states for Mother-Of-All generator
 
    // Fill state vector with random numbers from seed
    ((uint32_t*)state)[0] = y;
@@ -127,13 +126,6 @@ void Random::RandomInitByArray(int const seeds[], int NumSeeds) {
       sta[i] = r;
       i = (i + 1) % size;
    }
-   if (UseMother) {
-      // 4. loop: Initialize MotherState
-      for (j = 0; j < 5; j++) {
-         r = func2(r) + j;
-         MotherState[j] = r + sta[2*j];
-      }
-   }
    
    // Further initialization and period certification
    Init2();
@@ -217,41 +209,7 @@ void Random::Generate() {
    ix = 0;
 }
 
-uint32_t Random::BRan() {
-   // Output 32 random bits
-   uint32_t y;
-
-   if (ix >= SFMT_N*4) {
-      Generate();
-   }
-   y = ((uint32_t*)state)[ix++];
-   if (UseMother) y += MotherBits();
-   return y;
-}
-
-uint32_t Random::MotherBits() {
-   // Get random bits from Mother-Of-All generator
-   uint64_t sum;
-   sum = 
-      (uint64_t)2111111111U * (uint64_t)MotherState[3] +
-      (uint64_t)1492 * (uint64_t)MotherState[2] +
-      (uint64_t)1776 * (uint64_t)MotherState[1] +
-      (uint64_t)5115 * (uint64_t)MotherState[0] +
-      (uint64_t)MotherState[4];
-   MotherState[3] = MotherState[2];  
-   MotherState[2] = MotherState[1];  
-   MotherState[1] = MotherState[0];
-   MotherState[4] = (uint32_t)(sum >> 32);       // Carry
-   MotherState[0] = (uint32_t)sum;               // Low 32 bits of sum
-   return MotherState[0];
-}
-
-int  Random::IRan (int min, int max) {
-   // Output random integer in the interval min <= x <= max
-   // Slightly inaccurate if (max-min+1) is not a power of 2
-   if (max <= min) {
-      if (max == min) return min; else return 0x80000000;
-   }
+int  Random::IRan(int min, int max) {
    // Assume 64 bit integers supported. Use multiply and shift method
    uint32_t interval;                  // Length of interval
    uint64_t longran;                   // Random bits * interval
@@ -263,6 +221,43 @@ int  Random::IRan (int min, int max) {
    // Convert back to signed and return result
    return (int32_t)iran + min;
 }
+
+uint32_t Random::RanUint32_12() {
+   return (uint32_t)(((uint64_t)BRan()*12) >> 32);
+}
+
+uint32_t Random::BRan() {
+   // Output 32 random bits
+   uint32_t y;
+
+   if (ix >= SFMT_N*4) {
+      Generate();
+   }
+   y = ((uint32_t*)state)[ix++];
+   return y;
+}
+
+/*
+union256i_d Random::BRan8() {
+   // Output 256 random bits
+   union256i_d y;
+   if (ix >= SFMT_N/2) {
+      Generate();
+   }
+   y.x = ((__m256i*)state)[ix++];
+   return y;
+}
+
+union256i_d Random::IRan8_12() {
+   uint32_t interval;
+   uint64_t longran;
+   uint32_t iran;
+   interval = 13;
+   longran  = (uint64_t)BRan() * interval;
+   iran = (uint32_t)(longran >> 32);
+   return (int32_t)iran;
+}
+*/
 
 int  Random::IRanX (int min, int max) {
    // Output random integer in the interval min <= x <= max
@@ -308,13 +303,6 @@ double Random::Ran() {
    }
    uint64_t r = *(uint64_t*)((uint32_t*)state+ix);
    ix += 2;
-   if (UseMother) {
-      // We need 53 bits from Mother-Of-All generator
-      // Use the regular 32 bits and the carry bits rotated
-      uint64_t r2 = (uint64_t)MotherBits() << 32;
-      r2 |= (MotherState[4] << 16) | (MotherState[4] >> 16);
-      r += r2;
-   }
    // 53 bits resolution:
    // return (int64_t)(r >> 11) * (1./(67108864.0*134217728.0)); 
    // (r >> 11)*2^(-53)

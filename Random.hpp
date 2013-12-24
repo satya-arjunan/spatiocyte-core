@@ -34,6 +34,7 @@
 
 #include <stdint.h>
 #include <emmintrin.h> //SSE2 intrinsics
+#include <immintrin.h> //AVX2 intrinsics
 
 // Choose one of the possible Mersenne exponents.
 // Higher values give longer cycle length and use more memory:
@@ -117,29 +118,33 @@
 #define SFMT_PARITY 0x00000001, 0x00000000, 0x00000000, 0x5986f054
 #endif
 
+typedef union
+{
+  __m256i x;
+  int a[8];
+} union256i_d;
+
 class Random {
 public:
-   Random(int seed, int IncludeMother = 0) {
-      UseMother = IncludeMother; 
+   Random(int seed) {
       LastInterval = 0;
       RandomInit(seed);}
    void RandomInit(int seed);
    void RandomInitByArray(int const seeds[], int NumSeeds);
-   int IRan (int min, int max);
-   int IRanX (int min, int max);
+   int IRan(int min, int max);
+   //union265i_d IRan8(int min, int max);
+   int IRanX(int min, int max);
+   uint32_t RanUint32_12();
    double Ran();
    uint32_t BRan();
 private:
    void Init2();
    void Generate();
-   uint32_t MotherBits();
    uint32_t ix;         
    uint32_t LastInterval;
    uint32_t RLimit;     
-   uint32_t UseMother; 
    __m128i mask;     
    __m128i state[SFMT_N];
-   uint32_t MotherState[5];
 };
 
 #endif /* __Random_hpp */ 
