@@ -59,7 +59,8 @@ void Diffuser::walk()
   for(unsigned i(0), n(mols_.size()); i != n; ++i)
     { 
       //const unsigned vdx(comp_.get_tar(mols_[i], rng2_.IntegerC(ADJS-1)));
-      const unsigned vdx(comp_.get_tar(mols_[i], rng_.RanUint32_12()));
+      //const unsigned vdx(comp_.get_tar(mols_[i], rng_.RanUint32_12()));
+      const unsigned vdx(comp_.get_tar(mols_[i], rng_.RanUint8_12()));
       //const unsigned vdx(comp_.get_tar(mols_[i], rng_.IRan(0, ADJS-1)));
       /*
       if(vac_id_ == ((lattice_[vdx*nbit_/WORD] >> vdx*nbit_%WORD) & one_nbit_))

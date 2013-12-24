@@ -135,8 +135,10 @@ public:
    //union265i_d IRan8(int min, int max);
    int IRanX(int min, int max);
    uint32_t RanUint32_12();
+   uint8_t RanUint8_12();
    double Ran();
    uint32_t BRan();
+   uint8_t BRan8();
 private:
    void Init2();
    void Generate();

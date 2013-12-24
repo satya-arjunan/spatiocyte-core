@@ -226,6 +226,21 @@ uint32_t Random::RanUint32_12() {
    return (uint32_t)(((uint64_t)BRan()*12) >> 32);
 }
 
+uint8_t Random::RanUint8_12() {
+   return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
+}
+
+uint8_t Random::BRan8() {
+   // Output 32 random bits
+   uint8_t y;
+
+   if (ix >= SFMT_N*16) {
+      Generate();
+   }
+   y = ((uint8_t*)state)[ix++];
+   return y;
+}
+
 uint32_t Random::BRan() {
    // Output 32 random bits
    uint32_t y;
