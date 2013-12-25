@@ -65,12 +65,13 @@ void Diffuser::walk()
 
   //std::cout << "ut:" << (uint32_t)rng_.RanUint8_12() << std::endl;
   */
-  const unsigned n(mols_.size());
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
   unsigned i(0);
-  while (i != n)
+  for(unsigned k(0); k != n; ++k)
     {
       union256i_uint16 a(rng_.Ran16());
-      for(unsigned j(0); j != 16 && i != n; ++j, ++i)
+      for(unsigned j(0); j != 16; ++j, ++i)
         {
           const unsigned vdx(comp_.get_tar(mols_[i], a.a[j]));
           if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
@@ -79,6 +80,17 @@ void Diffuser::walk()
               lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
               mols_[i] = vdx;
             }
+        }
+    }
+  union256i_uint16 a(rng_.Ran16());
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const unsigned vdx(comp_.get_tar(mols_[i], a.a[j]));
+      if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
+        {
+          lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
+          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+          mols_[i] = vdx;
         }
     }
 }
