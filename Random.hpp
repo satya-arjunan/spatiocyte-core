@@ -151,6 +151,7 @@ public:
    uint32_t BRan();
    uint8_t BRan8();
    __m128i BinRan128();
+   __m256i BinRan256();
 private:
    void Init2();
    void Generate();

@@ -56,7 +56,6 @@ void Diffuser::initialize()
 
 void Diffuser::walk()
 {
-  /*
   union256i_uint16 a(rng_.Ran16());
   for(unsigned i(0); i != 16; ++i)
     {
@@ -64,7 +63,7 @@ void Diffuser::walk()
     }
 
   //std::cout << "ut:" << (uint32_t)rng_.RanUint8_12() << std::endl;
-  */
+  /*
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
   unsigned i(0);
@@ -93,5 +92,6 @@ void Diffuser::walk()
           mols_[i] = vdx;
         }
     }
+    */
 }
 

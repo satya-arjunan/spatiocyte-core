@@ -281,12 +281,20 @@ __m128i Random::BinRan128() {
   }
   return state[ix++];
 }
+
+__m256i Random::BinRan256() {
+  if (ix >= SFMT_N/2) {
+    Generate();
+  }
+  return ((__m256i*)state)[ix++];
+}
+
+/*
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
-//y.x = _mm256_mulhi_epu16 (y.x, __m256i b);
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
 //VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
 union256i_uint16 Random::Ran16() {
-  __m128i x(BinRan128());
+  __m128i x(BinRan128()); //8bit*16numbers = 128 bits
   union256i_uint16 y;
   //Cast uint8_t to uint16_t
   y.x = _mm256_cvtepu8_epi16(x);
@@ -294,6 +302,40 @@ union256i_uint16 Random::Ran16() {
   y.x = _mm256_maddubs_epi16(y.x, const12_.x);
   //Shift right logical by 8 counts
   y.x = _mm256_srli_epi16(y.x, 8);
+  return y;
+}
+*/
+
+   //return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
+union256i_uint16 Random::Ran16() {
+  union256i_uint16 y;
+  union256i_uint16 x;
+  y.x = BinRan256();
+  x.x = y.x;
+  y.x = _mm256_mulhi_epu16 (y.x, const12_.x);
+  std::cout << "before: ";
+  cout_binary(x.x);
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << "i:" << i << std::endl;
+      uint16_t ran16(x.a[i]);
+      std::cout << "ran16:";
+      cout_binary(ran16);
+      uint32_t ran32((uint32_t)ran16);
+      std::cout << "ran32:";
+      cout_binary(ran32);
+      ran32 = ran32*12;
+      std::cout << "ran32*12:";
+      cout_binary(ran32);
+      ran32 = ran32 >> 16;
+      std::cout << "ran32 >> 16:";
+      cout_binary(ran32);
+      ran16 = (uint16_t)ran32;
+      std::cout << "ran16 final:" << ran16 << " ";
+      cout_binary(ran16);
+      //uint16_t a((uint16_t)(((uint32_t)(x.x[i])*12) >> 16));
+    }
+  std::cout << "after" << std::endl;
   return y;
 }
 
