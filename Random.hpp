@@ -42,9 +42,9 @@
 //#define MEXP  1279
 //#define MEXP  2281
 //#define MEXP  4253
-  #define MEXP 11213
+//#define MEXP 11213
 //#define MEXP 19937
-//#define MEXP 44497
+#define MEXP 44497
 
 // Define constants for the selected Mersenne exponent:
 #if MEXP == 44497
@@ -129,6 +129,12 @@ typedef union
   __m256i x;
   uint16_t a[16];
 } union256i_uint16;
+
+typedef union
+{
+  __m128i x;
+  uint8_t a[16];
+} union128i_uint8;
 
 class Random {
 public:

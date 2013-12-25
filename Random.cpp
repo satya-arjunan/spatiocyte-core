@@ -289,24 +289,68 @@ __m256i Random::BinRan256() {
   return ((__m256i*)state)[ix++];
 }
 
-/*
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
 //VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
 union256i_uint16 Random::Ran16() {
-  __m128i x(BinRan128()); //8bit*16numbers = 128 bits
+  //BinRan128(): 8bit*16numbers = 128 bits
   union256i_uint16 y;
   //Cast uint8_t to uint16_t
-  y.x = _mm256_cvtepu8_epi16(x);
-  //Multiply with 12
+  y.x = _mm256_cvtepu8_epi16(BinRan128());
+  //Multiply by 12
   y.x = _mm256_maddubs_epi16(y.x, const12_.x);
   //Shift right logical by 8 counts
   y.x = _mm256_srli_epi16(y.x, 8);
   return y;
 }
+
+/*
+union256i_uint16 Random::Ran16() {
+  //8bit*16numbers = 128 bits
+  //Cast uint8_t to uint16_t
+  union256i_uint16 y;
+  union128i_uint8 x;
+  x.x = BinRan128();
+  y.x = _mm256_cvtepu8_epi16(x.x);
+  //Multiply with 12
+  y.x = _mm256_maddubs_epi16(y.x, const12_.x);
+  //Shift right logical by 8 counts
+  y.x = _mm256_srli_epi16(y.x, 8);
+  std::cout << "before: ";
+  cout_binary(x.x);
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << "i:" << i << std::endl;
+      uint8_t ran8(x.a[i]);
+      std::cout << "ran8:";
+      cout_binary(ran8);
+      uint16_t ran16((uint16_t)ran8);
+      std::cout << "ran16:";
+      cout_binary(ran16);
+      ran16 = ran16*12;
+      std::cout << "ran16*12:";
+      cout_binary(ran16);
+      ran16 = ran16 >> 8;
+      std::cout << "ran16 >> 8:";
+      cout_binary(ran16);
+      ran8 = (uint8_t)ran16;
+      std::cout << "ran8 final: " << (uint16_t)ran8 << " ";
+      cout_binary(ran8);
+    }
+  std::cout << "after" << std::endl;
+  return y;
+}
 */
 
-   //return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
+/*
+union256i_uint16 Random::Ran16() {
+  union256i_uint16 y;
+  y.x = _mm256_mulhi_epu16(BinRan256(), const12_.x);
+  return y;
+}
+*/
+
+/*
 union256i_uint16 Random::Ran16() {
   union256i_uint16 y;
   union256i_uint16 x;
@@ -338,6 +382,7 @@ union256i_uint16 Random::Ran16() {
   std::cout << "after" << std::endl;
   return y;
 }
+*/
 
 int  Random::IRanX (int min, int max) {
    // Output random integer in the interval min <= x <= max
