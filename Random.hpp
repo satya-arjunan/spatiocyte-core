@@ -124,21 +124,33 @@ typedef union
   int a[8];
 } union256i_d;
 
+typedef union
+{
+  __m256i x;
+  uint16_t a[16];
+} union256i_uint16;
+
 class Random {
 public:
    Random(int seed) {
+     for(unsigned i(0); i != 16; ++i)
+       {
+         const12_.a[i] = 12;
+       }
       LastInterval = 0;
-      RandomInit(seed);}
+      RandomInit(seed);
+   }
    void RandomInit(int seed);
    void RandomInitByArray(int const seeds[], int NumSeeds);
    int IRan(int min, int max);
-   //union265i_d IRan8(int min, int max);
+   union256i_uint16 Ran16();
    int IRanX(int min, int max);
    uint32_t RanUint32_12();
    uint8_t RanUint8_12();
    double Ran();
    uint32_t BRan();
    uint8_t BRan8();
+   __m128i BinRan128();
 private:
    void Init2();
    void Generate();
@@ -147,6 +159,7 @@ private:
    uint32_t RLimit;     
    __m128i mask;     
    __m128i state[SFMT_N];
+   union256i_uint16 const12_;
 };
 
 #endif /* __Random_hpp */ 

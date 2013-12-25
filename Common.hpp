@@ -33,6 +33,8 @@
 
 #include <iostream>
 #include <vector>
+#include <bitset>
+#include <climits>
 
 class Compartment;
 class Diffuser;
@@ -55,5 +57,19 @@ struct Vector
   double y;
   double z;
 };
+
+template<typename T>
+void cout_binary(const T& a)
+{
+  const char* beg(reinterpret_cast<const char*>(&a));
+  const char* end(beg + sizeof(a));
+  while(1) {
+    std::cout << std::bitset<CHAR_BIT>(*--end) << ' ';
+    if(end == beg) {
+      break;
+    }
+  }
+  std::cout << std::endl;
+}
 
 #endif /* __Common_hpp */

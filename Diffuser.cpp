@@ -56,25 +56,29 @@ void Diffuser::initialize()
 
 void Diffuser::walk()
 {
-  for(unsigned i(0), n(mols_.size()); i != n; ++i)
-    { 
-      //const unsigned vdx(comp_.get_tar(mols_[i], rng2_.IntegerC(ADJS-1)));
-      //const unsigned vdx(comp_.get_tar(mols_[i], rng_.RanUint32_12()));
-      const unsigned vdx(comp_.get_tar(mols_[i], rng_.RanUint8_12()));
-      //const unsigned vdx(comp_.get_tar(mols_[i], rng_.IRan(0, ADJS-1)));
-      /*
-      if(vac_id_ == ((lattice_[vdx*nbit_/WORD] >> vdx*nbit_%WORD) & one_nbit_))
+  /*
+  union256i_uint16 a(rng_.Ran16());
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << "i:" << i << " " << a.a[i] << std::endl;
+    }
+
+  //std::cout << "ut:" << (uint32_t)rng_.RanUint8_12() << std::endl;
+  */
+  const unsigned n(mols_.size());
+  unsigned i(0);
+  while (i != n)
+    {
+      union256i_uint16 a(rng_.Ran16());
+      for(unsigned j(0); j != 16 && i != n; ++j, ++i)
         {
-          lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
-          lattice_[mols_[i]*nbit_/WORD] ^= vac_xor_ << mols_[i]*nbit_%WORD;
-          mols_[i] = vdx;
-        }
-        */
-      if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
-        {
-          lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
-          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
-          mols_[i] = vdx;
+          const unsigned vdx(comp_.get_tar(mols_[i], a.a[j]));
+          if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
+            {
+              lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
+              lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+              mols_[i] = vdx;
+            }
         }
     }
 }

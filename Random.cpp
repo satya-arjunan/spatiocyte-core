@@ -29,6 +29,7 @@
 // based on the SFMT code by Agner Fog
 //
 
+#include <Common.hpp>
 #include <Random.hpp>
 
 void Random::RandomInit(int seed) {
@@ -222,13 +223,35 @@ int  Random::IRan(int min, int max) {
    return (int32_t)iran + min;
 }
 
+
 uint32_t Random::RanUint32_12() {
    return (uint32_t)(((uint64_t)BRan()*12) >> 32);
 }
 
 uint8_t Random::RanUint8_12() {
+  uint8_t ran8(BRan8());
+  std::cout << "ran8:";
+  cout_binary(ran8);
+  uint16_t ran16((uint16_t)ran8);
+  std::cout << "ran16:";
+  cout_binary(ran16);
+  ran16 = ran16*12;
+  std::cout << "ran16*12:";
+  cout_binary(ran16);
+  ran16 = ran16 >> 8;
+  std::cout << "ran16 >> 8:";
+  cout_binary(ran16);
+  ran8 = (uint8_t)ran16;
+  std::cout << "ran8 final:";
+  cout_binary(ran8);
+  return ran8;
+}
+
+/*
+uint8_t Random::RanUint8_12() {
    return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
 }
+*/
 
 uint8_t Random::BRan8() {
    // Output 32 random bits
@@ -252,27 +275,27 @@ uint32_t Random::BRan() {
    return y;
 }
 
-/*
-union256i_d Random::BRan8() {
-   // Output 256 random bits
-   union256i_d y;
-   if (ix >= SFMT_N/2) {
-      Generate();
-   }
-   y.x = ((__m256i*)state)[ix++];
-   return y;
+__m128i Random::BinRan128() {
+  if (ix >= SFMT_N) {
+    Generate();
+  }
+  return state[ix++];
 }
-
-union256i_d Random::IRan8_12() {
-   uint32_t interval;
-   uint64_t longran;
-   uint32_t iran;
-   interval = 13;
-   longran  = (uint64_t)BRan() * interval;
-   iran = (uint32_t)(longran >> 32);
-   return (int32_t)iran;
+//VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
+//y.x = _mm256_mulhi_epu16 (y.x, __m256i b);
+//VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
+//VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
+union256i_uint16 Random::Ran16() {
+  __m128i x(BinRan128());
+  union256i_uint16 y;
+  //Cast uint8_t to uint16_t
+  y.x = _mm256_cvtepu8_epi16(x);
+  //Multiply with 12
+  y.x = _mm256_maddubs_epi16(y.x, const12_.x);
+  //Shift right logical by 8 counts
+  y.x = _mm256_srli_epi16(y.x, 8);
+  return y;
 }
-*/
 
 int  Random::IRanX (int min, int max) {
    // Output random integer in the interval min <= x <= max
