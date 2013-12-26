@@ -292,16 +292,16 @@ __m256i Random::BinRan256() {
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
 //VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
-union256i_uint16 Random::Ran16() {
+union256 Random::Ran16() {
   //BinRan128(): 8bit*16numbers = 128 bits
-  union256i_uint16 y;
   //Cast uint8_t to uint16_t
-  y.x = _mm256_cvtepu8_epi16(BinRan128());
+  union256 ran;
+  ran.m256i = _mm256_cvtepu8_epi16(BinRan128());
   //Multiply by 12
-  y.x = _mm256_maddubs_epi16(y.x, const12_.x);
+  ran.m256i = _mm256_maddubs_epi16(ran.m256i, const12_.m256i);
   //Shift right logical by 8 counts
-  y.x = _mm256_srli_epi16(y.x, 8);
-  return y;
+  ran.m256i = _mm256_srli_epi16(ran.m256i, 8);
+  return ran;
 }
 
 /*

@@ -57,10 +57,14 @@ void Diffuser::initialize()
 void Diffuser::walk()
 {
   /*
-  union256i_uint16 a(rng_.Ran16());
-  for(unsigned i(0); i != 16; ++i)
+  union256 ran, idx;
+  ran.m256i = rng_.Ran16();
+  //cast uint16_t to uint32_t
+  idx.m256i = _mm256_cvtepu16_epi32(ran.m128i[0]);
+  for(unsigned i(0); i != 8; ++i)
     {
-      std::cout << "i:" << i << " " << a.a[i] << std::endl;
+      std::cout << "i:" << i << " " << ran.uint16[i] << " " << 
+        idx.uint32[i] << std::endl;
     }
     */
 
@@ -69,10 +73,10 @@ void Diffuser::walk()
   unsigned i(0);
   for(unsigned k(0); k != n; ++k)
     {
-      union256i_uint16 a(rng_.Ran16());
+      union256 ran(rng_.Ran16());
       for(unsigned j(0); j != 16; ++j, ++i)
         {
-          const unsigned vdx(comp_.get_tar(mols_[i], a.a[j]));
+          const unsigned vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
           if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
             {
               lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
@@ -81,10 +85,10 @@ void Diffuser::walk()
             }
         }
     }
-  union256i_uint16 a(rng_.Ran16());
+  union256 ran(rng_.Ran16());
   for(unsigned j(0); j != m; ++j, ++i)
     {
-      const unsigned vdx(comp_.get_tar(mols_[i], a.a[j]));
+      const unsigned vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
       if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
         {
           lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;

@@ -120,28 +120,22 @@
 
 typedef union
 {
-  __m256i x;
-  int a[8];
-} union256i_d;
-
-typedef union
-{
-  __m256i x;
-  uint16_t a[16];
-} union256i_uint16;
-
-typedef union
-{
-  __m128i x;
-  uint8_t a[16];
-} union128i_uint8;
+  __m128i m128i[2];
+  __m256i m256i;
+  uint8_t uint8[32];
+  uint16_t uint16[16];
+  uint32_t uint32[8];
+  int8_t int8[32];
+  int16_t int16[16];
+  int32_t int32[8];
+} union256;
 
 class Random {
 public:
    Random(int seed) {
      for(unsigned i(0); i != 16; ++i)
        {
-         const12_.a[i] = 12;
+         const12_.uint16[i] = 12;
        }
       LastInterval = 0;
       RandomInit(seed);
@@ -149,7 +143,7 @@ public:
    void RandomInit(int seed);
    void RandomInitByArray(int const seeds[], int NumSeeds);
    int IRan(int min, int max);
-   union256i_uint16 Ran16();
+   union256 Ran16();
    int IRanX(int min, int max);
    uint32_t RanUint32_12();
    uint8_t RanUint8_12();
@@ -166,7 +160,7 @@ private:
    uint32_t RLimit;     
    __m128i mask;     
    __m128i state[SFMT_N];
-   union256i_uint16 const12_;
+   union256 const12_;
 };
 
 #endif /* __Random_hpp */ 
