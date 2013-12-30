@@ -43,6 +43,7 @@
 //#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+3) //correct version
 #define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+2)
 #define NUM_COLROW unsigned(NUM_COL*NUM_ROW)
+#define NUM_COLROWROW unsigned(NUM_COLROW*NUM_ROW)
 #define NUM_VOXEL unsigned(NUM_COLROW*NUM_LAY)
 
 class Compartment { 
@@ -50,6 +51,7 @@ class Compartment {
   Compartment(std::string, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
+  void set_tars(const unsigned, union256&) const;
   unsigned get_num_col() const;
   unsigned get_num_lay() const;
   unsigned get_num_row() const;
@@ -75,7 +77,7 @@ class Compartment {
   Species surface_species_;
   unsigned nbit_;
   unsigned sur_xor_;
-  std::vector<int> offsets_;
+  int* offsets_;
 };
 
 #endif /* __Compartment_hpp */

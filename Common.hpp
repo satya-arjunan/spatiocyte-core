@@ -35,6 +35,8 @@
 #include <vector>
 #include <bitset>
 #include <climits>
+#include <emmintrin.h> //SSE2 intrinsics
+#include <immintrin.h> //AVX2 intrinsics
 
 class Compartment;
 class Diffuser;
@@ -57,6 +59,18 @@ struct Vector
   double y;
   double z;
 };
+
+typedef union
+{
+  __m128i m128i[2];
+  __m256i m256i;
+  uint8_t uint8[32];
+  uint16_t uint16[16];
+  uint32_t uint32[8];
+  int8_t int8[32];
+  int16_t int16[16];
+  int32_t int32[8];
+} union256;
 
 template<typename T>
 void cout_binary(const T& a)

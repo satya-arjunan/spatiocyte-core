@@ -57,16 +57,18 @@ void Diffuser::initialize()
 void Diffuser::walk()
 {
   /*
-  union256 ran, idx;
-  ran.m256i = rng_.Ran16();
+  union256 ran(rng_.Ran16()), idx, res;
   //cast uint16_t to uint32_t
   idx.m256i = _mm256_cvtepu16_epi32(ran.m128i[0]);
+  res = idx;
+  comp_.set_tars(mols_[0], res);
   for(unsigned i(0); i != 8; ++i)
     {
       std::cout << "i:" << i << " " << ran.uint16[i] << " " << 
-        idx.uint32[i] << std::endl;
-    }
+        idx.uint32[i] << " " << res.int32[i] << std::endl;
+    } 
     */
+  
 
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);

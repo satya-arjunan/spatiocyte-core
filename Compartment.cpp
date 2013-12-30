@@ -237,15 +237,150 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
 */
 
 unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
-  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   const bool odd_lay((vdx/NUM_COLROW)&1);
+  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   //return vdx+offsets_[nrand+odd_lay*24+odd_col*12];
   return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+  /*
+  The registers:
+    rax = 64 bit
+      eax = lower 32 bits
+    rbx = 64 bit
+      ebx = lower 32 bits
+    rcx = 64 bit
+      ecx = lower 32 bits
+    rdx = 64 bit
+      edx = lower 32 bits
+    rsi = 64 bit
+      esi = lower 32 bits
+    r8 = 64 bit
+      r8d = lower 32 bits
+    r9 = 64 bit
+      r9d = lower 32 bits
+  
+  Function parameters:
+  System V AMD64 ABI[11] is followed on Solaris, GNU/Linux, FreeBSD, Mac OS X,
+    and other UNIX-like or POSIX-compliant operating systems.
+    The first six integer arguments (from the left) are passed in:
+      RDI, RSI, RDX, RCX, R8, and R9, in that order.
+      Additional integer arguments are passed on the stack.
+      These registers, plus RAX, R10 and R11 are destroyed by function calls.
+      For system calls, R10 is used instead of RCX.
+    Integer return values are passed in RAX and RDX, in that order.
+    Floating point is done using SSE registers, except for long double.
+      Floating-point arguments are passed in XMM0 to XMM7. 
+    Floating point return is XMM0 and XMM1. 
+    Long double are passed on the stack, and returned in ST0 and ST1.
+    On 64-bit Unix, long is 64 bits.
+    Integer and SSE register arguments are counted separately, 
+      so for the case of
+        void foo(long a, double b, int c)
+        a is passed in RDI, b in XMM0, and c in ESI.
+    In C++ classes, the "this" pointer is passed as the first integer parameter
+      the next three parameters are passed in the registers, while the rest
+      are passed on the stack
+
+  GNU assembler coding:
+  mnemonic source, destination
+  There are up to 4 parameters of an address operand that are presented in:
+    displacement(base register, offset register, scalar multiplier)
+    which is equivalent to:
+      base register + displacement + offset register*scalar multiplier
+  suffixes:
+    b = byte (8 bit)
+    s = short (16 bit integer) or single (32-bit floating point)
+    w = word (16 bit)
+    l = long (32 bit integer or 64-bit floating point)
+    q = quad (64 bit)
+    t = ten bytes (80-bit floating point)
+  prefixes:
+    when referencing registers, prefix it with "%"
+    when using constant numbers, prefix it with "$"
+  examples:
+  movq [rbx], rax: moves 8 bytes beginning at rbx into rax
+  movl -4(%ebp, %edx, 4), %eax: load *(ebp - 4 + (edx * 4)) into eax
+  movl -4(%ebp), %eax: load a stack variable into eax
+  movl (%ecx), %edx: copy the target of a pointer into a register
+  leal 8(,%eax,4), %eax: multiply eax by 4 and add 8
+  leal (%eax,%eax,2), %eax: multiply eax by 2 and add eax (i.e. multiply by 3)
+
+  EVEN row numbers: 
+  unsigned get_tar(const unsigned vdx, const unsigned nrand)
+  const bool odd_lay((vdx/47066)&1);
+  const bool odd_col((vdx%47066/202)&1);
+  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+
+  Corresponding assembly:
+    rdi: contains the "this" pointer
+    esi: contains vdx
+    edx: contains nrand
+    eax: will contain the return value
+
+	movl	%esi, %eax         : eax contains vdx
+	movl	$747553905, %r8d   : r8d contains the magic number of 47066: 747553905
+	movl	%edx, %r9d         : r9d contains nrand
+	mull	%r8d               : mul is unsigned multiply (page 3-586 Vol2A)
+                             edx:eax = eax*r8d, so edx:eax = vdx*747553905
+	movl	%esi, %eax         : eax contains vdx
+	shrl	$13, %edx          : unsigned divide source by 2^13 (page 4-333 Vol2B)
+                             or shift logical right by 13 times
+                             we shift by 13 times to get division result
+                             edx = edx >> 13
+                             edx = MostSignificant32bits(vdx*747553905) >> 13
+                             edx = vdx/47066
+	imull	$47066, %edx, %r8d : signed multiply (page 3-387 Vol2A)
+                             r8d = 47066*edx
+                             r8d = 47066*(vdx/47066)
+	movl	%edx, %ecx         : ecx contains vdx/47066
+	movl	$680390859, %edx   : edx contains the magic number of 202: 680390859
+	andl	$1, %ecx           : ecx = ecx&1
+                             ecx = (vdx/47066)&1
+                             ecx = odd_lay
+	negl	%ecx               : ecx = -odd_lay
+	subl	%r8d, %eax         : eax = eax-r8d
+                             eax = vdx-47066*(vdx/47066)
+                             eax = vdx%47066
+	andl	$24, %ecx          : ecx = 24&ecx
+                             ecx = 24&(-odd_lay)
+	shrl	%eax               : eax = eax/2
+                             eax = (vdx%47066)/2
+	addl	%r9d, %ecx         : ecx = ecx+r9d
+                             ecx = 24&(-odd_lay)+nrand
+	mull	%edx               : edx:eax = eax*edx
+                             edx:eax = [(vdx%47066)/2]*680390859
+	movq	22056(%rdi), %rax  : rax = this+22056
+                             rax = offset_
+	sall	$27, %edx          : shift arithmetic left
+                             multiply edx by 2 for 27 times
+                             edx = 27 << edx 
+                                 = edx*2^27
+                                 = 27 << MS32{[(vdx%47066)/2]*680390859} 
+	sarl	$31, %edx          : signed divide edx by 2 for 31 times
+                             edx = edx >> 31
+                                 = (27 << MS32{[(vdx%47066)/2]*680390859}) >> 31
+                                 = -odd_col
+	andl	$12, %edx          : edx = 12&edx
+                                 = 12&(-odd_col)
+	addl	%ecx, %edx         : edx = edx + ecx
+                                 = 12&(-odd_col)+24&(-odd_lay)+nrand
+	addl	(%rax,%rdx,4), %esi: esi = (rax+rdx*4)+esi
+                               = offset_[12&(-odd_col)+24&(-odd_lay)+nrand]+vdx
+	movl	%esi, %eax         : eax = esi
+                             return esi
+	ret
+  */
+}
+
+void Compartment::set_tars(const unsigned vdx, union256& nrand) const {
+  nrand.m256i = _mm256_i32gather_epi32(offsets_, nrand.m256i, 4);
+  std::cout << "num_colrow:" << NUM_COLROW << " num_row:" << NUM_ROW << std::endl;
+  //num_colrow: 47066
+  //num_row: 202
 }
 
 void Compartment::setOffsets() {
   //col=even, layer=even
-  offsets_.resize(ADJS*4);
+  offsets_ = new int[ADJS*4];
   offsets_[0] = -1;
   offsets_[1] = 1;
   offsets_[2] = -NUM_ROW-1;

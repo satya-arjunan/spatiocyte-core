@@ -33,8 +33,7 @@
 #define __Random_hpp
 
 #include <stdint.h>
-#include <emmintrin.h> //SSE2 intrinsics
-#include <immintrin.h> //AVX2 intrinsics
+#include <Common.hpp>
 
 // Choose one of the possible Mersenne exponents.
 // Higher values give longer cycle length and use more memory:
@@ -117,18 +116,6 @@
 #define SFMT_MASK	  0xfdff37ff, 0xef7f3f7d, 0xff777b7d, 0x7ff7fb2f
 #define SFMT_PARITY 0x00000001, 0x00000000, 0x00000000, 0x5986f054
 #endif
-
-typedef union
-{
-  __m128i m128i[2];
-  __m256i m256i;
-  uint8_t uint8[32];
-  uint16_t uint16[16];
-  uint32_t uint32[8];
-  int8_t int8[32];
-  int16_t int16[16];
-  int32_t int32[8];
-} union256;
 
 class Random {
 public:
