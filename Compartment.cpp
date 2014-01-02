@@ -50,8 +50,14 @@ void Compartment::initialize() {
   lattice_.resize(ceil(double(NUM_VOXEL)*nbit_/WORD), 0);
   set_surface();
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
-    NUM_LAY << " latticeSize:" << lattice_.size() << " memory:" << 
+    NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
+    lattice_.size() << " memory:" << 
     lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
+  for(unsigned i(0); i != 8; ++i)
+    {
+      magic_colrow_.uint32[i] = 747553905;
+      magic_row_.uint32[i] = 680390859;
+    }
 }
 
 unsigned Compartment::get_num_col() const {
@@ -240,6 +246,7 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
   const bool odd_lay((vdx/NUM_COLROW)&1);
   const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   //return vdx+offsets_[nrand+odd_lay*24+odd_col*12];
+  //return vdx+offsets_[nrand+odd_lay+odd_col];
   return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
   /*
   The registers:
@@ -253,6 +260,8 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
       edx = lower 32 bits
     rsi = 64 bit
       esi = lower 32 bits
+    rsp = 64 bit
+      esp = lower 32 bits
     r8 = 64 bit
       r8d = lower 32 bits
     r9 = 64 bit
@@ -329,6 +338,8 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
                              edx = MostSignificant32bits(vdx*747553905) >> 13
                              edx = vdx/47066
 	imull	$47066, %edx, %r8d : signed multiply (page 3-387 Vol2A)
+                             result is truncated to the size of destination
+                             register, r8d which is 32 bits
                              r8d = 47066*edx
                              r8d = 47066*(vdx/47066)
 	movl	%edx, %ecx         : ecx contains vdx/47066
@@ -371,9 +382,47 @@ unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
   */
 }
 
-void Compartment::set_tars(const unsigned vdx, union256& nrand) const {
-  nrand.m256i = _mm256_i32gather_epi32(offsets_, nrand.m256i, 4);
+void Compartment::set_tars(const __m256i* mvdx, union256& nrand) const {
+  /*
+  union256 vdx, mul;
+  //Move integer values from an aligned memory location (32 bytes total)
+  //The integers could be uint8_t, uint16_t or uint32_t
+  //We first use uint32_t, so there are 8 vdx values:
+  vdx.m256i = _mm256_load_si256(mvdx);
+  mul.m256i = _mm256_mul_epu32(vdx.m256i, magic_colrow_.m256i);
+  //[mull] multiply unsigned and store high 16 bit result
+  VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
+  //[shrl] shift right logical (set the new bits on the left as 0)
+  VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count)
+  //[imull] signed multiply and store low 16 bit result
+  VPMULLW __m256i _mm256_mullo_epi16 ( __m256i a, __m256i b);
+  //[andl] 
+  VPAND __m256i _mm256_and_si256 ( __m256i a, __m256i b)
+  //[negl] use multiply instead of &(-)
+  //[subl] m1-m2 
+  VPSUBW __m256i _mm256_sub_epi16 ( __m256i a, __m256i b)
+  //[subl] m1-m2 unsigned integers and saturation (set 256 as 255 and -1 as 0)
+  VPSUBUSW __m256i _mm256_subs_epu16(__m256i m1, __m256i m2)
+  //[addl]
+  VPADDW __m256i _mm256_add_epi16(__m256i s1, __m256i s2);
+
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << "i: " << i << " vdx:" << vdx.uint32[i] << " vdx*magic:" << vdx.uint32[i]*747553905 << " act:" << mul.uint64[i] << std::endl;
+    }
+  std::cout << "vdx:" << std::endl;
+  //extern __m256i _mm256_broadcastw_epi16(__m128i val);
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << "i: " << i << " magic:" << magic_colrow_.uint32[i] << std::endl;
+    }
+    */
+
+  //nrand.m256i = _mm256_i32gather_epi32(offsets_, nrand.m256i, 4);
+
+  /*
   std::cout << "num_colrow:" << NUM_COLROW << " num_row:" << NUM_ROW << std::endl;
+  */
   //num_colrow: 47066
   //num_row: 202
 }

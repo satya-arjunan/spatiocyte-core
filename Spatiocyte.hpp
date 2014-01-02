@@ -29,7 +29,10 @@
 //
 
 #define VOXEL_RADIUS 2.5e-9
-#define LENGTH_X 1e-6
-#define LENGTH_Y 1e-6
-#define LENGTH_Z 1e-6
+#define LENGTH_X 0.164e-6 //ncol
+#define LENGTH_Y 0.171e-6 //nrow
+#define LENGTH_Z 0.168e-6 //nlay
+//#define LENGTH_X 1e-6 //ncol
+//#define LENGTH_Y 1e-6 //nrow
+//#define LENGTH_Z 1e-6 //nlay
 #define SPECIES_MAX 3

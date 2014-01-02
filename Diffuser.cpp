@@ -61,7 +61,12 @@ void Diffuser::walk()
   //cast uint16_t to uint32_t
   idx.m256i = _mm256_cvtepu16_epi32(ran.m128i[0]);
   res = idx;
-  comp_.set_tars(mols_[0], res);
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << "mol vdx:" << mols_[i] << std::endl;
+    }
+  comp_.set_tars((__m256i*)(&mols_[0]), res);
+  /*
   for(unsigned i(0); i != 8; ++i)
     {
       std::cout << "i:" << i << " " << ran.uint16[i] << " " << 

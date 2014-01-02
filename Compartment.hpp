@@ -51,7 +51,7 @@ class Compartment {
   Compartment(std::string, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
-  void set_tars(const unsigned, union256&) const;
+  void set_tars(const __m256i*, union256&) const;
   unsigned get_num_col() const;
   unsigned get_num_lay() const;
   unsigned get_num_row() const;
@@ -78,6 +78,8 @@ class Compartment {
   unsigned nbit_;
   unsigned sur_xor_;
   int* offsets_;
+  union256 magic_colrow_;
+  union256 magic_row_;
 };
 
 #endif /* __Compartment_hpp */

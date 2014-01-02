@@ -72,6 +72,17 @@ typedef union
   int32_t int32[8];
 } union256;
 
+typedef union
+{
+  __m128i m128i;
+  uint8_t uint8[16];
+  uint16_t uint16[8];
+  uint32_t uint32[4];
+  int8_t int8[16];
+  int16_t int16[8];
+  int32_t int32[4];
+} union128;
+
 template<typename T>
 void cout_binary(const T& a)
 {
