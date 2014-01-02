@@ -83,6 +83,8 @@ typedef union
   int32_t int32[4];
 } union128;
 
+typedef uint16_t mol_t;
+
 template<typename T>
 void cout_binary(const T& a)
 {

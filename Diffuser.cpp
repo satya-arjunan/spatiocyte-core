@@ -83,7 +83,7 @@ void Diffuser::walk()
       union256 ran(rng_.Ran16());
       for(unsigned j(0); j != 16; ++j, ++i)
         {
-          const unsigned vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
+          const mol_t vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
           if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
             {
               lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
@@ -95,7 +95,7 @@ void Diffuser::walk()
   union256 ran(rng_.Ran16());
   for(unsigned j(0); j != m; ++j, ++i)
     {
-      const unsigned vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
+      const mol_t vdx(comp_.get_tar(mols_[i], ran.uint16[j]));
       if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
         {
           lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;

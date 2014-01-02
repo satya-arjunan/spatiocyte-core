@@ -61,7 +61,7 @@ void Species::populate()
 {
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
-      unsigned vdx(rng_.IntegerC(lattice_.size()*WORD/nbit_-1));
+      mol_t vdx(rng_.IntegerC(lattice_.size()*WORD/nbit_-1));
       while(lattice_[vdx*nbit_/WORD] & (1 << vdx*nbit_%WORD))
         {
           vdx = rng_.IntegerC(lattice_.size()*WORD/nbit_-1);
@@ -126,7 +126,7 @@ const std::string Species::get_init_name(const std::string name,
   return std::string(vacant.get_name()+"/"+name);
 }
 
-std::vector<unsigned>& Species::get_mols()
+std::vector<mol_t>& Species::get_mols()
 {
   return mols_;
 }

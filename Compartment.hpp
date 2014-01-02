@@ -38,13 +38,13 @@
 
 #define HCP_X double(VOXEL_RADIUS*1.7320508075688772)
 #define HCP_Z double(VOXEL_RADIUS*1.632993161855452)
-#define NUM_COL unsigned(LENGTH_X/HCP_X+3)
-#define NUM_LAY unsigned(LENGTH_Z/HCP_Z+3)
+#define NUM_COL mol_t(LENGTH_X/HCP_X+3)
+#define NUM_LAY mol_t(LENGTH_Z/HCP_Z+3)
 //#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+3) //correct version
-#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+2)
-#define NUM_COLROW unsigned(NUM_COL*NUM_ROW)
-#define NUM_COLROWROW unsigned(NUM_COLROW*NUM_ROW)
-#define NUM_VOXEL unsigned(NUM_COLROW*NUM_LAY)
+#define NUM_ROW mol_t(LENGTH_Y/VOXEL_RADIUS/2+2)
+#define NUM_COLROW mol_t(NUM_COL*NUM_ROW)
+#define NUM_COLROWROW mol_t(NUM_COLROW*NUM_ROW)
+#define NUM_VOXEL mol_t(NUM_COLROW*NUM_LAY)
 
 class Compartment { 
  public: 
@@ -52,11 +52,11 @@ class Compartment {
   ~Compartment() {}
   void initialize();
   void set_tars(const __m256i*, union256&) const;
-  unsigned get_num_col() const;
-  unsigned get_num_lay() const;
-  unsigned get_num_row() const;
-  unsigned get_num_voxel() const;
-  unsigned get_tar(const unsigned, const unsigned) const;
+  mol_t get_num_col() const;
+  mol_t get_num_lay() const;
+  mol_t get_num_row() const;
+  mol_t get_num_voxel() const;
+  mol_t get_tar(const mol_t, const unsigned) const;
   const Vector& get_center() const;
   Species& get_surface_species();
   Species& get_volume_species();
@@ -65,7 +65,7 @@ class Compartment {
   std::vector<unsigned>& get_lattice();
  private:
   void set_surface();
-  void populate_mol(const unsigned);
+  void populate_mol(const mol_t);
   void setOffsets();
  private:
   const std::string name_;

@@ -47,7 +47,7 @@ private:
   double D_;
   Species& species_;
   Compartment& comp_;
-  std::vector<unsigned>& mols_;
+  std::vector<mol_t>& mols_;
   std::vector<unsigned>& lattice_;
   const unsigned vac_id_;
   const unsigned vac_xor_;

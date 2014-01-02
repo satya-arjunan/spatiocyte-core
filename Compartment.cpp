@@ -60,189 +60,23 @@ void Compartment::initialize() {
     }
 }
 
-unsigned Compartment::get_num_col() const {
+mol_t Compartment::get_num_col() const {
   return NUM_COL;
 }
 
-unsigned Compartment::get_num_lay() const {
+mol_t Compartment::get_num_lay() const {
   return NUM_LAY;
 }
 
-unsigned Compartment::get_num_row() const {
+mol_t Compartment::get_num_row() const {
   return NUM_ROW;
 }
 
-unsigned Compartment::get_num_voxel() const {
+mol_t Compartment::get_num_voxel() const {
   return NUM_VOXEL;
 }
 
-/*
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
-{
-  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
-  const bool odd_lay((vdx/NUM_COLROW)&1);
-  switch(nrand)
-    {
-    case 1:
-      return vdx+1;
-    case 2:
-      return vdx+(odd_col^odd_lay)-NUM_ROW-1 ;
-    case 3:
-      return vdx+(odd_col^odd_lay)-NUM_ROW;
-    case 4:
-      return vdx+(odd_col^odd_lay)+NUM_ROW-1;
-    case 5:
-      return vdx+(odd_col^odd_lay)+NUM_ROW;
-    case 6:
-      return vdx+NUM_ROW*(odd_lay-NUM_COL-1)-(odd_col&odd_lay);
-    case 7:
-      return vdx+!odd_col*(odd_lay-!odd_lay)-NUM_COLROW;
-    case 8:
-      return vdx+NUM_ROW*(odd_lay-NUM_COL)+(odd_col&!odd_lay);
-    case 9:
-      return vdx+NUM_ROW*(NUM_COL-!odd_lay)-(odd_col&odd_lay);
-    case 10:
-      return vdx+NUM_COLROW+!odd_col*(odd_lay-!odd_lay);
-    case 11:
-      return vdx+NUM_ROW*(NUM_COL+odd_lay)+(odd_col&!odd_lay);
-    }
-  return vdx-1;
-}
-*/
-/*
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
-{
-  const bool odd_col((vdx%47066/202)&1);
-  const bool odd_lay((vdx/47066)&1);
-  unsigned value(0);
-  switch(nrand)
-    {
-    case 1:
-      return vdx+1;
-    case 2:
-      value = -1;
-    case 3:
-      return vdx+(odd_col^odd_lay)-202+value;
-    case 4:
-      value = -1;
-    case 5:
-      return vdx+(odd_col^odd_lay)+202+value;
-    case 6:
-      value = 94132;
-    case 7:
-      return vdx+value-47066-(odd_col&odd_lay)-202*(!odd_lay);
-    case 8:
-      value = 94132;
-    case 9:
-      return vdx+value-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 10:
-      value = 94132;
-    case 11:
-      return vdx+value-47066+(odd_col&!odd_lay)+202*odd_lay;
-    }
-  return vdx-1;
-}
-*/
-/*
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
-{
-  const bool odd_col((vdx%47066/202)&1);
-  const bool odd_lay((vdx/47066)&1);
-  switch(nrand)
-    {
-    case 1:
-      return vdx+1;
-    case 2:
-      return vdx+(odd_col^odd_lay)-nrowm_;
-    case 3:
-      return vdx+(odd_col^odd_lay)-NUM_ROW;
-    case 4:
-      return vdx+(odd_col^odd_lay)+nrowm_;
-    case 5:
-      return vdx+(odd_col^odd_lay)+NUM_ROW;
-    case 6:
-      return vdx-NUM_COLROW-(odd_col&odd_lay)-NUM_ROW*(!odd_lay);
-    case 7:
-      return vdx-NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 8:
-      return vdx-NUM_COLROW+(odd_col&!odd_lay)+NUM_ROW*odd_lay;
-    case 9:
-      return vdx+NUM_COLROW-(odd_col&odd_lay)+NUM_ROW*(!odd_lay);
-    case 10:
-      return vdx+NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 11:
-      return vdx+NUM_COLROW+(odd_col&!odd_lay)+NUM_ROW*odd_lay;
-    }
-  return vdx-1;
-}
-*/
-/*
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const
-{
-  const bool odd_col((vdx%47066/202)&1);
-  const bool odd_lay((vdx/47066)&1);
-  switch(nrand)
-    {
-    case 1:
-      return vdx+1;
-    case 2:
-      return vdx+(odd_col^odd_lay)-201;
-    case 3:
-      return vdx+(odd_col^odd_lay)-202;
-    case 4:
-      return vdx+(odd_col^odd_lay)+201;
-    case 5:
-      return vdx+(odd_col^odd_lay)+202;
-    case 6:
-      return vdx-47066-(odd_col&odd_lay)-(202&(-!odd_lay));
-    case 7:
-      return vdx-47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 8:
-      return vdx-47066+(odd_col&!odd_lay)+(202&(-odd_lay));
-    case 9:
-      return vdx+47066-(odd_col&odd_lay)-(202&(-!odd_lay));
-    case 10:
-      return vdx+47066-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 11:
-      return vdx+47066+(odd_col&!odd_lay)+(202&(-odd_lay));
-    }
-  return vdx-1;
-}
-*/
-/*
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
-  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
-  const bool odd_lay((vdx/NUM_COLROW)&1);
-  switch(nrand)
-    {
-    case 1:
-      return vdx+1;
-    case 2:
-      return vdx+(odd_col^odd_lay)-NUM_ROW-1;
-    case 3:
-      return vdx+(odd_col^odd_lay)-NUM_ROW;
-    case 4:
-      return vdx+(odd_col^odd_lay)+NUM_ROW-1;
-    case 5:
-      return vdx+(odd_col^odd_lay)+NUM_ROW;
-    case 6:
-      return vdx-NUM_COLROW-(odd_col&odd_lay)-(NUM_ROW&(-!odd_lay));
-    case 7:
-      return vdx-NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 8:
-      return vdx-NUM_COLROW+(odd_col&!odd_lay)+(NUM_ROW&(-odd_lay));
-    case 9:
-      return vdx+NUM_COLROW-(odd_col&odd_lay)-(NUM_ROW&(-!odd_lay));
-    case 10:
-      return vdx+NUM_COLROW-!(odd_col|odd_lay)+(!odd_col&odd_lay);
-    case 11:
-      return vdx+NUM_COLROW+(odd_col&!odd_lay)+(NUM_ROW&(-odd_lay));
-    }
-  return vdx-1;
-}
-*/
-
-unsigned Compartment::get_tar(const unsigned vdx, const unsigned nrand) const {
+mol_t Compartment::get_tar(const mol_t vdx, const unsigned nrand) const {
   const bool odd_lay((vdx/NUM_COLROW)&1);
   const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   //return vdx+offsets_[nrand+odd_lay*24+odd_col*12];
@@ -386,7 +220,7 @@ void Compartment::set_tars(const __m256i* mvdx, union256& nrand) const {
   /*
   union256 vdx, mul;
   //Move integer values from an aligned memory location (32 bytes total)
-  //The integers could be uint8_t, uint16_t or uint32_t
+  //The integers could be uint8_t, mol_t or uint32_t
   //We first use uint32_t, so there are 8 vdx values:
   vdx.m256i = _mm256_load_si256(mvdx);
   mul.m256i = _mm256_mul_epu32(vdx.m256i, magic_colrow_.m256i);
@@ -512,18 +346,18 @@ std::vector<unsigned>& Compartment::get_lattice() {
 
 void Compartment::set_surface() {
   //row_col xy-plane
-  for (unsigned i(0); i != NUM_COLROW; ++i) {
+  for (mol_t i(0); i != NUM_COLROW; ++i) {
       populate_mol(i);
       populate_mol(NUM_VOXEL-1-i);
     }
-  for (unsigned i(1); i != NUM_LAY-1; ++i) {
+  for (mol_t i(1); i != NUM_LAY-1; ++i) {
       //layer_row yz-plane
-      for (unsigned j(0); j != NUM_ROW; ++j) {
+      for (mol_t j(0); j != NUM_ROW; ++j) {
           populate_mol(i*NUM_COLROW+j);
           populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
         }
       //layer_col xz-plane
-      for (unsigned j(1); j != NUM_COL-1; ++j) {
+      for (mol_t j(1); j != NUM_COL-1; ++j) {
           populate_mol(i*NUM_COLROW+j*NUM_ROW);
           populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
         }
@@ -533,7 +367,7 @@ void Compartment::set_surface() {
   //std::endl;
 }
 
-void Compartment::populate_mol(const unsigned vdx) {
+void Compartment::populate_mol(const mol_t vdx) {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
   surface_species_.get_mols().push_back(vdx);
 }
