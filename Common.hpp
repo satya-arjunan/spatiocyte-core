@@ -35,6 +35,7 @@
 #include <vector>
 #include <bitset>
 #include <climits>
+#include <stdint.h>
 #include <emmintrin.h> //SSE2 intrinsics
 #include <immintrin.h> //AVX2 intrinsics
 

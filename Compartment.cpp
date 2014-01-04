@@ -214,6 +214,32 @@ mol_t Compartment::get_tar(const mol_t vdx, const unsigned nrand) const {
                              return esi
 	ret
   */
+  /*
+  num_colrow = 1440
+
+ 	movzwl	%si, %r8d
+	movl	%esi, %eax
+	movq	22056(%rdi), %rdi  : rdi = this+22056
+	imull	$11651, %r8d, %r8d
+	shrl	$24, %r8d
+	movl	%r8d, %ecx
+	imulw	$1440, %r8w, %r8w :
+	andl	$1, %ecx
+	negl	%ecx
+	subl	%r8d, %eax
+	andl	$24, %ecx
+	movzwl	%ax, %eax
+	addl	%edx, %ecx
+	movl	%esi, %edx
+	imull	$58255, %eax, %eax
+	sall	$10, %eax
+	sarl	$31, %eax
+	andl	$12, %eax
+	addl	%ecx, %eax
+	addw	(%rdi,%rax,4), %dx
+	movl	%edx, %eax
+	ret
+  */
 }
 
 void Compartment::set_tars(const __m256i* mvdx, union256& nrand) const {

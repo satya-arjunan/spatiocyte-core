@@ -47,6 +47,7 @@ int main() {
   visual_logger.push_species(model.get_comp().get_surface_species());
   visual_logger.initialize();
 
+  model.run(0.0001);
   boost::posix_time::ptime start(
       boost::posix_time::microsec_clock::universal_time()); 
   //model.run(0.0001);
