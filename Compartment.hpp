@@ -51,7 +51,7 @@ class Compartment {
   Compartment(std::string, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
-  union512 set_tars(const __m256i*, union256&) const;
+  union512 get_tars(const __m256i*, union256) const;
   umol_t get_num_col() const;
   umol_t get_num_lay() const;
   umol_t get_num_row() const;

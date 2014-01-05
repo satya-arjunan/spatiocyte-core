@@ -251,7 +251,7 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
-union512 Compartment::set_tars(const __m256i* vdx, union256& nrand) const {
+union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
   union256 arand(nrand);
   /*
   const bool odd_lay((vdx/47066)&1);
@@ -313,6 +313,7 @@ union512 Compartment::set_tars(const __m256i* vdx, union256& nrand) const {
   index =  _mm256_i32gather_epi32(offsets_, index, 4);
   //cast second 8 vdx from uint16_t to uint32_t and add with offset
   tar.m256i[1] = _mm256_add_epi32(_mm256_cvtepu16_epi32(mvdx.m128i[1]), index);
+  /*
   for(unsigned i(0); i != 16; ++i)
     {
       std::cout << "tar:" << tar.uint32[i];
@@ -321,6 +322,7 @@ union512 Compartment::set_tars(const __m256i* vdx, union256& nrand) const {
       std::cout << " actual:" << mvdx.uint16[i]+offsets_[
         arand.uint16[i]+(24&(-bodd_lay))+(12&(-bodd_col))] << std::endl;
     }
+    */
   return tar;
 }
 
