@@ -56,16 +56,16 @@ void Diffuser::initialize()
 
 void Diffuser::walk()
 {
-  /*
-  union256 ran(rng_.Ran16()), idx, res;
-  //cast uint16_t to uint32_t
-  idx.m256i = _mm256_cvtepu16_epi32(ran.m128i[0]);
-  res = idx;
-  for(unsigned i(0); i != 8; ++i)
+  union256 ran(rng_.Ran16());
+  for(unsigned i(0); i != 16; ++i)
     {
-      std::cout << "mol vdx:" << mols_[i] << std::endl;
+      std::cout << "ran:" << ran.uint16[i] << std::endl;
     }
-  comp_.set_tars((__m256i*)(&mols_[0]), res);
+  comp_.set_tars((__m256i*)(&mols_[0]), ran);
+  exit(0);
+  //cast uint16_t to uint32_t
+  //idx.m256i = _mm256_cvtepu16_epi32(ran.m128i[0]);
+  //res = idx;
   /*
   for(unsigned i(0); i != 8; ++i)
     {
@@ -73,6 +73,7 @@ void Diffuser::walk()
         idx.uint32[i] << " " << res.int32[i] << std::endl;
     } 
     */
+  /*
   
 
   const unsigned n(mols_.size()/16);
@@ -103,5 +104,6 @@ void Diffuser::walk()
           mols_[i] = vdx;
         }
     }
+    */
 }
 

@@ -63,7 +63,7 @@ int floor_log2 (UNSIGNED_WIDE_INT x) {
   return t;
 }
 
-static void encode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT low,
+void encode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT low,
     HOST_WIDE_INT hi) {
   words[0] = LOWPART (low);
   words[1] = HIGHPART (low);
@@ -71,20 +71,19 @@ static void encode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT low,
   words[3] = HIGHPART (hi);
 }
 
-static void decode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT *low,
+void decode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT *low,
     HOST_WIDE_INT *hi) {
   *low = words[0] + words[1] * BASE;
   *hi = words[2] + words[3] * BASE;
 }
 
-static int neg_double (UNSIGNED_WIDE_INT l1, HOST_WIDE_INT h1,
+int neg_double (UNSIGNED_WIDE_INT l1, HOST_WIDE_INT h1,
     UNSIGNED_WIDE_INT *lv, HOST_WIDE_INT *hv) {
   if (l1 == 0) {
     *lv = 0;
     *hv = - (UNSIGNED_WIDE_INT) h1;
     return (*hv & h1) < 0;
-  }
-  else {
+  } else {
     *lv = -l1;
     *hv = ~h1;
     return 0;
@@ -208,8 +207,7 @@ int div_and_round_double (/* enum tree_code code,*/ int uns,
       quo[i] = work / lden;
       carry = work % lden;
     }
-  }
-  else {
+  } else {
     /* Full double precision division,
      * with thanks to Don Knuth's "Seminumerical Algorithms".  */
     int num_hi_sig, den_hi_sig;
@@ -254,8 +252,7 @@ int div_and_round_double (/* enum tree_code code,*/ int uns,
       work = num[num_hi_sig] * BASE + num[num_hi_sig - 1];
       if (num[num_hi_sig] != den[den_hi_sig]) {
         quo_est = work / den[den_hi_sig];
-      }
-      else {
+      } else {
         quo_est = BASE - 1;
       } 
       /* Refine quo_est so it's usually correct, and at most one high.  */
@@ -304,8 +301,9 @@ finish_up:
   return overflow;
 }
 
-int set_const_division_param(UNSIGNED_WIDE_INT B, UNSIGNED_WIDE_INT max_A,
-    UNSIGNED_WIDE_INT *multiplier_ptr, int *shift_ptr) {
+int set_const_division_param(UNSIGNED_WIDE_INT B,
+    UNSIGNED_WIDE_INT *multiplier_ptr, UNSIGNED_WIDE_INT *shift_ptr) {
+  UNSIGNED_WIDE_INT max_A = MAX_HOST_WIDE_INT;
   UNSIGNED_WIDE_INT K, last_K, d_LB, bad_A, udummy;
   HOST_WIDE_INT high_A, dummy;
   int lgdn; 
@@ -326,8 +324,7 @@ int set_const_division_param(UNSIGNED_WIDE_INT B, UNSIGNED_WIDE_INT max_A,
   bad_A = (bad_A / B) * B; /* ... + B-1 later */
   if(high_A || bad_A > MAX_HOST_WIDE_INT - (B-1)) {
     high_A = 1; /* we aren't interested much in true value if high_A!=0 */
-  }
-  else {
+  } else {
     bad_A += B-1;
   }
   if (!high_A && bad_A <= max_A) {
@@ -365,10 +362,9 @@ int set_const_division_param(UNSIGNED_WIDE_INT B, UNSIGNED_WIDE_INT max_A,
     div_and_round_double(1, 0, 1<<lgdn, d_LB, (HOST_WIDE_INT) 0, &bad_A,
                          &high_A, &udummy, &dummy);
     bad_A = (bad_A / B) * B;
-    if(high_A || bad_A > MAX_HOST_WIDE_INT - (B-1) ) {
+    if (high_A || bad_A > MAX_HOST_WIDE_INT - (B-1) ) {
       high_A = 1; /* we aren't interested much in true value if high_A!=0 */
-    }
-    else {
+    } else {
       bad_A += B-1;
     }
     if (!high_A && bad_A <= max_A) {
@@ -382,14 +378,13 @@ int set_const_division_param(UNSIGNED_WIDE_INT B, UNSIGNED_WIDE_INT max_A,
 }
 
 void test() { 
-  UNSIGNED_WIDE_INT type, multiplier;
-  int nshift;
+  UNSIGNED_WIDE_INT type, multiplier, nshift;
   UNSIGNED_WIDE_INT quotient(0); // result
   std::cout << "MAX_HOST_WIDE_INT:" << MAX_HOST_WIDE_INT << std::endl;
-  for (UNSIGNED_WIDE_INT divisor(1); divisor != MAX_HOST_WIDE_INT; ++divisor) {
+  for (UNSIGNED_WIDE_INT divisor(1); divisor <= MAX_HOST_WIDE_INT; ++divisor) {
     std::cout << "divisor:" << divisor << std::endl;
     //n = numerator
-    for (UNSIGNED_WIDE_INT numerator(0); numerator != MAX_HOST_WIDE_INT;
+    for (UNSIGNED_WIDE_INT numerator(0); numerator <= MAX_HOST_WIDE_INT;
          ++numerator) {
       if (EXACT_POWER_OF_2_OR_ZERO_P(divisor)) {
         type = 2;
@@ -397,10 +392,8 @@ void test() {
 		    nshift = floor_log2(divisor);
         quotient = UNSIGNED_DOUBLE_WIDE_INT(multiplier)*numerator;
         quotient = quotient >> nshift;
-		  }
-      else {
-        type = set_const_division_param(divisor, MAX_HOST_WIDE_INT, &multiplier,
-                                        &nshift); 
+      } else {
+        type = set_const_division_param(divisor, &multiplier, &nshift); 
         if (type) {
           UNSIGNED_WIDE_INT tmp(0);
           --nshift;
@@ -408,8 +401,7 @@ void test() {
             HOST_BITS_PER_WIDE_INT;
           tmp = ((numerator-quotient) >> 1) + quotient;
           quotient = tmp >> nshift;
-        }
-        else {
+        } else {
           quotient = (UNSIGNED_DOUBLE_WIDE_INT(multiplier)*numerator) >>
             HOST_BITS_PER_WIDE_INT;
           quotient = quotient >> nshift;
@@ -432,9 +424,47 @@ void test() {
   }
 }
 
+void print_multiplier(UNSIGNED_WIDE_INT divisor) { 
+  UNSIGNED_WIDE_INT type, multiplier, nshift;
+  if (EXACT_POWER_OF_2_OR_ZERO_P(divisor)) {
+    type = 2;
+    multiplier = 1;
+    nshift = floor_log2(divisor);
+    /*
+    quotient = UNSIGNED_DOUBLE_WIDE_INT(multiplier)*numerator;
+    quotient = quotient >> nshift;
+    */
+  } else {
+    type = set_const_division_param(divisor, &multiplier, &nshift); 
+    if (type) {
+      --nshift;
+      /*
+      UNSIGNED_WIDE_INT tmp(0);
+      quotient = (UNSIGNED_DOUBLE_WIDE_INT(multiplier)*numerator) >> 
+        HOST_BITS_PER_WIDE_INT;
+      tmp = ((numerator-quotient) >> 1) + quotient;
+      quotient = tmp >> nshift;
+      */
+    } else {
+      /*
+      quotient = (UNSIGNED_DOUBLE_WIDE_INT(multiplier)*numerator) >>
+        HOST_BITS_PER_WIDE_INT;
+      quotient = quotient >> nshift;
+      */
+    }
+  }
+  std::cout << "divisor:" << divisor << std::endl;
+  std::cout << "host int bits:" << HOST_BITS_PER_WIDE_INT << std::endl;
+  std::cout << "type:" << type << " multiplier:" << multiplier <<
+    " nshift:" << nshift << std::endl;
+}
+
+/*
 int main() { 
-  test();
+  //test();
+  print_multiplier(1440);
   return 0;
 }
+*/
 
 

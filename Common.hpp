@@ -63,6 +63,18 @@ struct Vector
 
 typedef union
 {
+  __m128i m128i[4];
+  __m256i m256i[2];
+  uint8_t uint8[64];
+  uint16_t uint16[32];
+  uint32_t uint32[16];
+  int8_t int8[64];
+  int16_t int16[32];
+  int32_t int32[16];
+} union512;
+
+typedef union
+{
   __m128i m128i[2];
   __m256i m256i;
   uint8_t uint8[32];
@@ -84,7 +96,10 @@ typedef union
   int32_t int32[4];
 } union128;
 
-typedef uint16_t mol_t;
+typedef int16_t mol_t;
+typedef uint16_t umol_t;
+typedef int32_t mol2_t;
+typedef uint32_t umol2_t;
 
 template<typename T>
 void cout_binary(const T& a)

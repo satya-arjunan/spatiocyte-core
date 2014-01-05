@@ -32,6 +32,7 @@
 #include <Compartment.hpp>
 #include <Species.hpp>
 #include <Model.hpp>
+#include <Optimization.hpp>
 
 
 Compartment::Compartment(std::string name, const double len_x,
@@ -41,7 +42,11 @@ Compartment::Compartment(std::string name, const double len_x,
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
-    surface_species_("surface", 0, 0, model, *this, surface_species_, true) {}
+    surface_species_("surface", 0, 0, model, *this, surface_species_, true),
+    m256i_1_(_mm256_set1_epi16(1)),
+    m256i_12_(_mm256_set1_epi16(12)),
+    m256i_24_(_mm256_set1_epi16(24)),
+    m256i_num_colrow_(_mm256_set1_epi16(NUM_COLROW)) {}
 
 void Compartment::initialize() {
   setOffsets();
@@ -53,30 +58,30 @@ void Compartment::initialize() {
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
     lattice_.size() << " memory:" << 
     lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
-  for(unsigned i(0); i != 8; ++i)
-    {
-      magic_colrow_.uint32[i] = 747553905;
-      magic_row_.uint32[i] = 680390859;
-    }
+  umol_t multiplier_colrow, multiplier_row;
+  set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow_);
+  multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
+  set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row_);
+  multiplier_row_ = _mm256_set1_epi16(multiplier_row);
 }
 
-mol_t Compartment::get_num_col() const {
+umol_t Compartment::get_num_col() const {
   return NUM_COL;
 }
 
-mol_t Compartment::get_num_lay() const {
+umol_t Compartment::get_num_lay() const {
   return NUM_LAY;
 }
 
-mol_t Compartment::get_num_row() const {
+umol_t Compartment::get_num_row() const {
   return NUM_ROW;
 }
 
-mol_t Compartment::get_num_voxel() const {
+umol_t Compartment::get_num_voxel() const {
   return NUM_VOXEL;
 }
 
-mol_t Compartment::get_tar(const mol_t vdx, const unsigned nrand) const {
+umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   const bool odd_lay((vdx/NUM_COLROW)&1);
   const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   //return vdx+offsets_[nrand+odd_lay*24+odd_col*12];
@@ -240,51 +245,83 @@ mol_t Compartment::get_tar(const mol_t vdx, const unsigned nrand) const {
 	movl	%edx, %eax
 	ret
   */
+  //Move integer values from an aligned memory location (32 bytes total)
+  //The integers could be uint8_t, umol_t or uint32_t
+  //We first use uint32_t, so there are 8 vdx values:
+  //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
-void Compartment::set_tars(const __m256i* mvdx, union256& nrand) const {
+union512 Compartment::set_tars(const __m256i* vdx, union256& nrand) const {
+  union256 arand(nrand);
   /*
-  union256 vdx, mul;
-  //Move integer values from an aligned memory location (32 bytes total)
-  //The integers could be uint8_t, mol_t or uint32_t
-  //We first use uint32_t, so there are 8 vdx values:
-  vdx.m256i = _mm256_load_si256(mvdx);
-  mul.m256i = _mm256_mul_epu32(vdx.m256i, magic_colrow_.m256i);
-  //[mull] multiply unsigned and store high 16 bit result
-  VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
-  //[shrl] shift right logical (set the new bits on the left as 0)
-  VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count)
-  //[imull] signed multiply and store low 16 bit result
-  VPMULLW __m256i _mm256_mullo_epi16 ( __m256i a, __m256i b);
-  //[andl] 
-  VPAND __m256i _mm256_and_si256 ( __m256i a, __m256i b)
-  //[negl] use multiply instead of &(-)
-  //[subl] m1-m2 
-  VPSUBW __m256i _mm256_sub_epi16 ( __m256i a, __m256i b)
-  //[subl] m1-m2 unsigned integers and saturation (set 256 as 255 and -1 as 0)
-  VPSUBUSW __m256i _mm256_subs_epu16(__m256i m1, __m256i m2)
-  //[addl]
-  VPADDW __m256i _mm256_add_epi16(__m256i s1, __m256i s2);
+  const bool odd_lay((vdx/47066)&1);
+  const bool odd_col((vdx%47066/202)&1);
+  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+  */
 
-  for(unsigned i(0); i != 8; ++i)
+  //[mull] multiply unsigned and store high 16 bit result
+  //vdx*multiplier
+  __m256i quotient_colrow(_mm256_mulhi_epu16(*vdx, multiplier_colrow_));
+  //[shrl] shift right logical (set the new bits on the left as 0)
+  //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
+  quotient_colrow = _mm256_srli_epi16(quotient_colrow, nshift_colrow_);
+  __m256i odd_lay(_mm256_and_si256(quotient_colrow, m256i_1_));
+  //[imull] signed multiply and store low 16 bit result
+  //(vdx/num_colrow)*num_colrow
+  quotient_colrow = _mm256_mullo_epi16(quotient_colrow, m256i_num_colrow_);
+  //[subl] a-b 
+  //remainder = vdx-(vdx/num_colrow)*num_colrow
+  __m256i remainder_colrow(_mm256_sub_epi16(*vdx, quotient_colrow));
+  //remainder*multiplier
+  __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
+  //remainder*multiplier/2^nshift_row_
+  quotient_row = _mm256_srli_epi16(quotient_row, nshift_row_);
+  __m256i odd_col(_mm256_and_si256(quotient_row, m256i_1_));
+  /*
+  odd_lay = _mm256_mullo_epi16(odd_lay, m256i_24_);
+  odd_col = _mm256_mullo_epi16(odd_col, m256i_12_);
+  */
+  //combine 4 instructions below into:
+  //left shift 8 bit of odd_col and OR with odd_lay
+  //and maddubs
+  odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_);
+  odd_col = _mm256_maddubs_epi16(odd_col, m256i_12_);
+  nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_col);
+  nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_lay);
+  union256 mvdx;
+  mvdx.m256i = *vdx;
+  /*
+  for(unsigned i(0); i != 16; ++i)
     {
-      std::cout << "i: " << i << " vdx:" << vdx.uint32[i] << " vdx*magic:" << vdx.uint32[i]*747553905 << " act:" << mul.uint64[i] << std::endl;
-    }
-  std::cout << "vdx:" << std::endl;
-  //extern __m256i _mm256_broadcastw_epi16(__m128i val);
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << "i: " << i << " magic:" << magic_colrow_.uint32[i] << std::endl;
+      std::cout << "index:" << nrand.uint16[i];
+      const bool bodd_lay((mvdx.uint16[i]/NUM_COLROW)&1);
+      const bool bodd_col((mvdx.uint16[i]%NUM_COLROW/NUM_ROW)&1);
+      std::cout << " actual:" << 
+        arand.uint16[i]+(24&(-bodd_lay))+(12&(-bodd_col)) << std::endl;
     }
     */
-
-  //nrand.m256i = _mm256_i32gather_epi32(offsets_, nrand.m256i, 4);
-
-  /*
-  std::cout << "num_colrow:" << NUM_COLROW << " num_row:" << NUM_ROW << std::endl;
-  */
-  //num_colrow: 47066
-  //num_row: 202
+  union512 tar;
+  //cast first 8 indices from uint16_t to uint32_t
+  __m256i index(_mm256_cvtepu16_epi32(nrand.m128i[0]));
+  //get the first 8 offsets
+  index = _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast first 8 vdx from uint16_t to uint32_t and add with offset
+  tar.m256i[0] = _mm256_add_epi32(_mm256_cvtepu16_epi32(mvdx.m128i[0]), index);
+  //cast second 8 indices from uint16_t to uint32_t
+  index = _mm256_cvtepu16_epi32(nrand.m128i[1]);
+  //get the second 8 offsets
+  index =  _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast second 8 vdx from uint16_t to uint32_t and add with offset
+  tar.m256i[1] = _mm256_add_epi32(_mm256_cvtepu16_epi32(mvdx.m128i[1]), index);
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << "tar:" << tar.uint32[i];
+      const bool bodd_lay((mvdx.uint16[i]/NUM_COLROW)&1);
+      const bool bodd_col((mvdx.uint16[i]%NUM_COLROW/NUM_ROW)&1);
+      std::cout << " actual:" << mvdx.uint16[i]+offsets_[
+        arand.uint16[i]+(24&(-bodd_lay))+(12&(-bodd_col))] << std::endl;
+    }
+  return tar;
 }
 
 void Compartment::setOffsets() {
@@ -372,18 +409,18 @@ std::vector<unsigned>& Compartment::get_lattice() {
 
 void Compartment::set_surface() {
   //row_col xy-plane
-  for (mol_t i(0); i != NUM_COLROW; ++i) {
+  for (umol_t i(0); i != NUM_COLROW; ++i) {
       populate_mol(i);
       populate_mol(NUM_VOXEL-1-i);
     }
-  for (mol_t i(1); i != NUM_LAY-1; ++i) {
+  for (umol_t i(1); i != NUM_LAY-1; ++i) {
       //layer_row yz-plane
-      for (mol_t j(0); j != NUM_ROW; ++j) {
+      for (umol_t j(0); j != NUM_ROW; ++j) {
           populate_mol(i*NUM_COLROW+j);
           populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
         }
       //layer_col xz-plane
-      for (mol_t j(1); j != NUM_COL-1; ++j) {
+      for (umol_t j(1); j != NUM_COL-1; ++j) {
           populate_mol(i*NUM_COLROW+j*NUM_ROW);
           populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
         }
@@ -393,7 +430,7 @@ void Compartment::set_surface() {
   //std::endl;
 }
 
-void Compartment::populate_mol(const mol_t vdx) {
+void Compartment::populate_mol(const umol_t vdx) {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
   surface_species_.get_mols().push_back(vdx);
 }

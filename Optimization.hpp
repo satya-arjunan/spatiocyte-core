@@ -33,11 +33,16 @@
 #define __Optimization_hpp
 
 #include <Common.hpp>
-
-#define HOST_WIDE_INT int16_t 
-#define UNSIGNED_WIDE_INT uint16_t
-#define HOST_DOUBLE_WIDE_INT int32_t 
-#define UNSIGNED_DOUBLE_WIDE_INT uint32_t
+#define HOST_WIDE_INT mol_t 
+#define UNSIGNED_WIDE_INT umol_t
+#define HOST_DOUBLE_WIDE_INT mol2_t 
+#define UNSIGNED_DOUBLE_WIDE_INT umol2_t
+/*
+#define HOST_WIDE_INT int32_t 
+#define UNSIGNED_WIDE_INT uint32_t
+#define HOST_DOUBLE_WIDE_INT int64_t 
+#define UNSIGNED_DOUBLE_WIDE_INT uint64_t
+*/
 #define MAX_HOST_WIDE_INT ((UNSIGNED_WIDE_INT) (~(HOST_WIDE_INT)0))
 #define HOST_BITS_PER_WIDE_INT (sizeof(HOST_WIDE_INT)*8)
 #define HOST_BITS_PER_DOUBLE_INT (2 * HOST_BITS_PER_WIDE_INT)
@@ -51,11 +56,11 @@
   (((x) & ((x) - (UNSIGNED_WIDE_INT) 1)) == 0)
 
 int floor_log2 (UNSIGNED_WIDE_INT x);
-static void encode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT low,
+void encode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT low,
     HOST_WIDE_INT hi);
-static void decode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT *low,
+void decode (HOST_WIDE_INT *words, UNSIGNED_WIDE_INT *low,
     HOST_WIDE_INT *hi);
-static int neg_double (UNSIGNED_WIDE_INT l1, HOST_WIDE_INT h1,
+int neg_double (UNSIGNED_WIDE_INT l1, HOST_WIDE_INT h1,
     UNSIGNED_WIDE_INT *lv, HOST_WIDE_INT *hv);
 int add_double (UNSIGNED_WIDE_INT l1, HOST_WIDE_INT h1, UNSIGNED_WIDE_INT l2,
     HOST_WIDE_INT h2, UNSIGNED_WIDE_INT *lv, HOST_WIDE_INT *hv);
@@ -65,7 +70,7 @@ int div_and_round_double (int uns, UNSIGNED_WIDE_INT lnum_orig,
     HOST_WIDE_INT hnum_orig, UNSIGNED_WIDE_INT lden_orig,
     HOST_WIDE_INT hden_orig, UNSIGNED_WIDE_INT *lquo, HOST_WIDE_INT *hquo,
     UNSIGNED_WIDE_INT *lrem, HOST_WIDE_INT *hrem);
-int set_const_division_param(UNSIGNED_WIDE_INT B, UNSIGNED_WIDE_INT max_A,
-    UNSIGNED_WIDE_INT *multiplier_ptr, int *shift_ptr);
+int set_const_division_param(UNSIGNED_WIDE_INT divisor, 
+    UNSIGNED_WIDE_INT *multiplier, UNSIGNED_WIDE_INT *nshift);
 
 #endif /* __Optimization_hpp */

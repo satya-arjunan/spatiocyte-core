@@ -38,25 +38,25 @@
 
 #define HCP_X double(VOXEL_RADIUS*1.7320508075688772)
 #define HCP_Z double(VOXEL_RADIUS*1.632993161855452)
-#define NUM_COL mol_t(LENGTH_X/HCP_X+3)
-#define NUM_LAY mol_t(LENGTH_Z/HCP_Z+3)
+#define NUM_COL umol_t(LENGTH_X/HCP_X+3)
+#define NUM_LAY umol_t(LENGTH_Z/HCP_Z+3)
 //#define NUM_ROW unsigned(LENGTH_Y/VOXEL_RADIUS/2+3) //correct version
-#define NUM_ROW mol_t(LENGTH_Y/VOXEL_RADIUS/2+2)
-#define NUM_COLROW mol_t(NUM_COL*NUM_ROW)
-#define NUM_COLROWROW mol_t(NUM_COLROW*NUM_ROW)
-#define NUM_VOXEL mol_t(NUM_COLROW*NUM_LAY)
+#define NUM_ROW umol_t(LENGTH_Y/VOXEL_RADIUS/2+2)
+#define NUM_COLROW umol_t(NUM_COL*NUM_ROW)
+#define NUM_COLROWROW umol_t(NUM_COLROW*NUM_ROW)
+#define NUM_VOXEL umol_t(NUM_COLROW*NUM_LAY)
 
 class Compartment { 
  public: 
   Compartment(std::string, const double, const double, const double, Model&);
   ~Compartment() {}
   void initialize();
-  void set_tars(const __m256i*, union256&) const;
-  mol_t get_num_col() const;
-  mol_t get_num_lay() const;
-  mol_t get_num_row() const;
-  mol_t get_num_voxel() const;
-  mol_t get_tar(const mol_t, const unsigned) const;
+  union512 set_tars(const __m256i*, union256&) const;
+  umol_t get_num_col() const;
+  umol_t get_num_lay() const;
+  umol_t get_num_row() const;
+  umol_t get_num_voxel() const;
+  umol_t get_tar(const umol_t, const unsigned) const;
   const Vector& get_center() const;
   Species& get_surface_species();
   Species& get_volume_species();
@@ -65,7 +65,7 @@ class Compartment {
   std::vector<unsigned>& get_lattice();
  private:
   void set_surface();
-  void populate_mol(const mol_t);
+  void populate_mol(const umol_t);
   void setOffsets();
  private:
   const std::string name_;
@@ -78,8 +78,14 @@ class Compartment {
   unsigned nbit_;
   unsigned sur_xor_;
   int* offsets_;
-  union256 magic_colrow_;
-  union256 magic_row_;
+  const __m256i m256i_1_;
+  const __m256i m256i_12_;
+  const __m256i m256i_24_;
+  const __m256i m256i_num_colrow_;
+  __m256i multiplier_colrow_;
+  __m256i multiplier_row_;
+ umol_t nshift_colrow_;
+ umol_t nshift_row_;
 };
 
 #endif /* __Compartment_hpp */

@@ -52,7 +52,7 @@ public:
   Compartment& get_comp();
   const std::string& get_name() const;
   const std::string get_name_id() const;
-  std::vector<mol_t>& get_mols();
+  std::vector<umol_t>& get_mols();
 private:
   const std::string get_init_name(const std::string, const Compartment&,
                                   const Species&, const bool) const;
@@ -65,7 +65,7 @@ private:
   const unsigned id_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
-  std::vector<mol_t> mols_;
+  std::vector<umol_t> mols_;
   Diffuser diffuser_;
   RandomLib::Random rng_;
   unsigned nbit_;

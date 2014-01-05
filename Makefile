@@ -9,7 +9,8 @@ SRC=\
 		Species\
 		Diffuser\
 		VisualLogger\
-		Random
+		Random\
+		Optimization
 
 IFLAGS = -I. -I$(HOME)/root/include
 LDFLAGS = -L$(HOME)/root/lib -lRandom

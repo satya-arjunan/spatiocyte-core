@@ -228,25 +228,6 @@ uint32_t Random::RanUint32_12() {
    return (uint32_t)(((uint64_t)BRan()*12) >> 32);
 }
 
-uint8_t Random::RanUint8_12() {
-  uint8_t ran8(BRan8());
-  std::cout << "ran8:";
-  cout_binary(ran8);
-  uint16_t ran16((uint16_t)ran8);
-  std::cout << "ran16:";
-  cout_binary(ran16);
-  ran16 = ran16*12;
-  std::cout << "ran16*12:";
-  cout_binary(ran16);
-  ran16 = ran16 >> 8;
-  std::cout << "ran16 >> 8:";
-  cout_binary(ran16);
-  ran8 = (uint8_t)ran16;
-  std::cout << "ran8 final:";
-  cout_binary(ran8);
-  return ran8;
-}
-
 /*
 uint8_t Random::RanUint8_12() {
    return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
@@ -303,6 +284,27 @@ union256 Random::Ran16() {
   ran.m256i = _mm256_srli_epi16(ran.m256i, 8);
   return ran;
 }
+
+//Original serial code:
+uint8_t Random::RanUint8_12() {
+  uint8_t ran8(BRan8());
+  //std::cout << "ran8:";
+  //cout_binary(ran8);
+  uint16_t ran16((uint16_t)ran8);
+  //std::cout << "ran16:";
+  //cout_binary(ran16);
+  ran16 = ran16*12;
+  //std::cout << "ran16*12:";
+  //cout_binary(ran16);
+  ran16 = ran16 >> 8;
+  //std::cout << "ran16 >> 8:";
+  //cout_binary(ran16);
+  ran8 = (uint8_t)ran16;
+  //std::cout << "ran8 final:";
+  //cout_binary(ran8);
+  return ran8;
+}
+
 
 /*
 union256i_uint16 Random::Ran16() {
