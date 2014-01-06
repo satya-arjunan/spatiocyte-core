@@ -85,8 +85,8 @@ class Compartment {
   const __m256i m256i_num_colrow_;
   __m256i multiplier_colrow_;
   __m256i multiplier_row_;
- umol_t nshift_colrow_;
- umol_t nshift_row_;
+  __m128i nshift_colrow_;
+  __m128i nshift_row_;
 };
 
 #endif /* __Compartment_hpp */

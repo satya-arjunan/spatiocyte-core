@@ -59,12 +59,14 @@ void Compartment::initialize() {
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
     lattice_.size() << " memory:" << 
     lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
-  umol_t multiplier_colrow, multiplier_row;
-  set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow_);
+  umol_t multiplier_colrow, multiplier_row, nshift_colrow, nshift_row;
+  set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow);
   multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
-  set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row_);
+  nshift_colrow_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_colrow);
+  set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row);
   multiplier_row_ = _mm256_set1_epi16(multiplier_row);
-  std::cout << "shift colrow:" << nshift_colrow_ << " row:" << nshift_row_ << std::endl;
+  nshift_row_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_row);
+  std::cout << "shift colrow:" << nshift_colrow << " row:" << nshift_row << std::endl;
 }
 
 umol_t Compartment::get_num_col() const {
@@ -258,8 +260,8 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
  *  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
  *  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
  */
-void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
-    const {
+void Compartment::set_tars(const __m256i vdx, __m256i nrand,
+    uint32_t* tars) const { 
   /*
   union256 arand;
   arand.m256i = nrand;
@@ -270,7 +272,7 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
   __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
   //[shrl] shift right logical (set the new bits on the left as 0)
   //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
-  quotient_colrow = _mm256_srli_epi16(quotient_colrow, nshift_colrow_);
+  quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
   __m256i odd_lay(_mm256_and_si256(quotient_colrow, m256i_1_));
   //[imull] signed multiply and store low 16 bit result
   //(vdx/num_colrow)*num_colrow
@@ -281,7 +283,7 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
   //remainder*multiplier
   __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
   //remainder*multiplier/2^nshift_row_
-  quotient_row = _mm256_srli_epi16(quotient_row, nshift_row_);
+  quotient_row = _mm256_srl_epi16(quotient_row, nshift_row_);
   __m256i odd_col(_mm256_and_si256(quotient_row, m256i_1_));
   /*
   odd_lay = _mm256_mullo_epi16(odd_lay, m256i_24_);
@@ -289,6 +291,7 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
   */
   //combine 4 instructions below into:
   //left shift 8 bits (1 byte) of odd_lay
+  //odd_lay = _mm256_slli_epi16(odd_lay, 8);
   odd_lay = _mm256_slli_si256(odd_lay, 1);
   //OR odd_lay with odd_col
   odd_lay = _mm256_or_si256(odd_lay, odd_col);
@@ -330,9 +333,11 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
     _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
                      index);
   /*
+  union256 mvdx;
+  mvdx.m256i = vdx;
   for(unsigned i(0); i != 16; ++i)
     {
-      std::cout << "tar:" << tar.uint32[i];
+      std::cout << "tar:" << tars[i];
       const bool bodd_lay((mvdx.uint16[i]/NUM_COLROW)&1);
       const bool bodd_col((mvdx.uint16[i]%NUM_COLROW/NUM_ROW)&1);
       std::cout << " actual:" << mvdx.uint16[i]+offsets_[
