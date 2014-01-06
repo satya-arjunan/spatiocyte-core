@@ -44,6 +44,7 @@ Compartment::Compartment(std::string name, const double len_x,
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
     surface_species_("surface", 0, 0, model, *this, surface_species_, true),
     m256i_1_(_mm256_set1_epi16(1)),
+    m256i_m1_(_mm256_set1_epi16(-1)),
     m256i_12_(_mm256_set1_epi16(12)),
     m256i_24_(_mm256_set1_epi16(24)),
     m256i_24_12_(_mm256_or_si256(_mm256_slli_si256(m256i_24_, 1), m256i_12_)),
@@ -292,11 +293,21 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand,
   //combine 4 instructions below into:
   //left shift 8 bits (1 byte) of odd_lay
   //odd_lay = _mm256_slli_epi16(odd_lay, 8);
+  //Option 1
+  /*
   odd_lay = _mm256_slli_si256(odd_lay, 1);
   //OR odd_lay with odd_col
   odd_lay = _mm256_or_si256(odd_lay, odd_col);
   odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_12_);
   nrand = _mm256_add_epi16(nrand, odd_lay);
+  */
+  //Option 2 faster
+  odd_lay = _mm256_sign_epi16(odd_lay, m256i_m1_);
+  odd_lay = _mm256_and_si256(odd_lay, m256i_24_);
+  odd_col = _mm256_sign_epi16(odd_col, m256i_m1_);
+  odd_col = _mm256_and_si256(odd_col, m256i_12_);
+  nrand = _mm256_add_epi16(nrand, odd_lay);
+  nrand = _mm256_add_epi16(nrand, odd_col);
   /*
   odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_);
   odd_col = _mm256_maddubs_epi16(odd_col, m256i_12_);

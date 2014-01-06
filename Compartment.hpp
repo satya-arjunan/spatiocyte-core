@@ -79,6 +79,7 @@ class Compartment {
   unsigned sur_xor_;
   int* offsets_;
   const __m256i m256i_1_;
+  const __m256i m256i_m1_;
   const __m256i m256i_12_;
   const __m256i m256i_24_;
   const __m256i m256i_24_12_;

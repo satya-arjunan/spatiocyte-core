@@ -107,4 +107,10 @@ void Diffuser::walk()
         }
     }
 }
-
+/*
+VPACKSSWB __m256i _mm256_packs_epi16(__m256i m1, __m256i m2)
+VPACKSSDW instruction (VEX.256 encoded version)
+  DEST[15:0] ? SaturateSignedDwordToSignedWord (SRC1[31:0]);
+  DEST[31:16] ? SaturateSignedDwordToSignedWord (SRC1[63:32]);
+  DEST[47:32] ? SaturateSignedDwordToSignedWord (SRC1[95:64]);
+  */
