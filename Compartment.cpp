@@ -46,6 +46,7 @@ Compartment::Compartment(std::string name, const double len_x,
     m256i_1_(_mm256_set1_epi16(1)),
     m256i_12_(_mm256_set1_epi16(12)),
     m256i_24_(_mm256_set1_epi16(24)),
+    m256i_24_12_(_mm256_or_si256(_mm256_slli_si256(m256i_24_, 1), m256i_12_)),
     m256i_num_colrow_(_mm256_set1_epi16(NUM_COLROW)) {}
 
 void Compartment::initialize() {
@@ -63,6 +64,7 @@ void Compartment::initialize() {
   multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
   set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row_);
   multiplier_row_ = _mm256_set1_epi16(multiplier_row);
+  std::cout << "shift colrow:" << nshift_colrow_ << " row:" << nshift_row_ << std::endl;
 }
 
 umol_t Compartment::get_num_col() const {
@@ -251,17 +253,21 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
-union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
-  union256 arand(nrand);
+/*AVX2 SIMD implementation of:
+ *  const bool odd_lay((vdx/NUM_COLROW)&1);
+ *  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
+ *  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+ */
+void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars)
+    const {
   /*
-  const bool odd_lay((vdx/47066)&1);
-  const bool odd_col((vdx%47066/202)&1);
-  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+  union256 arand;
+  arand.m256i = nrand;
   */
 
   //[mull] multiply unsigned and store high 16 bit result
   //vdx*multiplier
-  __m256i quotient_colrow(_mm256_mulhi_epu16(*vdx, multiplier_colrow_));
+  __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
   //[shrl] shift right logical (set the new bits on the left as 0)
   //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
   quotient_colrow = _mm256_srli_epi16(quotient_colrow, nshift_colrow_);
@@ -271,7 +277,7 @@ union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
   quotient_colrow = _mm256_mullo_epi16(quotient_colrow, m256i_num_colrow_);
   //[subl] a-b 
   //remainder = vdx-(vdx/num_colrow)*num_colrow
-  __m256i remainder_colrow(_mm256_sub_epi16(*vdx, quotient_colrow));
+  __m256i remainder_colrow(_mm256_sub_epi16(vdx, quotient_colrow));
   //remainder*multiplier
   __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
   //remainder*multiplier/2^nshift_row_
@@ -282,15 +288,21 @@ union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
   odd_col = _mm256_mullo_epi16(odd_col, m256i_12_);
   */
   //combine 4 instructions below into:
-  //left shift 8 bit of odd_col and OR with odd_lay
-  //and maddubs
+  //left shift 8 bits (1 byte) of odd_lay
+  odd_lay = _mm256_slli_si256(odd_lay, 1);
+  //OR odd_lay with odd_col
+  odd_lay = _mm256_or_si256(odd_lay, odd_col);
+  odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_12_);
+  nrand = _mm256_add_epi16(nrand, odd_lay);
+  /*
   odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_);
   odd_col = _mm256_maddubs_epi16(odd_col, m256i_12_);
   nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_col);
   nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_lay);
-  union256 mvdx;
-  mvdx.m256i = *vdx;
+  */
   /*
+  union256 mvdx;
+  mvdx.m256i = vdx;
   for(unsigned i(0); i != 16; ++i)
     {
       std::cout << "index:" << nrand.uint16[i];
@@ -299,20 +311,24 @@ union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
       std::cout << " actual:" << 
         arand.uint16[i]+(24&(-bodd_lay))+(12&(-bodd_col)) << std::endl;
     }
-    */
-  union512 tar;
+  exit(0);
+  */
   //cast first 8 indices from uint16_t to uint32_t
-  __m256i index(_mm256_cvtepu16_epi32(nrand.m128i[0]));
+  __m256i index(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(nrand)));
   //get the first 8 offsets
   index = _mm256_i32gather_epi32(offsets_, index, 4);
   //cast first 8 vdx from uint16_t to uint32_t and add with offset
-  tar.m256i[0] = _mm256_add_epi32(_mm256_cvtepu16_epi32(mvdx.m128i[0]), index);
+  *(__m256i*)(tars) = 
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
+                                                     
   //cast second 8 indices from uint16_t to uint32_t
-  index = _mm256_cvtepu16_epi32(nrand.m128i[1]);
+  index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
   //get the second 8 offsets
   index =  _mm256_i32gather_epi32(offsets_, index, 4);
   //cast second 8 vdx from uint16_t to uint32_t and add with offset
-  tar.m256i[1] = _mm256_add_epi32(_mm256_cvtepu16_epi32(mvdx.m128i[1]), index);
+  *(__m256i*)(&tars[8]) =
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
+                     index);
   /*
   for(unsigned i(0); i != 16; ++i)
     {
@@ -322,8 +338,8 @@ union512 Compartment::get_tars(const __m256i* vdx, union256 nrand) const {
       std::cout << " actual:" << mvdx.uint16[i]+offsets_[
         arand.uint16[i]+(24&(-bodd_lay))+(12&(-bodd_col))] << std::endl;
     }
-    */
-  return tar;
+  exit(0);
+  */
 }
 
 void Compartment::setOffsets() {

@@ -80,12 +80,13 @@ void Diffuser::walk()
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
   unsigned i(0);
+  uint32_t tars[16];
   for(unsigned k(0); k != n; ++k)
     {
-      union512 tars(comp_.get_tars((__m256i*)(&mols_[i]), rng_.Ran16()));
+      comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
       for(unsigned j(0); j != 16; ++j, ++i)
         {
-          const uint32_t vdx(tars.uint32[j]);
+          const uint32_t vdx(tars[j]);
           if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
             {
               lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
@@ -94,10 +95,10 @@ void Diffuser::walk()
             }
         }
     }
-  union512 tars(comp_.get_tars((__m256i*)(&mols_[i]), rng_.Ran16()));
+  comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
   for(unsigned j(0); j != m; ++j, ++i)
     {
-      const uint32_t vdx(tars.uint32[j]);
+      const uint32_t vdx(tars[j]);
       if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
         {
           lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;

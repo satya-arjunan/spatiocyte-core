@@ -273,16 +273,14 @@ __m256i Random::BinRan256() {
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
 //VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
-union256 Random::Ran16() {
+__m256i Random::Ran16() {
   //BinRan128(): 8bit*16numbers = 128 bits
   //Cast uint8_t to uint16_t
-  union256 ran;
-  ran.m256i = _mm256_cvtepu8_epi16(BinRan128());
+  __m256i ran(_mm256_cvtepu8_epi16(BinRan128()));
   //Multiply by 12
-  ran.m256i = _mm256_maddubs_epi16(ran.m256i, const12_.m256i);
+  ran = _mm256_maddubs_epi16(ran, const12_.m256i);
   //Shift right logical by 8 counts
-  ran.m256i = _mm256_srli_epi16(ran.m256i, 8);
-  return ran;
+  return _mm256_srli_epi16(ran, 8);
 }
 
 //Original serial code:

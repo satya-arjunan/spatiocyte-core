@@ -130,7 +130,7 @@ public:
    void RandomInit(int seed);
    void RandomInitByArray(int const seeds[], int NumSeeds);
    int IRan(int min, int max);
-   union256 Ran16();
+   __m256i Ran16();
    int IRanX(int min, int max);
    uint32_t RanUint32_12();
    uint8_t RanUint8_12();
