@@ -55,6 +55,7 @@ void Compartment::initialize() {
   nbit_ = model_.get_nbit();
   sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
   lattice_.resize(ceil(double(NUM_VOXEL)*nbit_/WORD), 0);
+  //lattice_.resize(NUM_VOXEL, 0);
   set_surface();
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
@@ -466,6 +467,7 @@ void Compartment::set_surface() {
 
 void Compartment::populate_mol(const umol_t vdx) {
   lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
+  //lattice_[vdx] = surface_species_.get_id();
   surface_species_.get_mols().push_back(vdx);
 }
 

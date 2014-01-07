@@ -49,12 +49,13 @@ private:
   Compartment& comp_;
   std::vector<umol_t>& mols_;
   std::vector<voxel_t>& lattice_;
-  const unsigned vac_id_;
-  const unsigned vac_xor_;
+  const voxel_t species_id_;
+  const voxel_t vac_id_;
+  const voxel_t vac_xor_;
   Random rng_;
   RandomLib::Random rng2_;
-  unsigned nbit_;
-  unsigned one_nbit_;
+  voxel_t nbit_;
+  voxel_t one_nbit_;
 };
 
 #endif /* __Diffuser_hpp */

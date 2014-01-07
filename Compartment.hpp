@@ -75,8 +75,8 @@ class Compartment {
   Model& model_;
   Species volume_species_;
   Species surface_species_;
-  unsigned nbit_;
-  unsigned sur_xor_;
+  voxel_t nbit_;
+  voxel_t sur_xor_;
   mol2_t* offsets_;
   const __m256i m256i_1_;
   const __m256i m256i_m1_;

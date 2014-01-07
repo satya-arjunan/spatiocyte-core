@@ -39,6 +39,7 @@ Diffuser::Diffuser(const double D, Species& species):
   comp_(species_.get_comp()),
   mols_(species_.get_mols()),
   lattice_(comp_.get_lattice()),
+  species_id_(species_.get_id()),
   vac_id_(species_.get_vac_id()),
   vac_xor_(species_.get_vac_xor()),
   rng_(time(0)) {}
@@ -76,7 +77,6 @@ void Diffuser::walk()
     } 
     */
   
-
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
   unsigned i(0);
@@ -106,6 +106,37 @@ void Diffuser::walk()
           mols_[i] = vdx;
         }
     }
+  /*
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  uint32_t tars[16];
+  for(unsigned k(0); k != n; ++k)
+    {
+      comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+      for(unsigned j(0); j != 16; ++j, ++i)
+        {
+          const uint32_t vdx(tars[j]);
+          if(lattice_[vdx] == vac_id_)
+            {
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+    }
+  comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint32_t vdx(tars[j]);
+      if(lattice_[vdx] == vac_id_)
+        {
+          lattice_[vdx] = species_id_;
+          lattice_[mols_[i]] = vac_id_;
+          mols_[i] = vdx;
+        }
+    }
+    */
 }
 /*
 VPACKSSWB __m256i _mm256_packs_epi16(__m256i m1, __m256i m2)

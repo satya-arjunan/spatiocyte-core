@@ -45,9 +45,9 @@ public:
   void initialize();
   void populate();
   bool is_comp_vacant() const;
-  unsigned get_id() const;
-  unsigned get_vac_id() const;
-  unsigned get_vac_xor() const;
+  voxel_t get_id() const;
+  voxel_t get_vac_id() const;
+  voxel_t get_vac_xor() const;
   Diffuser& get_diffuser();
   Compartment& get_comp();
   const std::string& get_name() const;
@@ -62,13 +62,13 @@ private:
   Species& vacant_;
   const bool is_comp_vacant_;
   std::vector<voxel_t>& lattice_;
-  const unsigned id_;
-  const unsigned vac_id_;
-  const unsigned vac_xor_;
+  const voxel_t id_;
+  const voxel_t vac_id_;
+  const voxel_t vac_xor_;
   std::vector<umol_t> mols_;
   Diffuser diffuser_;
   RandomLib::Random rng_;
-  unsigned nbit_;
+  voxel_t nbit_;
 };
 
 #endif /* __Species_hpp */
