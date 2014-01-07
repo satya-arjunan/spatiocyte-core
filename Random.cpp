@@ -278,7 +278,7 @@ __m256i Random::Ran16() {
   //Cast uint8_t to uint16_t
   __m256i ran(_mm256_cvtepu8_epi16(BinRan128()));
   //Multiply by 12
-  ran = _mm256_maddubs_epi16(ran, const12_.m256i);
+  ran = _mm256_maddubs_epi16(ran, m256i_12_);
   //Shift right logical by 8 counts
   return _mm256_srli_epi16(ran, 8);
 }

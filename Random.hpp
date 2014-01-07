@@ -119,14 +119,12 @@
 
 class Random {
 public:
-   Random(int seed) {
-     for(unsigned i(0); i != 16; ++i)
-       {
-         const12_.uint16[i] = 12;
-       }
-      LastInterval = 0;
-      RandomInit(seed);
-   }
+  Random(int seed)
+     : LastInterval(0),
+       m256i_12_(_mm256_set1_epi16(12))
+  {
+    RandomInit(seed);
+  }
    void RandomInit(int seed);
    void RandomInitByArray(int const seeds[], int NumSeeds);
    int IRan(int min, int max);
@@ -147,7 +145,7 @@ private:
    uint32_t RLimit;     
    __m128i mask;     
    __m128i state[SFMT_N];
-   union256 const12_;
+   __m256i m256i_12_;
 };
 
 #endif /* __Random_hpp */ 
