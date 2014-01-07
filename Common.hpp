@@ -46,8 +46,6 @@ class Species;
 class Stepper;
 class VisualLogger;
 
-#define TYPE unsigned
-#define WORD (sizeof(TYPE)*8)
 #define ADJS 12
 
 struct Vector
@@ -95,6 +93,9 @@ typedef union
   int16_t int16[8];
   int32_t int32[4];
 } union128;
+
+typedef uint8_t voxel_t;
+#define WORD (sizeof(voxel_t)*8)
 
 typedef int16_t mol_t;
 typedef uint16_t umol_t;

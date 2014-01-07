@@ -48,7 +48,7 @@ private:
   Species& species_;
   Compartment& comp_;
   std::vector<umol_t>& mols_;
-  std::vector<unsigned>& lattice_;
+  std::vector<voxel_t>& lattice_;
   const unsigned vac_id_;
   const unsigned vac_xor_;
   Random rng_;

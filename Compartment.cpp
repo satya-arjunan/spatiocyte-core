@@ -59,7 +59,7 @@ void Compartment::initialize() {
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
     lattice_.size() << " memory:" << 
-    lattice_.size()*sizeof(unsigned)/(1024*1024.0) << " MB" << std::endl;
+    lattice_.size()*sizeof(voxel_t)/(1024*1024.0) << " MB" << std::endl;
   umol_t multiplier_colrow, multiplier_row, nshift_colrow, nshift_row;
   set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow);
   multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
@@ -437,7 +437,7 @@ const std::string& Compartment::get_name() const {
   return name_;
 }
 
-std::vector<unsigned>& Compartment::get_lattice() {
+std::vector<voxel_t>& Compartment::get_lattice() {
   return lattice_;
 }
 
