@@ -103,12 +103,28 @@ typedef int32_t mol2_t;
 typedef uint32_t umol2_t;
 
 template<typename T>
-void cout_binary(const T& a)
+void cout_binary(const T& a, const std::string str)
 {
+  std::cout << str << ": ";
   const char* beg(reinterpret_cast<const char*>(&a));
   const char* end(beg + sizeof(a));
   while(1) {
     std::cout << std::bitset<CHAR_BIT>(*--end) << ' ';
+    if(end == beg) {
+      break;
+    }
+  }
+  std::cout << std::endl;
+}
+
+template<typename T>
+void cout_uint8(const T& a, const std::string str)
+{
+  const uint8_t* beg(reinterpret_cast<const uint8_t*>(&a));
+  const uint8_t* end(beg + sizeof(a));
+  std::cout << str << ": ";
+  while(1) {
+    std::cout << (uint32_t)(*--end) << ' ';
     if(end == beg) {
       break;
     }

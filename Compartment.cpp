@@ -262,8 +262,7 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
  *  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
  *  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
  */
-void Compartment::set_tars(const __m256i vdx, __m256i nrand,
-    uint32_t* tars) const { 
+__m256i Compartment::set_tars(const __m256i vdx, __m256i nrand) const { 
   /*
   union256 arand;
   arand.m256i = nrand;
@@ -333,23 +332,25 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand,
   //get the first 8 offsets
   index = _mm256_i32gather_epi32(offsets_, index, 4);
   //cast first 8 vdx from uint16_t to uint32_t and add with offset
-  *(__m256i*)(tars) = 
-    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
+  __m256i tar1 = _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
                                                      
   //cast second 8 indices from uint16_t to uint32_t
   index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
   //get the second 8 offsets
   index =  _mm256_i32gather_epi32(offsets_, index, 4);
   //cast second 8 vdx from uint16_t to uint32_t and add with offset
-  *(__m256i*)(&tars[8]) =
+  __m256i tar2 =
     _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
                      index);
+  tar2 = _mm256_packus_epi32(tar1, tar2);
+  return _mm256_permute4x64_epi64(tar2, 216);
   /*
+
   union256 mvdx;
   mvdx.m256i = vdx;
   for(unsigned i(0); i != 16; ++i)
     {
-      std::cout << "tar:" << tars[i];
+      std::cout << "tar:" << ((uint16_t*)&tar2)[i];
       const bool bodd_lay((mvdx.uint16[i]/NUM_COLROW)&1);
       const bool bodd_col((mvdx.uint16[i]%NUM_COLROW/NUM_ROW)&1);
       std::cout << " actual:" << mvdx.uint16[i]+offsets_[
