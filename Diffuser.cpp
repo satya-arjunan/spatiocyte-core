@@ -38,7 +38,6 @@ Diffuser::Diffuser(const double D, Species& species):
   species_(species),
   comp_(species_.get_comp()),
   mols_(species_.get_mols()),
-  lattice_(comp_.get_lattice()),
   species_id_(species_.get_id()),
   vac_id_(species_.get_vac_id()),
   vac_xor_(species_.get_vac_xor()),
@@ -46,6 +45,7 @@ Diffuser::Diffuser(const double D, Species& species):
 
 void Diffuser::initialize()
 {
+  lattice_ = comp_.get_lattice();
   nbit_ = species_.get_comp().get_model().get_nbit();
   one_nbit_ = pow(2, nbit_)-1;
   std::cout << species_.get_name_id() << std::endl;
@@ -85,15 +85,44 @@ void Diffuser::walk()
       __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
       __m256i quos(_mm256_srli_epi16(tars, 4));
       __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
-      for(unsigned j(0); j != 16; ++j, ++i)
+      //cast first 8 quos from uint16_t to uint32_t 
+      __m256i rem(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(rems)));
+      __m256i quo(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(quos)));
+      __m256i vox(_mm256_i32gather_epi32(lattice_, quo, 4));
+      __m256i val(_mm256_srlv_epi32(vox, rem));
+      val = _mm256_and_si256(val,_mm256_set1_epi32(3));
+      for(unsigned j(0); j != 8; ++j, ++i)
         {
-          const uint16_t quo(((uint16_t*)&quos)[j]);
-          const uint16_t rem(((uint16_t*)&rems)[j]);
-          if(0 == ((lattice_[quo] >> rem) & 3))
+          const uint32_t voxel(((uint32_t*)&val)[j]);
+          if(!voxel)
             {
-              lattice_[quo] ^= 2 << rem;
+              const uint16_t quo1(((uint16_t*)&quos)[j]);
+              const uint16_t rem1(((uint16_t*)&rems)[j]);
+              const uint16_t vdx1(((uint16_t*)&tars)[j]);
+              lattice_[quo1] ^= 2 << rem1;
               lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
-              mols_[i] = ((uint16_t*)&tars)[j];
+              //mols_[i] = ((uint16_t*)&tars)[j];
+              mols_[i] = vdx1;
+            }
+        }
+      //cast second 8 quos from uint16_t to uint32_t 
+      rem = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(rems, 1));
+      quo = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(quos, 1));
+      vox = _mm256_i32gather_epi32(lattice_, quo, 4);
+      val = _mm256_srlv_epi32(vox, rem);
+      val = _mm256_and_si256(val,_mm256_set1_epi32(3));
+      for(unsigned j(8); j != 16; ++j, ++i)
+        {
+          const uint32_t voxel(((uint32_t*)&val)[j-8]);
+          if(!voxel)
+            {
+              const uint16_t quo1(((uint16_t*)&quos)[j]);
+              const uint16_t rem1(((uint16_t*)&rems)[j]);
+              const uint16_t vdx1(((uint16_t*)&tars)[j]);
+              lattice_[quo1] ^= 2 << rem1;
+              lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+              //mols_[i] = ((uint16_t*)&tars)[j];
+              mols_[i] = vdx1;
             }
         }
     }
@@ -108,6 +137,41 @@ void Diffuser::walk()
           mols_[i] = vdx;
         }
     }
+  /*
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  for(unsigned k(0); k != n; ++k)
+    {
+      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i quos(_mm256_srli_epi16(tars, 4));
+      __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
+      for(unsigned j(0); j != 16; ++j, ++i)
+        {
+          const uint16_t quo(((uint16_t*)&quos)[j]);
+          const uint16_t rem(((uint16_t*)&rems)[j]);
+          //const uint16_t vdx(((uint16_t*)&tars)[j]);
+          if(0 == ((lattice_[quo] >> rem) & 3))
+            {
+              lattice_[quo] ^= 2 << rem;
+              lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+              mols_[i] = ((uint16_t*)&tars)[j];
+              //mols_[i] = vdx;
+            }
+        }
+    }
+  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint16_t vdx(((uint16_t*)&tars)[j]);
+      if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
+        {
+          lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
+          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+          mols_[i] = vdx;
+        }
+    }
+    */
   /*
   __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
   __m256i quos(_mm256_srli_epi16(tars, 4));
@@ -187,10 +251,3 @@ void Diffuser::walk()
     }
     */
 }
-/*
-VPACKSSWB __m256i _mm256_packs_epi16(__m256i m1, __m256i m2)
-VPACKSSDW instruction (VEX.256 encoded version)
-  DEST[15:0] ? SaturateSignedDwordToSignedWord (SRC1[31:0]);
-  DEST[31:16] ? SaturateSignedDwordToSignedWord (SRC1[63:32]);
-  DEST[47:32] ? SaturateSignedDwordToSignedWord (SRC1[95:64]);
-  */

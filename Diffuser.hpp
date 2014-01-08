@@ -48,7 +48,7 @@ private:
   Species& species_;
   Compartment& comp_;
   std::vector<umol_t>& mols_;
-  std::vector<voxel_t>& lattice_;
+  int* lattice_;
   const voxel_t species_id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;

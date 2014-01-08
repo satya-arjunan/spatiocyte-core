@@ -56,13 +56,14 @@ class Compartment {
   umol_t get_num_lay() const;
   umol_t get_num_row() const;
   umol_t get_num_voxel() const;
+  umol_t get_lattice_size() const;
   umol_t get_tar(const umol_t, const unsigned) const;
   const Vector& get_center() const;
   Species& get_surface_species();
   Species& get_volume_species();
   Model& get_model();
   const std::string& get_name() const;
-  std::vector<voxel_t>& get_lattice();
+  int* get_lattice();
  private:
   void set_surface();
   void populate_mol(const umol_t);
@@ -71,7 +72,8 @@ class Compartment {
   const std::string name_;
   const Vector length_;
   const Vector center_;
-  std::vector<voxel_t> lattice_;
+  umol_t lattice_size_;
+  int* lattice_;
   Model& model_;
   Species volume_species_;
   Species surface_species_;

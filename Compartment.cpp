@@ -28,6 +28,7 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#include <cstring>
 #include <math.h>
 #include <Compartment.hpp>
 #include <Species.hpp>
@@ -54,13 +55,16 @@ void Compartment::initialize() {
   setOffsets();
   nbit_ = model_.get_nbit();
   sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
-  lattice_.resize(ceil(double(NUM_VOXEL)*nbit_/WORD), 0);
-  //lattice_.resize(NUM_VOXEL, 0);
+  lattice_size_ = ceil(double(NUM_VOXEL)*nbit_/WORD);
+  lattice_ = new int[lattice_size_];
+  //lattice_size_ = NUM_VOXEL;
+  //lattice_ = new int[NUM_VOXEL];
+  memset(lattice_, 0, sizeof(int)*lattice_size_);
   set_surface();
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
-    lattice_.size() << " memory:" << 
-    lattice_.size()*sizeof(voxel_t)/(1024*1024.0) << " MB" << std::endl;
+    lattice_size_ << " memory:" << 
+    lattice_size_*sizeof(voxel_t)/(1024*1024.0) << " MB" << std::endl;
   umol_t multiplier_colrow, multiplier_row, nshift_colrow, nshift_row;
   set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow);
   multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
@@ -85,6 +89,10 @@ umol_t Compartment::get_num_row() const {
 
 umol_t Compartment::get_num_voxel() const {
   return NUM_VOXEL;
+}
+
+umol_t Compartment::get_lattice_size() const {
+  return lattice_size_;
 }
 
 umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
@@ -439,7 +447,7 @@ const std::string& Compartment::get_name() const {
   return name_;
 }
 
-std::vector<voxel_t>& Compartment::get_lattice() {
+int* Compartment::get_lattice() {
   return lattice_;
 }
 

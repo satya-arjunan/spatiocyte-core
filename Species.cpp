@@ -41,7 +41,6 @@ Species::Species(const std::string name, const unsigned nmols, const double D,
   comp_(comp),
   vacant_(vacant),
   is_comp_vacant_(is_comp_vacant),
-  lattice_(comp_.get_lattice()),
   id_(model.push_species(*this)),
   vac_id_(vacant_.get_id()),
   vac_xor_(vac_id_^id_),
@@ -53,6 +52,7 @@ Species::Species(const std::string name, const unsigned nmols, const double D,
 
 void Species::initialize()
 {
+  lattice_ = comp_.get_lattice();
   nbit_ = comp_.get_model().get_nbit();
   diffuser_.initialize();
 }
@@ -61,10 +61,10 @@ void Species::populate()
 {
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
-      umol_t vdx(rng_.IntegerC(lattice_.size()*WORD/nbit_-1));
+      umol_t vdx(rng_.IntegerC(comp_.get_lattice_size()*WORD/nbit_-1));
       while(lattice_[vdx*nbit_/WORD] & (1 << vdx*nbit_%WORD))
         {
-          vdx = rng_.IntegerC(lattice_.size()*WORD/nbit_-1);
+          vdx = rng_.IntegerC(comp_.get_lattice_size()*WORD/nbit_-1);
         }
       mols_[i] = vdx;
       lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
