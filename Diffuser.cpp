@@ -83,6 +83,55 @@ void Diffuser::walk()
   for(unsigned k(0); k != n; ++k)
     {
       __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i quos(_mm256_srli_epi16(tars, 4));
+      __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
+      for(unsigned j(0); j != 16; ++j, ++i)
+        {
+          const uint16_t quo(((uint16_t*)&quos)[j]);
+          const uint16_t rem(((uint16_t*)&rems)[j]);
+          if(0 == ((lattice_[quo] >> rem) & 3))
+            {
+              lattice_[quo] ^= 2 << rem;
+              lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+              mols_[i] = ((uint16_t*)&tars)[j];
+            }
+        }
+    }
+  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint16_t vdx(((uint16_t*)&tars)[j]);
+      if(0 == ((lattice_[vdx*2/WORD] >> vdx*2%WORD) & 3))
+        {
+          lattice_[vdx*2/WORD] ^= 2 << vdx*2%WORD;
+          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+          mols_[i] = vdx;
+        }
+    }
+  /*
+  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  __m256i quos(_mm256_srli_epi16(tars, 4));
+  __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint16_t vdx(((uint16_t*)&tars)[j]);
+      const uint16_t quo(((uint16_t*)&quos)[j]);
+      const uint16_t rem(((uint16_t*)&rems)[j]);
+      if(0 == ((lattice_[quo] >> rem) & 3))
+        {
+          lattice_[quo] ^= 2 << rem;
+          lattice_[mols_[i]*2/WORD] ^= 2 << mols_[i]*2%WORD;
+          mols_[i] = vdx;
+        }
+    }
+    */
+  /*
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  for(unsigned k(0); k != n; ++k)
+    {
+      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
       for(unsigned j(0); j != 16; ++j, ++i)
         {
           const uint16_t vdx(((uint16_t*)&tars)[j]);
@@ -105,6 +154,7 @@ void Diffuser::walk()
           mols_[i] = vdx;
         }
     }
+    */
   /*
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
