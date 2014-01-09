@@ -265,12 +265,56 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
+void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars) const { 
+  //[mull] multiply unsigned and store high 16 bit result
+  //vdx*multiplier
+  __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
+  //[shrl] shift right logical (set the new bits on the left as 0)
+  //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
+  quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
+  __m256i odd_lay(_mm256_and_si256(quotient_colrow, m256i_1_));
+  //[imull] signed multiply and store low 16 bit result
+  //(vdx/num_colrow)*num_colrow
+  quotient_colrow = _mm256_mullo_epi16(quotient_colrow, m256i_num_colrow_);
+  //[subl] a-b 
+  //remainder = vdx-(vdx/num_colrow)*num_colrow
+  __m256i remainder_colrow(_mm256_sub_epi16(vdx, quotient_colrow));
+  //remainder*multiplier
+  __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
+  //remainder*multiplier/2^nshift_row_
+  quotient_row = _mm256_srl_epi16(quotient_row, nshift_row_);
+  __m256i odd_col(_mm256_and_si256(quotient_row, m256i_1_));
+  //Option 2 faster
+  odd_lay = _mm256_sign_epi16(odd_lay, m256i_m1_);
+  odd_lay = _mm256_and_si256(odd_lay, m256i_24_);
+  odd_col = _mm256_sign_epi16(odd_col, m256i_m1_);
+  odd_col = _mm256_and_si256(odd_col, m256i_12_);
+  nrand = _mm256_add_epi16(nrand, odd_lay);
+  nrand = _mm256_add_epi16(nrand, odd_col);
+  //cast first 8 indices from uint16_t to uint32_t
+  __m256i index(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(nrand)));
+  //get the first 8 offsets
+  index = _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast first 8 vdx from uint16_t to uint32_t and add with offset
+  *(__m256i*)(tars) = 
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
+                                                     
+  //cast second 8 indices from uint16_t to uint32_t
+  index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
+  //get the second 8 offsets
+  index =  _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast second 8 vdx from uint16_t to uint32_t and add with offset
+  *(__m256i*)(&tars[8]) =
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
+                     index);
+}
+
 /*AVX2 SIMD implementation of:
  *  const bool odd_lay((vdx/NUM_COLROW)&1);
  *  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
  *  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
  */
-__m256i Compartment::set_tars(const __m256i vdx, __m256i nrand) const { 
+__m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const { 
   /*
   union256 arand;
   arand.m256i = nrand;

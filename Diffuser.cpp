@@ -55,19 +55,19 @@ void Diffuser::initialize()
   std::cout << "vac_xor:" << vac_xor_ << std::endl;
 }
 
-
 void Diffuser::walk()
 {
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
   unsigned i(0);
+  uint32_t tars[16];
   for(unsigned k(0); k != n; ++k)
     {
-      //comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
-      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i mols(_mm256_load_si256((__m256i*)(&mols_[i])));
+      comp_.set_tars(mols, rng_.Ran16(), tars);
       for(unsigned j(0); j != 16; ++j, ++i)
         {
-          const uint16_t vdx(((uint16_t*)&tars)[j]);
+          const uint32_t vdx(tars[j]);
           if(lattice_[vdx] == vac_id_)
             {
               lattice_[vdx] = species_id_;
@@ -76,11 +76,11 @@ void Diffuser::walk()
             }
         }
     }
-  //comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
-  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  __m256i mols(_mm256_load_si256((__m256i*)(&mols_[i])));
+  comp_.set_tars(mols, rng_.Ran16(), tars);
   for(unsigned j(0); j != m; ++j, ++i)
     {
-      const uint16_t vdx(((uint16_t*)&tars)[j]);
+      const uint32_t vdx(tars[j]);
       if(lattice_[vdx] == vac_id_)
         {
           lattice_[vdx] = species_id_;
@@ -91,6 +91,58 @@ void Diffuser::walk()
 }
 
 /*
+t = 1.48 s
+void Diffuser::walk()
+{
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  uint32_t tars[16];
+  const int* base((int*)(&lattice_[0]));
+  for(unsigned k(0); k != n; ++k)
+    {
+      comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+      __m256i vox(_mm256_i32gather_epi32(base, *(__m256i*)(&tars[0]), 1));
+      for(unsigned j(0); j != 8; ++j, ++i)
+        {
+          const uint8_t voxel(((uint8_t*)&vox)[j*4]);
+          if(voxel == vac_id_)
+            {
+              const uint32_t vdx(tars[j]);
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+      vox = (_mm256_i32gather_epi32(base, *(__m256i*)(&tars[8]), 1));
+      for(unsigned j(0); j != 8; ++j, ++i)
+        {
+          const uint8_t voxel(((uint8_t*)&vox)[j*4]);
+          if(voxel == vac_id_)
+            {
+              const uint32_t vdx(tars[j+8]);
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+    }
+  comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint32_t vdx(tars[j]);
+      if(lattice_[vdx] == vac_id_)
+        {
+          lattice_[vdx] = species_id_;
+          lattice_[mols_[i]] = vac_id_;
+          mols_[i] = vdx;
+        }
+    }
+}
+*/
+
+/*
+t = 1.47 s
 void Diffuser::walk()
 {
   const unsigned n(mols_.size()/16);
@@ -125,6 +177,39 @@ void Diffuser::walk()
 }
 */
 
+/*
+void Diffuser::walk()
+{
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  for(unsigned k(0); k != n; ++k)
+    {
+      __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      for(unsigned j(0); j != 16; ++j, ++i)
+        {
+          const uint16_t vdx(((uint16_t*)&tars)[j]);
+          if(lattice_[vdx] == vac_id_)
+            {
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+    }
+  __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  for(unsigned j(0); j != m; ++j, ++i)
+    {
+      const uint16_t vdx(((uint16_t*)&tars)[j]);
+      if(lattice_[vdx] == vac_id_)
+        {
+          lattice_[vdx] = species_id_;
+          lattice_[mols_[i]] = vac_id_;
+          mols_[i] = vdx;
+        }
+    }
+}
+*/
 
 /*
 void Diffuser::walk()
@@ -134,7 +219,7 @@ void Diffuser::walk()
   unsigned i(0);
   for(unsigned k(0); k != n; ++k)
     {
-      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
       for(unsigned j(0); j != 16; ++j, ++i)
         {
           const uint16_t vdx(((uint16_t*)&tars)[j]);
@@ -146,7 +231,7 @@ void Diffuser::walk()
             }
         }
     }
-  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
   for(unsigned j(0); j != m; ++j, ++i)
     {
       const uint16_t vdx(((uint16_t*)&tars)[j]);
@@ -169,7 +254,7 @@ void Diffuser::walk()
   unsigned i(0);
   for(unsigned k(0); k != n; ++k)
     {
-      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
       __m256i quos(_mm256_srli_epi16(tars, 4));
       __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
       //cast first 8 quos from uint16_t to uint32_t 
@@ -213,7 +298,7 @@ void Diffuser::walk()
             }
         }
     }
-  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
   for(unsigned j(0); j != m; ++j, ++i)
     {
       const uint16_t vdx(((uint16_t*)&tars)[j]);
@@ -235,7 +320,7 @@ void Diffuser::walk()
   unsigned i(0);
   for(unsigned k(0); k != n; ++k)
     {
-      __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+      __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
       __m256i quos(_mm256_srli_epi16(tars, 4));
       __m256i rems(_mm256_slli_epi16(_mm256_sub_epi16(tars, _mm256_slli_epi16(quos, 4)), 1));
       for(unsigned j(0); j != 16; ++j, ++i)
@@ -252,7 +337,7 @@ void Diffuser::walk()
             }
         }
     }
-  __m256i tars(comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
+  __m256i tars(comp_.get_tars(*(__m256i*)(&mols_[i]), rng_.Ran16()));
   for(unsigned j(0); j != m; ++j, ++i)
     {
       const uint16_t vdx(((uint16_t*)&tars)[j]);
