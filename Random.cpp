@@ -210,7 +210,7 @@ void Random::Generate() {
    ix = 0;
 }
 
-int  Random::IRan(int min, int max) {
+int Random::IRan(int min, int max) {
    // Assume 64 bit integers supported. Use multiply and shift method
    uint32_t interval;                  // Length of interval
    uint64_t longran;                   // Random bits * interval

@@ -35,6 +35,7 @@
 #include <RandomLib/Random.hpp>
 #include <Common.hpp>
 #include <Diffuser.hpp>
+#include <Random.hpp>
 
 class Species
 { 
@@ -68,7 +69,7 @@ private:
   const voxel_t vac_xor_;
   std::vector<umol_t> mols_;
   Diffuser diffuser_;
-  RandomLib::Random rng_;
+  Random rng_;
   voxel_t nbit_;
 };
 

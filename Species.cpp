@@ -28,11 +28,12 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#include <iostream>
+#include <string>
+#include <time.h>
 #include <Species.hpp>
 #include <Compartment.hpp>
 #include <Model.hpp>
-#include <iostream>
-#include <string>
 
 Species::Species(const std::string name, const unsigned nmols, const double D,
                  Model& model, Compartment& comp, Species& vacant,
@@ -44,7 +45,8 @@ Species::Species(const std::string name, const unsigned nmols, const double D,
   id_(model.push_species(*this)),
   vac_id_(vacant_.get_id()),
   vac_xor_(vac_id_^id_),
-  diffuser_(D, *this)
+  diffuser_(D, *this),
+  rng_(time(0))
 {
   std::cout << get_name_id() << std::endl;
   mols_.resize(nmols);
@@ -73,10 +75,10 @@ void Species::populate()
     */
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
-      umol_t vdx(rng_.IntegerC(comp_.get_lattice_size()-1));
+      umol_t vdx(rng_.IRan(0, comp_.get_lattice_size()-1));
       while(lattice_[vdx] != vac_id_)
         {
-          vdx = rng_.IntegerC(comp_.get_lattice_size()-1);
+          vdx = rng_.IRan(0, comp_.get_lattice_size()-1);
         }
       mols_[i] = vdx;
       lattice_[vdx] = id_;

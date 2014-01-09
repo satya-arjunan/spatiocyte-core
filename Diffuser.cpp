@@ -28,10 +28,10 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#include <time.h>
 #include <Diffuser.hpp>
 #include <Compartment.hpp>
 #include <Model.hpp>
-#include <time.h>
 
 Diffuser::Diffuser(const double D, Species& species):
   D_(D),
@@ -55,6 +55,45 @@ void Diffuser::initialize()
   std::cout << "vac_xor:" << vac_xor_ << std::endl;
 }
 
+/*
+void Diffuser::walk()
+{
+  __m256i mols(_mm256_load_si256((__m256i*)(&mols_[0])));
+  for(unsigned j(0); j != 8; ++j)
+    {
+          ((int*)&mols)[j] = j;
+    }
+  for(unsigned o(0); o != 8; ++o)
+    {
+      std::cout << ((int*)&mols)[o] << std::endl;
+    }
+  _mm256_store_si256((__m256i*)(&mols_[0]), mols);
+}
+*/
+
+void Diffuser::walk()
+{
+  uint32_t tars[16];
+  __m256i* base((__m256i*)(&mols_[0]));
+  for(unsigned k(0), n(mols_.size()/16); k != n; ++k, ++base)
+    {
+      __m256i mols(_mm256_load_si256(base));
+      comp_.set_tars(mols, rng_.Ran16(), tars);
+      for(unsigned j(0); j != 16; ++j)
+        {
+          const uint32_t vdx(tars[j]);
+          if(lattice_[vdx] == vac_id_)
+            {
+              lattice_[vdx] = species_id_;
+              lattice_[((umol_t*)&mols)[j]] = vac_id_;
+              ((umol_t*)&mols)[j] = vdx;
+            }
+        }
+      _mm256_store_si256(base, mols);
+    }
+}
+
+/*
 void Diffuser::walk()
 {
   const unsigned n(mols_.size()/16);
@@ -89,6 +128,7 @@ void Diffuser::walk()
         }
     }
 }
+*/
 
 /*
 t = 1.48 s
