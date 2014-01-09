@@ -61,7 +61,8 @@ private:
   Compartment& comp_;
   Species& vacant_;
   const bool is_comp_vacant_;
-  int* lattice_;
+  voxel_t* lattice_;
+  //std::vector<voxel_t>& lattice_;
   const voxel_t id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;

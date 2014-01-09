@@ -36,7 +36,7 @@
 #include <Common.hpp>
 #include <Species.hpp>
 
-#define HCP_X double(VOXEL_RADIUS*1.7320508075688772)
+#define HCP_X double(VOXEL_RADIUS*1.732050807568877)
 #define HCP_Z double(VOXEL_RADIUS*1.632993161855452)
 #define NUM_COL umol_t(LENGTH_X/HCP_X+3)
 #define NUM_LAY umol_t(LENGTH_Z/HCP_Z+3)
@@ -63,7 +63,7 @@ class Compartment {
   Species& get_volume_species();
   Model& get_model();
   const std::string& get_name() const;
-  int* get_lattice();
+  voxel_t* get_lattice();
  private:
   void set_surface();
   void populate_mol(const umol_t);
@@ -73,7 +73,7 @@ class Compartment {
   const Vector length_;
   const Vector center_;
   umol_t lattice_size_;
-  int* lattice_;
+  voxel_t* lattice_;
   Model& model_;
   Species volume_species_;
   Species surface_species_;

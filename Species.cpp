@@ -59,6 +59,7 @@ void Species::initialize()
 
 void Species::populate()
 {
+  /*
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
       umol_t vdx(rng_.IntegerC(comp_.get_lattice_size()*WORD/nbit_-1));
@@ -69,18 +70,17 @@ void Species::populate()
       mols_[i] = vdx;
       lattice_[vdx*nbit_/WORD] ^= vac_xor_ << vdx*nbit_%WORD;
     }
-  /*
+    */
   for(unsigned i(0), j(mols_.size()); i != j; ++i)
     {
-      umol_t vdx(rng_.IntegerC(lattice_.size()-1));
+      umol_t vdx(rng_.IntegerC(comp_.get_lattice_size()-1));
       while(lattice_[vdx] != vac_id_)
         {
-          vdx = rng_.IntegerC(lattice_.size()-1);
+          vdx = rng_.IntegerC(comp_.get_lattice_size()-1);
         }
       mols_[i] = vdx;
       lattice_[vdx] = id_;
     }
-    */
 }
 
 bool Species::is_comp_vacant() const

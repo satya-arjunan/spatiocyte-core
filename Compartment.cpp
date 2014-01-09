@@ -55,11 +55,10 @@ void Compartment::initialize() {
   setOffsets();
   nbit_ = model_.get_nbit();
   sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
-  lattice_size_ = ceil(double(NUM_VOXEL)*nbit_/WORD);
-  lattice_ = new int[lattice_size_];
-  //lattice_size_ = NUM_VOXEL;
-  //lattice_ = new int[NUM_VOXEL];
-  memset(lattice_, 0, sizeof(int)*lattice_size_);
+  //lattice_size_ = ceil(double(NUM_VOXEL)*nbit_/WORD);
+  lattice_size_ = NUM_VOXEL;
+  lattice_ = new voxel_t[lattice_size_];
+  memset(lattice_, 0, sizeof(voxel_t)*lattice_size_);
   set_surface();
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
@@ -93,6 +92,7 @@ umol_t Compartment::get_num_voxel() const {
 
 umol_t Compartment::get_lattice_size() const {
   return lattice_size_;
+  //return lattice_.size();
 }
 
 umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
@@ -447,7 +447,8 @@ const std::string& Compartment::get_name() const {
   return name_;
 }
 
-int* Compartment::get_lattice() {
+//std::vector<voxel_t>& Compartment::get_lattice() {
+voxel_t* Compartment::get_lattice() {
   return lattice_;
 }
 
@@ -475,8 +476,8 @@ void Compartment::set_surface() {
 }
 
 void Compartment::populate_mol(const umol_t vdx) {
-  lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  //lattice_[vdx] = surface_species_.get_id();
+  //lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
+  lattice_[vdx] = surface_species_.get_id();
   surface_species_.get_mols().push_back(vdx);
 }
 
