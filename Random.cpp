@@ -229,10 +229,10 @@ uint32_t Random::RanUint32_12() {
 }
 
 /*
+//Doesn't work, not accurate
 uint8_t Random::RanUint8_12() {
    return (uint8_t)(((uint16_t)BRan8()*12) >> 8);
 }
-*/
 
 uint8_t Random::BRan8() {
    // Output 32 random bits
@@ -242,6 +242,18 @@ uint8_t Random::BRan8() {
       Generate();
    }
    y = ((uint8_t*)state)[ix++];
+   return y;
+}
+*/
+
+uint16_t Random::BRan16() {
+   // Output 32 random bits
+   uint16_t y;
+
+   if (ix >= SFMT_N*8) {
+      Generate();
+   }
+   y = ((uint16_t*)state)[ix++];
    return y;
 }
 
@@ -270,6 +282,15 @@ __m256i Random::BinRan256() {
   return ((__m256i*)state)[ix++];
 }
 
+uint16_t Random::RanUint16_12() {
+   return (uint16_t)(((uint32_t)BRan16()*12) >> 16);
+}
+
+__m256i Random::Ran16() {
+  return _mm256_mulhi_epu16(BinRan256(), m256i_12_);
+}
+
+/*
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
 //VPSRLW __m256i _mm_srli_epi16 (__m256i m, int count) (V)PSRLW
@@ -279,11 +300,14 @@ __m256i Random::Ran16() {
   __m256i ran(_mm256_cvtepu8_epi16(BinRan128()));
   //Multiply by 12
   ran = _mm256_maddubs_epi16(ran, m256i_12_);
+  _mm256_mulhi_epu16(BinRan256(), m256i_12_);
   //Shift right logical by 8 counts
   return _mm256_srli_epi16(ran, 8);
 }
+*/
 
-//Original serial code:
+/*
+//Doesn't work (not accurate):
 uint8_t Random::RanUint8_12() {
   uint8_t ran8(BRan8());
   //std::cout << "ran8:";
@@ -302,6 +326,7 @@ uint8_t Random::RanUint8_12() {
   //cout_binary(ran8);
   return ran8;
 }
+*/
 
 
 /*

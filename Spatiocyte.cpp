@@ -36,7 +36,7 @@
 
 int main() {
   Model model;
-  Species A("A", 1000, 1e-12, model, model.get_comp(),
+  Species A("A", 10000, 1e-12, model, model.get_comp(),
             model.get_comp().get_volume_species());
   model.initialize();
   A.populate();
@@ -44,15 +44,15 @@ int main() {
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);
   visual_logger.push_species(A);
-  visual_logger.push_species(model.get_comp().get_surface_species());
-  visual_logger.push_species(model.get_comp().get_volume_species());
+  //visual_logger.push_species(model.get_comp().get_surface_species());
+  //visual_logger.push_species(model.get_comp().get_volume_species());
   visual_logger.initialize();
 
   model.run(0.0001);
   boost::posix_time::ptime start(
       boost::posix_time::microsec_clock::universal_time()); 
-  model.run(0.0001);
-  //model.run(0.8);
+  //model.run(0.1);
+  model.run(0.8);
   boost::posix_time::ptime end(
       boost::posix_time::microsec_clock::universal_time());
   std::cout << "duration:" << (end-start)/8.0 << std::endl;

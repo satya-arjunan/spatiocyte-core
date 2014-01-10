@@ -131,9 +131,11 @@ public:
    __m256i Ran16();
    int IRanX(int min, int max);
    uint32_t RanUint32_12();
+   uint16_t RanUint16_12();
    uint8_t RanUint8_12();
    double Ran();
    uint32_t BRan();
+   uint16_t BRan16();
    uint8_t BRan8();
    __m128i BinRan128();
    __m256i BinRan256();
