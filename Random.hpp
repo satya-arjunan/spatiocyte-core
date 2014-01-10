@@ -118,36 +118,30 @@
 #endif
 
 class Random {
-public:
-  Random(int seed)
-     : LastInterval(0),
-       m256i_12_(_mm256_set1_epi16(12))
-  {
-    RandomInit(seed);
-  }
-   void RandomInit(int seed);
-   void RandomInitByArray(int const seeds[], int NumSeeds);
-   int IRan(int min, int max);
-   __m256i Ran16();
-   int IRanX(int min, int max);
-   uint32_t RanUint32_12();
-   uint16_t RanUint16_12();
-   uint8_t RanUint8_12();
-   double Ran();
-   uint32_t BRan();
-   uint16_t BRan16();
-   uint8_t BRan8();
-   __m128i BinRan128();
-   __m256i BinRan256();
-private:
-   void Init2();
-   void Generate();
-   uint32_t ix;         
-   uint32_t LastInterval;
-   uint32_t RLimit;     
-   __m128i mask;     
-   __m128i state[SFMT_N];
-   __m256i m256i_12_;
+ public:
+  Random(int seed); 
+  void RandomInit(int seed);
+  void RandomInitByArray(int const seeds[], int NumSeeds);
+  int IRan(int min, int max);
+  __m256i Ran16();
+  int IRanX(int min, int max);
+  uint32_t RanUint32_12();
+  uint16_t RanUint16_12();
+  uint8_t RanUint8_12();
+  double Ran();
+  uint32_t BRan();
+  uint16_t BRan16();
+  uint8_t BRan8();
+  __m128i BinRan128();
+  __m256i BinRan256();
+ private:
+  void Init2();
+  void Generate();
+  uint32_t ix;         
+  uint32_t LastInterval;
+  uint32_t RLimit;     
+  __m128i mask;     
+  __m128i state[SFMT_N];
 };
 
 #endif /* __Random_hpp */ 

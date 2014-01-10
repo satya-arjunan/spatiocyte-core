@@ -32,23 +32,28 @@
 #include <Common.hpp>
 #include <Random.hpp>
 
+Random::Random(const int seed)
+    : LastInterval(0) {
+  RandomInit(seed);
+}
+
 void Random::RandomInit(int seed) {
-   // Re-seed
-   uint32_t i;                         // Loop counter
-   uint32_t y = seed;                  // Temporary
-   uint32_t statesize = SFMT_N*4;      // Size of state vector
+  // Re-seed
+  uint32_t i;                         // Loop counter
+  uint32_t y = seed;                  // Temporary
+  uint32_t statesize = SFMT_N*4;      // Size of state vector
 
-   // Fill state vector with random numbers from seed
-   ((uint32_t*)state)[0] = y;
-   const uint32_t factor = 1812433253U;// Multiplication factor
+  // Fill state vector with random numbers from seed
+  ((uint32_t*)state)[0] = y;
+  const uint32_t factor = 1812433253U;// Multiplication factor
 
-   for (i = 1; i < statesize; i++) {
-      y = factor * (y ^ (y >> 30)) + i;
-      ((uint32_t*)state)[i] = y;
-   }
+  for (i = 1; i < statesize; i++) {
+     y = factor * (y ^ (y >> 30)) + i;
+     ((uint32_t*)state)[i] = y;
+  }
 
-   // Further initialization and period certification
-   Init2();
+  // Further initialization and period certification
+  Init2();
 }
 
 // Functions used by Random::RandomInitByArray
@@ -287,7 +292,7 @@ uint16_t Random::RanUint16_12() {
 }
 
 __m256i Random::Ran16() {
-  return _mm256_mulhi_epu16(BinRan256(), m256i_12_);
+  return _mm256_mulhi_epu16(BinRan256(), _mm256_set1_epi16(12));
 }
 
 /*
