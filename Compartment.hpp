@@ -82,12 +82,6 @@ class Compartment {
   voxel_t nbit_;
   voxel_t sur_xor_;
   mol2_t* offsets_;
-  const __m256i m256i_1_;
-  const __m256i m256i_m1_;
-  const __m256i m256i_12_;
-  const __m256i m256i_24_;
-  const __m256i m256i_24_12_;
-  const __m256i m256i_num_colrow_;
   __m256i multiplier_colrow_;
   __m256i multiplier_row_;
   __m128i nshift_colrow_;

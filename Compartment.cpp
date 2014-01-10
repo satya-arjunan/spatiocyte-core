@@ -43,13 +43,7 @@ Compartment::Compartment(std::string name, const double len_x,
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
-    surface_species_("surface", 0, 0, model, *this, volume_species_, true),
-    m256i_1_(_mm256_set1_epi16(1)),
-    m256i_m1_(_mm256_set1_epi16(-1)),
-    m256i_12_(_mm256_set1_epi16(12)),
-    m256i_24_(_mm256_set1_epi16(24)),
-    m256i_24_12_(_mm256_or_si256(_mm256_slli_si256(m256i_24_, 1), m256i_12_)),
-    m256i_num_colrow_(_mm256_set1_epi16(NUM_COLROW)) {}
+    surface_species_("surface", 0, 0, model, *this, volume_species_, true) {}
 
 void Compartment::initialize() {
   set_offsets();
@@ -272,10 +266,11 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars) con
   //[shrl] shift right logical (set the new bits on the left as 0)
   //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
   quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
-  __m256i odd_lay(_mm256_and_si256(quotient_colrow, m256i_1_));
+  __m256i odd_lay(_mm256_and_si256(quotient_colrow, _mm256_set1_epi16(1)));
   //[imull] signed multiply and store low 16 bit result
   //(vdx/num_colrow)*num_colrow
-  quotient_colrow = _mm256_mullo_epi16(quotient_colrow, m256i_num_colrow_);
+  quotient_colrow = _mm256_mullo_epi16(quotient_colrow,
+                                       _mm256_set1_epi16(NUM_COLROW));
   //[subl] a-b 
   //remainder = vdx-(vdx/num_colrow)*num_colrow
   __m256i remainder_colrow(_mm256_sub_epi16(vdx, quotient_colrow));
@@ -283,12 +278,12 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars) con
   __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
   //remainder*multiplier/2^nshift_row_
   quotient_row = _mm256_srl_epi16(quotient_row, nshift_row_);
-  __m256i odd_col(_mm256_and_si256(quotient_row, m256i_1_));
+  __m256i odd_col(_mm256_and_si256(quotient_row, _mm256_set1_epi16(1)));
   //Option 2 faster
-  odd_lay = _mm256_sign_epi16(odd_lay, m256i_m1_);
-  odd_lay = _mm256_and_si256(odd_lay, m256i_24_);
-  odd_col = _mm256_sign_epi16(odd_col, m256i_m1_);
-  odd_col = _mm256_and_si256(odd_col, m256i_12_);
+  odd_lay = _mm256_sign_epi16(odd_lay, _mm256_set1_epi64x(-1));
+  odd_lay = _mm256_and_si256(odd_lay, _mm256_set1_epi16(24));
+  odd_col = _mm256_sign_epi16(odd_col, _mm256_set1_epi64x(-1));
+  odd_col = _mm256_and_si256(odd_col, _mm256_set1_epi16(12));
   nrand = _mm256_add_epi16(nrand, odd_lay);
   nrand = _mm256_add_epi16(nrand, odd_col);
   //cast first 8 indices from uint16_t to uint32_t
@@ -326,10 +321,11 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   //[shrl] shift right logical (set the new bits on the left as 0)
   //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
   quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
-  __m256i odd_lay(_mm256_and_si256(quotient_colrow, m256i_1_));
+  __m256i odd_lay(_mm256_and_si256(quotient_colrow, _mm256_set1_epi16(1)));
   //[imull] signed multiply and store low 16 bit result
   //(vdx/num_colrow)*num_colrow
-  quotient_colrow = _mm256_mullo_epi16(quotient_colrow, m256i_num_colrow_);
+  quotient_colrow = _mm256_mullo_epi16(quotient_colrow,
+                                       _mm256_set1_epi16(NUM_COLROW));
   //[subl] a-b 
   //remainder = vdx-(vdx/num_colrow)*num_colrow
   __m256i remainder_colrow(_mm256_sub_epi16(vdx, quotient_colrow));
@@ -337,10 +333,10 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
   //remainder*multiplier/2^nshift_row_
   quotient_row = _mm256_srl_epi16(quotient_row, nshift_row_);
-  __m256i odd_col(_mm256_and_si256(quotient_row, m256i_1_));
+  __m256i odd_col(_mm256_and_si256(quotient_row, _mm256_set1_epi16(1)));
   /*
-  odd_lay = _mm256_mullo_epi16(odd_lay, m256i_24_);
-  odd_col = _mm256_mullo_epi16(odd_col, m256i_12_);
+  odd_lay = _mm256_mullo_epi16(odd_lay, _mm256_set1_epi16(24));
+  odd_col = _mm256_mullo_epi16(odd_col, _mm256_set1_epi16(12));
   */
   //combine 4 instructions below into:
   //left shift 8 bits (1 byte) of odd_lay
@@ -350,19 +346,19 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   odd_lay = _mm256_slli_si256(odd_lay, 1);
   //OR odd_lay with odd_col
   odd_lay = _mm256_or_si256(odd_lay, odd_col);
-  odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_12_);
+  odd_lay = _mm256_maddubs_epi16(odd_lay, _mm256_set1_epi16(24));
   nrand = _mm256_add_epi16(nrand, odd_lay);
   */
   //Option 2 faster
-  odd_lay = _mm256_sign_epi16(odd_lay, m256i_m1_);
-  odd_lay = _mm256_and_si256(odd_lay, m256i_24_);
-  odd_col = _mm256_sign_epi16(odd_col, m256i_m1_);
-  odd_col = _mm256_and_si256(odd_col, m256i_12_);
+  odd_lay = _mm256_sign_epi16(odd_lay, _mm256_set1_epi64x(-1));
+  odd_lay = _mm256_and_si256(odd_lay, _mm256_set1_epi16(24));
+  odd_col = _mm256_sign_epi16(odd_col, _mm256_set1_epi64x(-1));
+  odd_col = _mm256_and_si256(odd_col, _mm256_set1_epi16(12));
   nrand = _mm256_add_epi16(nrand, odd_lay);
   nrand = _mm256_add_epi16(nrand, odd_col);
   /*
-  odd_lay = _mm256_maddubs_epi16(odd_lay, m256i_24_);
-  odd_col = _mm256_maddubs_epi16(odd_col, m256i_12_);
+  odd_lay = _mm256_maddubs_epi16(odd_lay, _mm256_set1_epi16(24));
+  odd_col = _mm256_maddubs_epi16(odd_col, _mm256_set1_epi16(12));
   nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_col);
   nrand.m256i = _mm256_add_epi16(nrand.m256i, odd_lay);
   */
