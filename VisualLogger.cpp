@@ -55,7 +55,7 @@ void VisualLogger::initialize()
   fileName << filename_ << std::ends;
   logfile_.open(fileName.str().c_str(), std::ios::binary | std::ios::trunc);
   initialize_log();
-  log_comp_vacant();
+  log_structure_species();
   log_species();
   logfile_.flush();
 }
@@ -106,13 +106,13 @@ void VisualLogger::initialize_log()
     }
 }
 
-void VisualLogger::log_comp_vacant()
+void VisualLogger::log_structure_species()
 {
   const double currentTime(stepper_.get_current_time());
   logfile_.write((char*)(&currentTime), sizeof(currentTime));
   for(unsigned i(0); i != species_.size(); ++i)
     {
-      if(species_[i]->is_comp_vacant())
+      if(species_[i]->is_structure_species())
         {
           Species& species(*species_[i]);
           //The species index in the process:
@@ -148,7 +148,7 @@ void VisualLogger::log_mols(const unsigned index)
   Species& species(*species_[index]);
   //No need to log lipid or non diffusing vacant molecules since we have
   //already logged them once during initialization:
-  if(species.is_comp_vacant())
+  if(species.is_structure_species())
     {
       return;
     }

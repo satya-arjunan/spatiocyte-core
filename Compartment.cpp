@@ -43,7 +43,7 @@ Compartment::Compartment(std::string name, const double len_x,
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
-    surface_species_("surface", 0, 0, model, *this, surface_species_, true),
+    surface_species_("surface", 0, 0, model, *this, volume_species_, true),
     m256i_1_(_mm256_set1_epi16(1)),
     m256i_m1_(_mm256_set1_epi16(-1)),
     m256i_12_(_mm256_set1_epi16(12)),
@@ -52,14 +52,15 @@ Compartment::Compartment(std::string name, const double len_x,
     m256i_num_colrow_(_mm256_set1_epi16(NUM_COLROW)) {}
 
 void Compartment::initialize() {
-  setOffsets();
+  set_offsets();
   nbit_ = model_.get_nbit();
   sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
   //lattice_size_ = ceil(double(NUM_VOXEL)*nbit_/WORD);
   lattice_size_ = NUM_VOXEL;
   lattice_ = new voxel_t[lattice_size_];
   memset(lattice_, 0, sizeof(voxel_t)*lattice_size_);
-  set_surface();
+  set_volume_structure();
+  set_surface_structure();
   std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
     NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
     lattice_size_ << " memory:" << 
@@ -71,7 +72,6 @@ void Compartment::initialize() {
   set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row);
   multiplier_row_ = _mm256_set1_epi16(multiplier_row);
   nshift_row_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_row);
-  std::cout << "shift colrow:" << nshift_colrow << " row:" << nshift_row << std::endl;
 }
 
 umol_t Compartment::get_num_col() const {
@@ -412,7 +412,7 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   */
 }
 
-void Compartment::setOffsets() {
+void Compartment::set_offsets() {
   //col=even, layer=even
   offsets_ = new int[ADJS*4];
   offsets_[0] = -1;
@@ -496,32 +496,33 @@ voxel_t* Compartment::get_lattice() {
   return lattice_;
 }
 
-void Compartment::set_surface() {
+void Compartment::set_volume_structure() {
+  for(umol_t i(0); i != get_lattice_size(); ++i) {
+    volume_species_.populate_mol(i);
+  }
+}
+
+void Compartment::set_surface_structure() {
   //row_col xy-plane
   for (umol_t i(0); i != NUM_COLROW; ++i) {
-      populate_mol(i);
-      populate_mol(NUM_VOXEL-1-i);
-    }
+    surface_species_.populate_mol(i);
+    surface_species_.populate_mol(NUM_VOXEL-1-i);
+  }
   for (umol_t i(1); i != NUM_LAY-1; ++i) {
-      //layer_row yz-plane
-      for (umol_t j(0); j != NUM_ROW; ++j) {
-          populate_mol(i*NUM_COLROW+j);
-          populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
-        }
-      //layer_col xz-plane
-      for (umol_t j(1); j != NUM_COL-1; ++j) {
-          populate_mol(i*NUM_COLROW+j*NUM_ROW);
-          populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
-        }
+    //layer_row yz-plane
+    for (umol_t j(0); j != NUM_ROW; ++j) {
+      surface_species_.populate_mol(i*NUM_COLROW+j);
+      surface_species_.populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
     }
+    //layer_col xz-plane
+    for (umol_t j(1); j != NUM_COL-1; ++j) {
+      surface_species_.populate_mol(i*NUM_COLROW+j*NUM_ROW);
+      surface_species_.populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
+    }
+  }
   //std::cout << "surface size:" << mols.size() << " actual size:" <<
   //NUM_COLROW*2 + NUM_ROW*(NUM_LAY-2)*2 + (NUM_COL-2)*(NUM_LAY-2)*2 <<
   //std::endl;
 }
 
-void Compartment::populate_mol(const umol_t vdx) {
-  //lattice_[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  lattice_[vdx] = surface_species_.get_id();
-  surface_species_.get_mols().push_back(vdx);
-}
 

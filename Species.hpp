@@ -41,29 +41,30 @@ class Species
 { 
 public: 
   Species(const std::string, const unsigned, const double, Model&, Compartment&,
-          Species& vacant, const bool is_comp_vacant=false);
+      Species& vacant, const bool is_structure_species=false);
   ~Species() {}
   void initialize();
   void populate();
-  bool is_comp_vacant() const;
+  void populate_mol(const umol_t);
+  bool is_structure_species() const;
+  bool is_root_structure_species() const;
   voxel_t get_id() const;
   voxel_t get_vac_id() const;
   voxel_t get_vac_xor() const;
+  umol_t get_random_valid_mol();
   Diffuser& get_diffuser();
   Compartment& get_comp();
   const std::string& get_name() const;
   const std::string get_name_id() const;
   std::vector<umol_t>& get_mols();
 private:
-  const std::string get_init_name(const std::string, const Compartment&,
-                                  const Species&, const bool) const;
+  const std::string get_init_name(const std::string) const;
 private:
-  const std::string name_;
   Compartment& comp_;
   Species& vacant_;
-  const bool is_comp_vacant_;
-  voxel_t* lattice_;
-  //std::vector<voxel_t>& lattice_;
+  const std::string name_;
+  const umol2_t init_nmols_;
+  const bool is_structure_species_;
   const voxel_t id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;

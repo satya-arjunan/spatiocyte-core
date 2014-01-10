@@ -66,9 +66,10 @@ class Compartment {
   const std::string& get_name() const;
   voxel_t* get_lattice();
  private:
-  void set_surface();
+  void set_volume_structure();
+  void set_surface_structure();
   void populate_mol(const umol_t);
-  void setOffsets();
+  void set_offsets();
  private:
   const std::string name_;
   const Vector length_;

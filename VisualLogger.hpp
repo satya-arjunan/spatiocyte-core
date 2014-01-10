@@ -45,7 +45,7 @@ public:
   void push_species(Species&);
 private:
   void initialize_log();
-  void log_comp_vacant();
+  void log_structure_species();
   void log_species();
   void log_mols(const unsigned);
 private:
