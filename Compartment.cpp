@@ -259,7 +259,8 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
-void Compartment::set_tars(const __m256i vdx, __m256i nrand, uint32_t* tars) const { 
+void Compartment::set_tars(const __m256i vdx, __m256i nrand,
+    uint32_t* tars) const { 
   //[mull] multiply unsigned and store high 16 bit result
   //vdx*multiplier
   __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
@@ -392,6 +393,27 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
                      index);
   tar2 = _mm256_packus_epi32(tar1, tar2);
   return _mm256_permute4x64_epi64(tar2, 216);
+  /*
+   Option 2: slower
+  __m256i index(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(nrand)));
+  //get the first 8 offsets
+  index = _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast first 8 vdx from uint16_t to uint32_t and add with offset
+  __m256i tar1 = _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
+  __m128i tar1high = _mm256_extractf128_si256(tar1, 1);
+                                                     
+  //cast second 8 indices from uint16_t to uint32_t
+  index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
+  //get the second 8 offsets
+  index =  _mm256_i32gather_epi32(offsets_, index, 4);
+  //cast second 8 vdx from uint16_t to uint32_t and add with offset
+  __m256i tar2 =
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
+                     index);
+  tar1 = _mm256_insertf128_si256(tar1, _mm256_castsi256_si128(tar2), 1);
+  tar2 = _mm256_insertf128_si256(tar2, tar1high, 0);
+  return _mm256_packus_epi32(tar1, tar2);
+  */
   /*
 
   union256 mvdx;
