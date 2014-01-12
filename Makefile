@@ -6,6 +6,7 @@ SRC=\
 		Model\
 		Stepper\
 		Compartment\
+		Lattice\
 		Species\
 		Diffuser\
 		VisualLogger\

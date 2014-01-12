@@ -48,15 +48,16 @@ class VisualLogger;
 
 #define ADJS 12
 
+template<typename T>
 struct Vector
 {
-  Vector(const double a=0, const double b=0, const double c=0):
+  Vector(const T a=0, const T b=0, const T c=0):
     x(a),
     y(b),
     z(c) {}
-  double x;
-  double y;
-  double z;
+  T x;
+  T y;
+  T z;
 };
 
 typedef union

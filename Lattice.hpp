@@ -29,30 +29,29 @@
 //
 
 
-#ifndef __Model_hpp
-#define __Model_hpp
+#ifndef __Lattice_hpp
+#define __Lattice_hpp
 
 #include <Common.hpp>
-#include <Compartment.hpp>
-#include <Stepper.hpp>
 
-class Model {
+class Lattice {
  public: 
-  Model();
-  ~Model() {}
+  Lattice(const unsigned, const Vector<unsigned>&, const unsigned);
+  ~Lattice() {}
   void initialize();
-  void run(const double);
-  unsigned get_nbit() const;
-  unsigned push_species(Species&);
-  Compartment& get_comp();
-  Stepper& get_stepper();
-  std::vector<Species*>& get_species();
+  unsigned get_num_voxel() const;
+  unsigned get_num_box() const;
+  const Vector<unsigned>& get_dimensions() const;
+  const Vector<unsigned>& get_box_dimensions() const;
+  voxel_t* get_voxels();
  private:
-  const unsigned nbit_;
-  std::vector<Species*> species_;
-  Stepper stepper_;
-  Compartment comp_; //must declare this at the end after initializing others
+  const unsigned num_voxel_;
+  const unsigned num_box_;
+  const Vector<unsigned> dimensions_;
+  const Vector<unsigned> box_dimensions_;
+  voxel_t* voxels_;
+  voxel_t** voxel_boxes_;
 };
 
-#endif /* __Model_hpp */
+#endif /* __Lattice_hpp */
 

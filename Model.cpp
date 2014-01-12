@@ -3,7 +3,7 @@
 //        This file is part of the Spatiocyte package
 //
 //        Copyright (C) 2006-2009 Keio University
-//        Copyright (C) 2010-2013 RIKEN
+//        Copyright (C) 2010-2014 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //

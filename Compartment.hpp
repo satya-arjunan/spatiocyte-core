@@ -3,7 +3,7 @@
 //        This file is part of the Spatiocyte package
 //
 //        Copyright (C) 2006-2009 Keio University
-//        Copyright (C) 2010-2013 RIKEN
+//        Copyright (C) 2010-2014 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -35,6 +35,7 @@
 #include <Spatiocyte.hpp>
 #include <Common.hpp>
 #include <Species.hpp>
+#include <Lattice.hpp>
 
 #define HCP_X double(VOXEL_RADIUS*1.732050807568877)
 #define HCP_Z double(VOXEL_RADIUS*1.632993161855452)
@@ -53,18 +54,13 @@ class Compartment {
   void initialize();
   void set_tars(const __m256i, __m256i, uint32_t*) const;
   __m256i get_tars(const __m256i, __m256i) const;
-  umol_t get_num_col() const;
-  umol_t get_num_lay() const;
-  umol_t get_num_row() const;
-  umol_t get_num_voxel() const;
-  umol_t get_lattice_size() const;
   umol_t get_tar(const umol_t, const unsigned) const;
-  const Vector& get_center() const;
+  const Vector<double>& get_center() const;
   Species& get_surface_species();
   Species& get_volume_species();
   Model& get_model();
   const std::string& get_name() const;
-  voxel_t* get_lattice();
+  Lattice& get_lattice();
  private:
   void set_volume_structure();
   void set_surface_structure();
@@ -72,11 +68,10 @@ class Compartment {
   void set_offsets();
  private:
   const std::string name_;
-  const Vector length_;
-  const Vector center_;
-  umol_t lattice_size_;
-  voxel_t* lattice_;
+  const Vector<double> length_;
+  const Vector<double> center_;
   Model& model_;
+  Lattice lattice_;
   Species volume_species_;
   Species surface_species_;
   voxel_t nbit_;

@@ -63,14 +63,15 @@ void Species::populate() {
 }
 
 void Species::populate_mol(const umol_t vdx) {
-  //comp_.get_lattice()[vdx*nbit_/WORD] ^= sur_xor_ << vdx*nbit_%WORD;
-  comp_.get_lattice()[vdx] = get_id();
+  //comp_.get_lattice().get_voxels()[vdx*nbit_/WORD] ^= sur_xor_ << 
+  //vdx*nbit_%WORD;
+  comp_.get_lattice().get_voxels()[vdx] = get_id();
   mols_.push_back(vdx);
 }
 
 umol_t Species::get_random_valid_mol() {
   umol_t mol(mols_[rng_.IRan(0, mols_.size())]);
-  while(comp_.get_lattice()[mol] != get_id()) {
+  while(comp_.get_lattice().get_voxels()[mol] != get_id()) {
     mol = mols_[rng_.IRan(0, mols_.size())];
   }
   return mol;

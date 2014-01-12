@@ -45,7 +45,7 @@ Diffuser::Diffuser(const double D, Species& species):
 
 void Diffuser::initialize()
 {
-  lattice_ = comp_.get_lattice();
+  lattice_ = comp_.get_lattice().get_voxels();
   nbit_ = species_.get_comp().get_model().get_nbit();
   one_nbit_ = pow(2, nbit_)-1;
   std::cout << species_.get_name_id() << std::endl;

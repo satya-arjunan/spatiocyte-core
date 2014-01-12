@@ -3,7 +3,7 @@
 //        This file is part of the Spatiocyte package
 //
 //        Copyright (C) 2006-2009 Keio University
-//        Copyright (C) 2010-2013 RIKEN
+//        Copyright (C) 2010-2014 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -28,7 +28,6 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
-#include <cstring>
 #include <math.h>
 #include <Compartment.hpp>
 #include <Species.hpp>
@@ -42,23 +41,15 @@ Compartment::Compartment(std::string name, const double len_x,
     length_(len_x, len_y, len_z),
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
+    lattice_(NUM_VOXEL, Vector<unsigned>(NUM_COL, NUM_ROW, NUM_LAY), 1),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
     surface_species_("surface", 0, 0, model, *this, volume_species_, true) {}
 
 void Compartment::initialize() {
+  lattice_.initialize();
   set_offsets();
-  nbit_ = model_.get_nbit();
-  sur_xor_ = surface_species_.get_id()^volume_species_.get_id();
-  //lattice_size_ = ceil(double(NUM_VOXEL)*nbit_/WORD);
-  lattice_size_ = NUM_VOXEL;
-  lattice_ = new voxel_t[lattice_size_];
-  memset(lattice_, 0, sizeof(voxel_t)*lattice_size_);
   set_volume_structure();
   set_surface_structure();
-  std::cout << "nrow:" << NUM_ROW << " ncol:" << NUM_COL << " nlay:" <<
-    NUM_LAY << " nvoxel:" << NUM_VOXEL << " latticeSize:" <<
-    lattice_size_ << " memory:" << 
-    lattice_size_*sizeof(voxel_t)/(1024*1024.0) << " MB" << std::endl;
   umol_t multiplier_colrow, multiplier_row, nshift_colrow, nshift_row;
   set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow);
   multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
@@ -66,27 +57,6 @@ void Compartment::initialize() {
   set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row);
   multiplier_row_ = _mm256_set1_epi16(multiplier_row);
   nshift_row_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_row);
-}
-
-umol_t Compartment::get_num_col() const {
-  return NUM_COL;
-}
-
-umol_t Compartment::get_num_lay() const {
-  return NUM_LAY;
-}
-
-umol_t Compartment::get_num_row() const {
-  return NUM_ROW;
-}
-
-umol_t Compartment::get_num_voxel() const {
-  return NUM_VOXEL;
-}
-
-umol_t Compartment::get_lattice_size() const {
-  return lattice_size_;
-  //return lattice_.size();
 }
 
 umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
@@ -489,7 +459,7 @@ void Compartment::set_offsets() {
   offsets_[47] = NUM_COLROW+NUM_ROW;
 }
 
-const Vector& Compartment::get_center() const {
+const Vector<double>& Compartment::get_center() const {
   return center_;
 }
 
@@ -509,13 +479,12 @@ const std::string& Compartment::get_name() const {
   return name_;
 }
 
-//std::vector<voxel_t>& Compartment::get_lattice() {
-voxel_t* Compartment::get_lattice() {
+Lattice& Compartment::get_lattice() {
   return lattice_;
 }
 
 void Compartment::set_volume_structure() {
-  for(umol_t i(0); i != get_lattice_size(); ++i) {
+  for(umol_t i(0); i != get_lattice().get_num_voxel(); ++i) {
     volume_species_.populate_mol(i);
   }
 }
@@ -538,9 +507,6 @@ void Compartment::set_surface_structure() {
       surface_species_.populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
     }
   }
-  //std::cout << "surface size:" << mols.size() << " actual size:" <<
-  //NUM_COLROW*2 + NUM_ROW*(NUM_LAY-2)*2 + (NUM_COL-2)*(NUM_LAY-2)*2 <<
-  //std::endl;
 }
 
 

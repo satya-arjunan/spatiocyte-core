@@ -28,31 +28,36 @@
 // written by Satya Arjunan <satya.arjunan@gmail.com>
 //
 
+#include <cstring>
+#include <Lattice.hpp>
 
-#ifndef __Model_hpp
-#define __Model_hpp
+Lattice::Lattice(const unsigned num_voxel,
+    const Vector<unsigned>& dimensions, const unsigned num_box)
+  : num_voxel_(num_voxel),
+    num_box_(num_box),
+    dimensions_(dimensions),
+    box_dimensions_(dimensions) {}
 
-#include <Common.hpp>
-#include <Compartment.hpp>
-#include <Stepper.hpp>
+void Lattice::initialize() {
+  voxels_ = new voxel_t[num_voxel_];
+  memset(voxels_, 0, sizeof(voxel_t)*num_voxel_);
+  std::cout << "num_x:" << dimensions_.x << " num_y:" << dimensions_.y <<
+    " num_z:" << dimensions_.z  << " num_voxel:" << num_voxel_ << " memory:"
+    << num_voxel_*sizeof(voxel_t)/(1024*1024.0) << " MB" << std::endl;
+}
 
-class Model {
- public: 
-  Model();
-  ~Model() {}
-  void initialize();
-  void run(const double);
-  unsigned get_nbit() const;
-  unsigned push_species(Species&);
-  Compartment& get_comp();
-  Stepper& get_stepper();
-  std::vector<Species*>& get_species();
- private:
-  const unsigned nbit_;
-  std::vector<Species*> species_;
-  Stepper stepper_;
-  Compartment comp_; //must declare this at the end after initializing others
-};
+unsigned Lattice::get_num_voxel() const {
+  return num_voxel_;
+}
 
-#endif /* __Model_hpp */
+const Vector<unsigned>& Lattice::get_dimensions() const {
+  return dimensions_;
+}
 
+const Vector<unsigned>& Lattice::get_box_dimensions() const {
+  return box_dimensions_;
+}
+
+voxel_t* Lattice::get_voxels() {
+  return voxels_;
+}
