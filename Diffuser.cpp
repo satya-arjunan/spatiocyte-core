@@ -3,7 +3,7 @@
 //        This file is part of the Spatiocyte package
 //
 //        Copyright (C) 2006-2009 Keio University
-//        Copyright (C) 2010-2013 RIKEN
+//        Copyright (C) 2010-2014 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -45,6 +45,7 @@ Diffuser::Diffuser(const double D, Species& species):
 
 void Diffuser::initialize()
 {
+  //voxel_boxes_ = comp_.get_lattice().get_voxel_boxes();
   lattice_ = comp_.get_lattice().get_voxels();
   nbit_ = species_.get_comp().get_model().get_nbit();
   one_nbit_ = pow(2, nbit_)-1;
@@ -55,31 +56,187 @@ void Diffuser::initialize()
   std::cout << "vac_xor:" << vac_xor_ << std::endl;
 }
 
-void Diffuser::walk()
-{
+/*
+void Diffuser::walk() {
+  for (unsigned i(0); i != 10; ++i) {
+    walk(voxel_boxes_[i], mols_[i]);
+  }
+}
+
+void Diffuser::walk(voxel_t* lattice, std::vector<umol_t>& smols) {
+  const unsigned n(smols.size()/16);
+  const unsigned m(smols.size()%16);
+  uint32_t tars[16];
+  __m256i* base((__m256i*)(&smols[0]));
+  for (unsigned k(0); k != n; ++k, ++base) {
+    __m256i mols(_mm256_load_si256(base));
+    comp_.set_tars(mols, rng_.Ran16(), tars);
+    for (unsigned j(0); j != 16; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (lattice[vdx] == vac_id_) {
+        lattice[vdx] = species_id_;
+        lattice[((umol_t*)&mols)[j]] = vac_id_;
+        ((umol_t*)&mols)[j] = vdx;
+      }
+    }
+    _mm256_store_si256(base, mols);
+  }
+  __m256i mols(_mm256_load_si256(base));
+  comp_.set_tars(mols, rng_.Ran16(), tars);
+  for (unsigned j(0), i(smols.size()-m); j != m; ++j, ++i) {
+    const uint32_t vdx(tars[j]);
+    if (lattice[vdx] == vac_id_) {
+      lattice[vdx] = species_id_;
+      lattice[smols[i]] = vac_id_;
+      smols[i] = vdx;
+    }
+  }
+}
+*/
+
+//t = 1.16 s
+void Diffuser::walk() {
   const unsigned n(mols_.size()/16);
   const unsigned m(mols_.size()%16);
   uint32_t tars[16];
   __m256i* base((__m256i*)(&mols_[0]));
-  for(unsigned k(0); k != n; ++k, ++base)
-    {
-      __m256i mols(_mm256_load_si256(base));
-      comp_.set_tars(mols, rng_.Ran16(), tars);
-      for(unsigned j(0); j != 16; ++j)
-        {
-          const uint32_t vdx(tars[j]);
-          if(lattice_[vdx] == vac_id_)
-            {
-              lattice_[vdx] = species_id_;
-              lattice_[((umol_t*)&mols)[j]] = vac_id_;
-              ((umol_t*)&mols)[j] = vdx;
-            }
-        }
-      _mm256_store_si256(base, mols);
+  for (unsigned k(0); k != n; ++k, ++base) {
+    __m256i mols(_mm256_load_si256(base));
+    comp_.set_tars(mols, rng_.Ran16(), tars);
+    for (unsigned j(0); j != 16; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (lattice_[vdx] == vac_id_) {
+        lattice_[((umol_t*)&mols)[j]] = vac_id_;
+        ((umol_t*)&mols)[j] = vdx;
+        lattice_[vdx] = species_id_;
+      }
     }
+    _mm256_store_si256(base, mols);
+  }
   __m256i mols(_mm256_load_si256(base));
   comp_.set_tars(mols, rng_.Ran16(), tars);
-  for(unsigned j(0), i(mols_.size()-m); j != m; ++j, ++i)
+  for (unsigned j(0), i(mols_.size()-m); j != m; ++j, ++i) {
+    const uint32_t vdx(tars[j]);
+    if (lattice_[vdx] == vac_id_) {
+      lattice_[mols_[i]] = vac_id_;
+      mols_[i] = vdx;
+      lattice_[vdx] = species_id_;
+    }
+  }
+}
+
+/*
+//t = 1.16 s
+void Diffuser::walk() {
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  uint32_t tars[16];
+  __m256i* base((__m256i*)(&mols_[0]));
+  for (unsigned k(0); k != n; ++k, ++base) {
+    __m256i mols(_mm256_load_si256(base));
+    comp_.set_tars(mols, rng_.Ran16(), tars);
+    for (unsigned j(0); j != 16; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (lattice_[vdx] == vac_id_) {
+        lattice_[((umol_t*)&mols)[j]] = vac_id_;
+        lattice_[vdx] = species_id_;
+        ((umol_t*)&mols)[j] = vdx;
+      }
+    }
+    _mm256_store_si256(base, mols);
+  }
+  __m256i mols(_mm256_load_si256(base));
+  comp_.set_tars(mols, rng_.Ran16(), tars);
+  for (unsigned j(0), i(mols_.size()-m); j != m; ++j, ++i) {
+    const uint32_t vdx(tars[j]);
+    if (lattice_[vdx] == vac_id_) {
+      lattice_[mols_[i]] = vac_id_;
+      lattice_[vdx] = species_id_;
+      mols_[i] = vdx;
+    }
+  }
+}
+*/
+
+/*
+t = 1.20
+void Diffuser::walk() {
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  uint32_t tars[16];
+  __m256i* base((__m256i*)(&mols_[0]));
+  const int* base2((int*)(&lattice_[0]));
+  __m256i vox[2];
+  for (unsigned k(0); k != n; ++k, ++base) {
+    __m256i mols(_mm256_load_si256(base));
+    comp_.set_tars(mols, rng_.Ran16(), tars);
+    vox[0] = (_mm256_i32gather_epi32(base2, *(__m256i*)(&tars[0]), 1));
+    vox[1] = (_mm256_i32gather_epi32(base2, *(__m256i*)(&tars[8]), 1));
+    for (unsigned j(0); j != 16; ++j) {
+      if(((uint8_t*)&vox[0])[j*4] == vac_id_) {
+        lattice_[((umol_t*)&mols)[j]] = vac_id_;
+        ((umol_t*)&mols)[j] = tars[j];
+      }
+    }
+    for (unsigned j(0); j != 16; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (lattice_[vdx] == vac_id_) {
+        lattice_[vdx] = species_id_;
+      }
+    }
+    _mm256_store_si256(base, mols);
+  }
+  __m256i mols(_mm256_load_si256(base));
+  comp_.set_tars(mols, rng_.Ran16(), tars);
+  for (unsigned j(0), i(mols_.size()-m); j != m; ++j, ++i) {
+    const uint32_t vdx(tars[j]);
+    if (lattice_[vdx] == vac_id_) {
+      lattice_[vdx] = species_id_;
+      lattice_[mols_[i]] = vac_id_;
+      mols_[i] = vdx;
+    }
+  }
+}
+*/
+
+/*
+void Diffuser::walk()
+{
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  unsigned i(0);
+  uint32_t tars[16];
+  const int* base((int*)(&lattice_[0]));
+  for(unsigned k(0); k != n; ++k)
+    {
+      comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+      __m256i vox(_mm256_i32gather_epi32(base, *(__m256i*)(&tars[0]), 1));
+      for(unsigned j(0); j != 8; ++j, ++i)
+        {
+          const uint8_t voxel(((uint8_t*)&vox)[j*4]);
+          if(voxel == vac_id_)
+            {
+              const uint32_t vdx(tars[j]);
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+      vox = (_mm256_i32gather_epi32(base, *(__m256i*)(&tars[8]), 1));
+      for(unsigned j(0); j != 8; ++j, ++i)
+        {
+          const uint8_t voxel(((uint8_t*)&vox)[j*4]);
+          if(voxel == vac_id_)
+            {
+              const uint32_t vdx(tars[j+8]);
+              lattice_[vdx] = species_id_;
+              lattice_[mols_[i]] = vac_id_;
+              mols_[i] = vdx;
+            }
+        }
+    }
+  comp_.set_tars(*(__m256i*)(&mols_[i]), rng_.Ran16(), tars);
+  for(unsigned j(0); j != m; ++j, ++i)
     {
       const uint32_t vdx(tars[j]);
       if(lattice_[vdx] == vac_id_)
@@ -90,6 +247,40 @@ void Diffuser::walk()
         }
     }
 }
+*/
+
+/*
+//t = 1.18 s
+void Diffuser::walk() {
+  const unsigned n(mols_.size()/16);
+  const unsigned m(mols_.size()%16);
+  uint32_t tars[16];
+  __m256i* base((__m256i*)(&mols_[0]));
+  for (unsigned k(0); k != n; ++k, ++base) {
+    __m256i mols(_mm256_load_si256(base));
+    comp_.set_tars(mols, rng_.Ran16(), tars);
+    for (unsigned j(0); j != 16; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (lattice_[vdx] == vac_id_) {
+        lattice_[vdx] = species_id_;
+        lattice_[((umol_t*)&mols)[j]] = vac_id_;
+        ((umol_t*)&mols)[j] = vdx;
+      }
+    }
+    _mm256_store_si256(base, mols);
+  }
+  __m256i mols(_mm256_load_si256(base));
+  comp_.set_tars(mols, rng_.Ran16(), tars);
+  for (unsigned j(0), i(mols_.size()-m); j != m; ++j, ++i) {
+    const uint32_t vdx(tars[j]);
+    if (lattice_[vdx] == vac_id_) {
+      lattice_[vdx] = species_id_;
+      lattice_[mols_[i]] = vac_id_;
+      mols_[i] = vdx;
+    }
+  }
+}
+*/
 
 /*
 //t = 1.23 s
