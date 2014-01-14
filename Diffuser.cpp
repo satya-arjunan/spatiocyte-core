@@ -98,30 +98,30 @@ void Diffuser::walk() {
   walk(lattice_, (__m256i*)(&mols_[0]), mols_.size());
 }
 
-void Diffuser::walk(voxel_t* voxels, __m256i* base, const unsigned size) {
+void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
   const unsigned n(size/16);
   const unsigned m(size%16);
   uint32_t tars[16];
-  for (unsigned k(0); k != n; ++k, ++base) {
-    __m256i m256i_mols(_mm256_load_si256(base));
-    comp_.set_tars(m256i_mols, rng_.Ran16(), tars);
+  for (unsigned k(0); k != n; ++k, ++mols) {
+    __m256i mols_m256i(_mm256_load_si256(mols));
+    comp_.set_tars(mols_m256i, rng_.Ran16(), tars);
     for (unsigned j(0); j != 16; ++j) {
       const uint32_t vdx(tars[j]);
       if (voxels[vdx] == vac_id_) {
-        voxels[((umol_t*)&m256i_mols)[j]] = vac_id_;
+        voxels[((umol_t*)&mols_m256i)[j]] = vac_id_;
         voxels[vdx] = species_id_;
-        ((umol_t*)&m256i_mols)[j] = vdx;
+        ((umol_t*)&mols_m256i)[j] = vdx;
       }
     }
-    _mm256_store_si256(base, m256i_mols);
+    _mm256_store_si256(mols, mols_m256i);
   }
-  comp_.set_tars(_mm256_load_si256(base), rng_.Ran16(), tars);
+  comp_.set_tars(_mm256_load_si256(mols), rng_.Ran16(), tars);
   for (unsigned j(0); j != m; ++j) {
     const uint32_t vdx(tars[j]);
     if (voxels[vdx] == vac_id_) {
-      voxels[((umol_t*)base)[j]] = vac_id_;
+      voxels[((umol_t*)mols)[j]] = vac_id_;
       voxels[vdx] = species_id_;
-      ((umol_t*)base)[j] = vdx;
+      ((umol_t*)mols)[j] = vdx;
     }
   }
 }
@@ -138,17 +138,17 @@ void Diffuser::walk(voxel_t* voxels, __m256i* base, const unsigned size) {
   const unsigned m(size%16);
   uint32_t tars[16];
   for (unsigned k(0); k != n; ++k, ++base) {
-    __m256i m256i_mols(_mm256_load_si256(base));
-    comp_.set_tars(m256i_mols, rng_.Ran16(), tars);
+    __m256i mols_m256i(_mm256_load_si256(base));
+    comp_.set_tars(mols_m256i, rng_.Ran16(), tars);
     for (unsigned j(0); j != 16; ++j) {
       const uint32_t vdx(tars[j]);
       if (voxels[vdx] == vac_id_) {
-        voxels[((umol_t*)&m256i_mols)[j]] = vac_id_;
+        voxels[((umol_t*)&mols_m256i)[j]] = vac_id_;
         voxels[vdx] = species_id_;
-        ((umol_t*)&m256i_mols)[j] = vdx;
+        ((umol_t*)&mols_m256i)[j] = vdx;
       }
     }
-    _mm256_store_si256(base, m256i_mols);
+    _mm256_store_si256(base, mols_m256i);
   }
   comp_.set_tars(_mm256_load_si256(base), rng_.Ran16(), tars);
   for (unsigned j(0); j != m; ++j) {
@@ -174,17 +174,17 @@ void Diffuser::walk(voxel_t* voxels, std::vector<umol_t>& mols) {
   uint32_t tars[16];
   __m256i* base((__m256i*)(&mols[0]));
   for (unsigned k(0); k != n; ++k, ++base) {
-    __m256i m256i_mols(_mm256_load_si256(base));
-    comp_.set_tars(m256i_mols, rng_.Ran16(), tars);
+    __m256i mols_m256i(_mm256_load_si256(base));
+    comp_.set_tars(mols_m256i, rng_.Ran16(), tars);
     for (unsigned j(0); j != 16; ++j) {
       const uint32_t vdx(tars[j]);
       if (voxels[vdx] == vac_id_) {
-        voxels[((umol_t*)&m256i_mols)[j]] = vac_id_;
+        voxels[((umol_t*)&mols_m256i)[j]] = vac_id_;
         voxels[vdx] = species_id_;
-        ((umol_t*)&m256i_mols)[j] = vdx;
+        ((umol_t*)&mols_m256i)[j] = vdx;
       }
     }
-    _mm256_store_si256(base, m256i_mols);
+    _mm256_store_si256(base, mols_m256i);
   }
   comp_.set_tars(_mm256_load_si256(base), rng_.Ran16(), tars);
   for (unsigned j(0); j != m; ++j) {
