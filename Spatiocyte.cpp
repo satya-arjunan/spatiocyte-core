@@ -3,7 +3,7 @@
 //        This file is part of the Spatiocyte package
 //
 //        Copyright (C) 2006-2009 Keio University
-//        Copyright (C) 2010-2013 RIKEN
+//        Copyright (C) 2010-2014 RIKEN
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -35,17 +35,17 @@
 #include <VisualLogger.hpp>
 
 int main() {
-  Model model;
-  Species A("A", 10000, 1e-12, model, model.get_comp(),
-            model.get_comp().get_volume_species());
+  Model model(10);
+  Species A("A", 10000, 1e-12, model, model.get_compartment(),
+            model.get_compartment().get_volume_species());
   model.initialize();
   A.populate();
   VisualLogger visual_logger(model);
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);
   visual_logger.push_species(A);
-  //visual_logger.push_species(model.get_comp().get_surface_species());
-  //visual_logger.push_species(model.get_comp().get_volume_species());
+  //visual_logger.push_species(model.get_compartment().get_surface_species());
+  //visual_logger.push_species(model.get_compartment().get_volume_species());
   visual_logger.initialize();
 
   model.run(0.0001);

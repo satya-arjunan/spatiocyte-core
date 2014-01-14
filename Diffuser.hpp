@@ -47,9 +47,9 @@ public:
 private:
   double D_;
   Species& species_;
-  Compartment& comp_;
-  std::vector<umol_t>& mols_;
-  voxel_t* lattice_;
+  Compartment& compartment_;
+  std::vector<std::vector<umol_t> >& box_mols_;
+  voxel_t** box_voxels_;
   const voxel_t species_id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;

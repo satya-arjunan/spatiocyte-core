@@ -45,22 +45,24 @@ public:
   ~Species() {}
   void initialize();
   void populate();
-  void populate_mol(const umol_t);
+  void populate_mol(const unsigned, const umol_t);
   bool is_structure_species() const;
   bool is_root_structure_species() const;
   voxel_t get_id() const;
   voxel_t get_vac_id() const;
   voxel_t get_vac_xor() const;
-  umol_t get_random_valid_mol();
+  umol_t get_random_valid_mol(const unsigned);
   Diffuser& get_diffuser();
-  Compartment& get_comp();
+  Species& get_vacant();
+  Compartment& get_compartment();
   const std::string& get_name() const;
   const std::string get_name_id() const;
-  std::vector<umol_t>& get_mols();
+  std::vector<unsigned> get_mols();
+  std::vector<std::vector<umol_t> >& get_box_mols();
 private:
   const std::string get_init_name(const std::string) const;
 private:
-  Compartment& comp_;
+  Compartment& compartment_;
   Species& vacant_;
   const std::string name_;
   const umol2_t init_nmols_;
@@ -68,7 +70,7 @@ private:
   const voxel_t id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;
-  std::vector<umol_t> mols_;
+  std::vector<std::vector<umol_t> > box_mols_;
   Diffuser diffuser_;
   Random rng_;
   voxel_t nbit_;

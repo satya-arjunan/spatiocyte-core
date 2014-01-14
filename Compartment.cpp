@@ -36,12 +36,14 @@
 
 
 Compartment::Compartment(std::string name, const double len_x,
-                         const double len_y, const double len_z, Model& model)
+    const double len_y, const double len_z, Model& model,
+    const unsigned num_box)
   : name_(name),
     length_(len_x, len_y, len_z),
     center_(len_x/2, len_y/2, len_z/2),
     model_(model),
-    lattice_(NUM_VOXEL, Vector<unsigned>(NUM_COL, NUM_ROW, NUM_LAY), 1),
+    lattice_(NUM_VOXEL, Vector<unsigned>(NUM_COL, NUM_ROW, NUM_LAY),
+        num_box),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
     surface_species_("surface", 0, 0, model, *this, volume_species_, true) {}
 
@@ -484,27 +486,33 @@ Lattice& Compartment::get_lattice() {
 }
 
 void Compartment::set_volume_structure() {
-  for(umol_t i(0); i != get_lattice().get_num_voxel(); ++i) {
-    volume_species_.populate_mol(i);
+  for(unsigned box(0); box != get_lattice().get_num_box(); ++box) {
+    for(umol_t i(0); i != get_lattice().get_num_box_voxel(); ++i) {
+      get_volume_species().populate_mol(box, i);
+    }
   }
 }
 
 void Compartment::set_surface_structure() {
-  //row_col xy-plane
-  for (umol_t i(0); i != NUM_COLROW; ++i) {
-    surface_species_.populate_mol(i);
-    surface_species_.populate_mol(NUM_VOXEL-1-i);
-  }
-  for (umol_t i(1); i != NUM_LAY-1; ++i) {
-    //layer_row yz-plane
-    for (umol_t j(0); j != NUM_ROW; ++j) {
-      surface_species_.populate_mol(i*NUM_COLROW+j);
-      surface_species_.populate_mol(i*NUM_COLROW+j+NUM_ROW*(NUM_COL-1));
+  for(unsigned box(0); box != get_lattice().get_num_box(); ++box) {
+    //row_col xy-plane
+    for (umol_t i(0); i != NUM_COLROW; ++i) {
+      get_surface_species().populate_mol(box, i);
+      get_surface_species().populate_mol(box, NUM_VOXEL-1-i);
     }
-    //layer_col xz-plane
-    for (umol_t j(1); j != NUM_COL-1; ++j) {
-      surface_species_.populate_mol(i*NUM_COLROW+j*NUM_ROW);
-      surface_species_.populate_mol(i*NUM_COLROW+j*NUM_ROW+NUM_ROW-1);
+    for (umol_t i(1); i != NUM_LAY-1; ++i) {
+      //layer_row yz-plane
+      for (umol_t j(0); j != NUM_ROW; ++j) {
+        get_surface_species().populate_mol(box, i*NUM_COLROW+j);
+        get_surface_species().populate_mol(box, i*NUM_COLROW+j+NUM_ROW*
+                                           (NUM_COL-1));
+      }
+      //layer_col xz-plane
+      for (umol_t j(1); j != NUM_COL-1; ++j) {
+        get_surface_species().populate_mol(box, i*NUM_COLROW+j*NUM_ROW);
+        get_surface_species().populate_mol(box, i*NUM_COLROW+j*NUM_ROW+
+                                           NUM_ROW-1);
+      }
     }
   }
 }

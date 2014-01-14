@@ -52,7 +52,7 @@ private:
   unsigned marker_;
   std::string filename_;
   std::ofstream logfile_;
-  Compartment& comp_;
+  Compartment& compartment_;
   Stepper& stepper_;
   std::vector<Species*> species_;
 };

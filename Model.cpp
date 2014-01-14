@@ -32,13 +32,14 @@
 #include <Spatiocyte.hpp>
 #include <Model.hpp>
 
-Model::Model()
-    : nbit_(rint(log(SPECIES_MAX)/log(2.0))),
-      comp_("root", LENGTH_X, LENGTH_Y, LENGTH_Z, *this) {}
+Model::Model(const unsigned num_box)
+    : num_box_(num_box),
+      nbit_(rint(log(SPECIES_MAX)/log(2.0))),
+      compartment_("root", LENGTH_X, LENGTH_Y, LENGTH_Z, *this, num_box) {}
       
 void Model::initialize() {
   std::cout << "nbit:" << nbit_ << " size:" << species_.size() << std::endl;
-  comp_.initialize();
+  compartment_.initialize();
   for (unsigned i(0), n(species_.size()); i != n; ++i) {
       species_[i]->initialize();
     }
@@ -67,8 +68,8 @@ unsigned Model::push_species(Species& species) {
   return species_.size()-1;
 }
 
-Compartment& Model::get_comp() {
-  return comp_;
+Compartment& Model::get_compartment() {
+  return compartment_;
 }
 
 Stepper& Model::get_stepper() {

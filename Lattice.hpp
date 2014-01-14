@@ -39,18 +39,26 @@ class Lattice {
   Lattice(const unsigned, const Vector<unsigned>&, const unsigned);
   ~Lattice() {}
   void initialize();
-  unsigned get_num_voxel() const;
   unsigned get_num_box() const;
+  unsigned get_num_box_voxel() const;
+  unsigned get_num_voxel() const;
+  unsigned box_mol_to_mol(const unsigned, const umol_t) const;
+  unsigned coord_to_mol(const Vector<unsigned>&) const;
+  Vector<unsigned> box_mol_to_coord(const umol_t) const;
+  Vector<unsigned> box_to_coord(const unsigned) const;
   const Vector<unsigned>& get_dimensions() const;
   const Vector<unsigned>& get_box_dimensions() const;
+  const Vector<unsigned>& get_box_voxel_dimensions() const;
   voxel_t* get_voxels();
+  voxel_t** get_box_voxels();
  private:
-  const unsigned num_voxel_;
   const unsigned num_box_;
-  const Vector<unsigned> dimensions_;
   const Vector<unsigned> box_dimensions_;
+  const Vector<unsigned> box_voxel_dimensions_;
+  const Vector<unsigned> dimensions_;
+  const unsigned num_box_voxel_;
   voxel_t* voxels_;
-  voxel_t** voxel_boxes_;
+  voxel_t** box_voxels_;
 };
 
 #endif /* __Lattice_hpp */

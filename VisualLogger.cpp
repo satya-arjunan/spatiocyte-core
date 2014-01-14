@@ -40,7 +40,7 @@
 VisualLogger::VisualLogger(Model& model):
   marker_(UINT_MAX),
   filename_("VisualLog.dat"),
-  comp_(model.get_comp()),
+  compartment_(model.get_compartment()),
   stepper_(model.get_stepper()) {}
 
 void VisualLogger::fire()
@@ -73,12 +73,13 @@ void VisualLogger::initialize_log()
   logfile_.write((char*)(&meanCount), sizeof(meanCount));
   const unsigned startCoord(0);
   logfile_.write((char*)(&startCoord), sizeof(startCoord));
-  const Vector<unsigned>& dimensions(comp_.get_lattice().get_dimensions());
+  const Vector<unsigned>& dimensions(
+      compartment_.get_lattice().get_dimensions());
   logfile_.write((char*)(&dimensions.x), sizeof(dimensions.x));
   logfile_.write((char*)(&dimensions.z), sizeof(dimensions.z));
   logfile_.write((char*)(&dimensions.y), sizeof(dimensions.y));
   const double voxRadius(VOXEL_RADIUS);
-  const Vector<double>& center(comp_.get_center());
+  const Vector<double>& center(compartment_.get_center());
   const double realColSize(center.x*2/(voxRadius*2));
   logfile_.write((char*)(&realColSize), sizeof(realColSize));
   const double realLayerSize(center.y*2/(voxRadius*2));
@@ -115,7 +116,7 @@ void VisualLogger::log_structure_species()
           Species& species(*species_[i]);
           //The species index in the process:
           logfile_.write((char*)(&i), sizeof(i)); 
-          const std::vector<umol_t>& mols(species.get_mols());
+          const std::vector<unsigned>& mols(species.get_mols());
           const unsigned size(mols.size());
           logfile_.write((char*)(&size), sizeof(size)); 
           for(unsigned j(0); j != mols.size(); ++j)
@@ -151,7 +152,7 @@ void VisualLogger::log_mols(const unsigned index)
       return;
     }
   logfile_.write((char*)(&index), sizeof(index));
-  const std::vector<umol_t>& mols(species.get_mols());
+  const std::vector<unsigned>& mols(species.get_mols());
   const unsigned size(mols.size());
   logfile_.write((char*)(&size), sizeof(size)); 
   for(unsigned i(0); i != mols.size(); ++i)

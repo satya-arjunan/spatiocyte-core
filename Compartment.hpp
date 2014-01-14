@@ -49,7 +49,8 @@
 
 class Compartment { 
  public: 
-  Compartment(std::string, const double, const double, const double, Model&);
+  Compartment(std::string, const double, const double, const double, Model&,
+      const unsigned);
   ~Compartment() {}
   void initialize();
   void set_tars(const __m256i, __m256i, uint32_t*) const;

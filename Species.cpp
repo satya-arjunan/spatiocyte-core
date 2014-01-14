@@ -36,43 +36,44 @@
 #include <Model.hpp>
 
 Species::Species(const std::string name, const unsigned nmols, const double D,
-    Model& model, Compartment& comp, Species& vacant,
-    const bool is_structure_species):
-  comp_(comp),
-  vacant_(vacant),
-  name_(get_init_name(name)),
-  init_nmols_(nmols),
-  is_structure_species_(is_structure_species),
-  id_(model.push_species(*this)),
-  vac_id_(vacant_.get_id()),
-  vac_xor_(vac_id_^id_),
-  diffuser_(D, *this),
-  rng_(time(0)) {
-    std::cout << get_name_id() << std::endl;
+    Model& model, Compartment& compartment, Species& vacant,
+    const bool is_structure_species)
+    : compartment_(compartment),
+      vacant_(vacant),
+      name_(get_init_name(name)),
+      init_nmols_(nmols),
+      is_structure_species_(is_structure_species),
+      id_(model.push_species(*this)),
+      vac_id_(vacant_.get_id()),
+      vac_xor_(vac_id_^id_),
+      diffuser_(D, *this),
+      rng_(time(0)) {
+  get_box_mols().resize(get_compartment().get_lattice().get_num_box());
 }
 
 void Species::initialize() {
-  nbit_ = comp_.get_model().get_nbit();
+  nbit_ = get_compartment().get_model().get_nbit();
   diffuser_.initialize();
 }
 
 void Species::populate() {
-  for(unsigned i(0); i != init_nmols_; ++i) {
-    populate_mol(vacant_.get_random_valid_mol());
+  for(unsigned box(0), n(get_box_mols().size()); box != n; ++box) {
+    for(unsigned i(0); i != init_nmols_; ++i) {
+      populate_mol(box, vacant_.get_random_valid_mol(box));
+    }
   }
 }
 
-void Species::populate_mol(const umol_t vdx) {
-  //comp_.get_lattice().get_voxels()[vdx*nbit_/WORD] ^= sur_xor_ << 
-  //vdx*nbit_%WORD;
-  comp_.get_lattice().get_voxels()[vdx] = get_id();
-  mols_.push_back(vdx);
+void Species::populate_mol(const unsigned box, const umol_t vdx) {
+  get_compartment().get_lattice().get_box_voxels()[box][vdx] = get_id();
+  get_box_mols()[box].push_back(vdx);
 }
 
-umol_t Species::get_random_valid_mol() {
-  umol_t mol(mols_[rng_.IRan(0, mols_.size())]);
-  while(comp_.get_lattice().get_voxels()[mol] != get_id()) {
-    mol = mols_[rng_.IRan(0, mols_.size())];
+umol_t Species::get_random_valid_mol(const unsigned box) {
+  std::vector<umol_t>& mols(get_box_mols()[box]);
+  umol_t mol(mols[rng_.IRan(0, mols.size())]);
+  while(get_compartment().get_lattice().get_box_voxels()[box][mol] != get_id()) {
+    mol = mols[rng_.IRan(0, mols.size())];
   }
   return mol;
 }
@@ -101,8 +102,12 @@ Diffuser& Species::get_diffuser() {
   return diffuser_;
 }
 
-Compartment& Species::get_comp() {
-  return comp_;
+Compartment& Species::get_compartment() {
+  return compartment_;
+}
+
+Species& Species::get_vacant() {
+  return vacant_;
 }
 
 const std::string& Species::get_name() const {
@@ -118,11 +123,22 @@ const std::string Species::get_name_id() const {
 
 const std::string Species::get_init_name(const std::string name) const {
   if(is_root_structure_species()) {
-    return std::string(comp_.get_name()+"/"+name);
+    return std::string(compartment_.get_name()+"/"+name);
   }
   return std::string(vacant_.get_name()+"/"+name);
 }
 
-std::vector<umol_t>& Species::get_mols() {
-  return mols_;
+std::vector<unsigned> Species::get_mols() {
+  std::vector<unsigned> mols;
+  for(unsigned box(0), m(get_box_mols().size()); box != m; ++box) {
+    for(unsigned i(0), n(get_box_mols()[box].size()); i != n; ++i) {
+      mols.push_back(get_compartment().get_lattice().box_mol_to_mol(box,
+          get_box_mols()[box][i]));
+    }
+  }
+  return mols;
+}
+
+std::vector<std::vector<umol_t> >& Species::get_box_mols() {
+  return box_mols_;
 }

@@ -38,20 +38,21 @@
 
 class Model {
  public: 
-  Model();
+  Model(const unsigned);
   ~Model() {}
   void initialize();
   void run(const double);
   unsigned get_nbit() const;
   unsigned push_species(Species&);
-  Compartment& get_comp();
+  Compartment& get_compartment();
   Stepper& get_stepper();
   std::vector<Species*>& get_species();
  private:
+  const unsigned num_box_;
   const unsigned nbit_;
   std::vector<Species*> species_;
   Stepper stepper_;
-  Compartment comp_; //must declare this at the end after initializing others
+  Compartment compartment_; //must declare this at the end after initializing others
 };
 
 #endif /* __Model_hpp */
