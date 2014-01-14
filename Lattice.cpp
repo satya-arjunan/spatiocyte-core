@@ -47,6 +47,7 @@ Lattice::Lattice(const unsigned num_voxel,
 void Lattice::initialize() {
   voxels_ = new voxel_t[get_num_voxel()];
   memset(get_voxels(), 0, sizeof(voxel_t)*get_num_voxel());
+  box_voxels_ = new voxel_t*[get_num_box()];
   for(unsigned box(0); box != get_num_box(); ++box) {
     box_voxels_[box] = voxels_+box*get_num_box_voxel();
   }
