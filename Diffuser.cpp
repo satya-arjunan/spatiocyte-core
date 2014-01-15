@@ -79,13 +79,15 @@ void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
     }
     _mm256_store_si256(mols, mols_m256i);
   }
-  compartment_.set_tars(_mm256_load_si256(mols), rng_.Ran16(), tars);
-  for (unsigned j(0); j != m; ++j) {
-    const uint32_t vdx(tars[j]);
-    if (voxels[vdx] == vac_id_) {
-      voxels[((umol_t*)mols)[j]] = vac_id_;
-      voxels[vdx] = species_id_;
-      ((umol_t*)mols)[j] = vdx;
+  if(m) {
+    compartment_.set_tars(_mm256_load_si256(mols), rng_.Ran16(), tars);
+    for (unsigned j(0); j != m; ++j) {
+      const uint32_t vdx(tars[j]);
+      if (voxels[vdx] == vac_id_) {
+        voxels[((umol_t*)mols)[j]] = vac_id_;
+        voxels[vdx] = species_id_;
+        ((umol_t*)mols)[j] = vdx;
+      }
     }
   }
 }
