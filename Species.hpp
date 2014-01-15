@@ -65,7 +65,7 @@ private:
   Compartment& compartment_;
   Species& vacant_;
   const std::string name_;
-  const umol2_t init_nmols_;
+  const unsigned init_nmols_;
   const bool is_structure_species_;
   const voxel_t id_;
   const voxel_t vac_id_;

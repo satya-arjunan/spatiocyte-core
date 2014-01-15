@@ -62,6 +62,36 @@ void Diffuser::walk() {
   }
 }
 
+void Diffuser::walk_epi32(voxel_t* voxels, __m256i* mols, const unsigned size) {
+  const unsigned n(size/8);
+  const unsigned m(size%8);
+  for (unsigned k(0); k != n; ++k, ++mols) {
+    __m256i mols_m256i(_mm256_load_si256(mols));
+    __m256i tars(compartment_.get_tars(mols_m256i, rng_.Ran8()));
+    for (unsigned j(0); j != 8; ++j) {
+      const uint32_t vdx(((umol_t*)&tars)[j]);
+      if (voxels[vdx] == vac_id_) {
+        voxels[((umol_t*)&mols_m256i)[j]] = vac_id_;
+        voxels[vdx] = species_id_;
+        ((umol_t*)&mols_m256i)[j] = vdx;
+      }
+    }
+    _mm256_store_si256(mols, mols_m256i);
+  }
+  if(m) {
+    __m256i tars(compartment_.get_tars(_mm256_load_si256(mols), rng_.Ran8()));
+    for (unsigned j(0); j != m; ++j) {
+      const uint32_t vdx(((umol_t*)&tars)[j]);
+      if (voxels[vdx] == vac_id_) {
+        voxels[((umol_t*)mols)[j]] = vac_id_;
+        voxels[vdx] = species_id_;
+        ((umol_t*)mols)[j] = vdx;
+      }
+    }
+  }
+}
+
+/*
 void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
   const unsigned n(size/16);
   const unsigned m(size%16);
@@ -91,6 +121,7 @@ void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
     }
   }
 }
+*/
 
 
 /*

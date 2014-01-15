@@ -54,6 +54,7 @@ class Compartment {
   ~Compartment() {}
   void initialize();
   void set_tars(const __m256i, __m256i, uint32_t*) const;
+  __m256i get_tars_epi32(const __m256i, __m256i) const;
   __m256i get_tars(const __m256i, __m256i) const;
   umol_t get_tar(const umol_t, const unsigned) const;
   Vector<double> get_center() const;
@@ -77,7 +78,7 @@ class Compartment {
   Species surface_species_;
   voxel_t nbit_;
   voxel_t sur_xor_;
-  mol2_t* offsets_;
+  int* offsets_;
   __m256i multiplier_colrow_;
   __m256i multiplier_row_;
   __m128i nshift_colrow_;

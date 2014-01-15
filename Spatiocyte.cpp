@@ -35,8 +35,8 @@
 #include <VisualLogger.hpp>
 
 int main() {
-  Model model(10);
-  Species A("A", 1000, 1e-12, model, model.get_compartment(),
+  Model model(1);
+  Species A("A", 10000, 1e-12, model, model.get_compartment(),
             model.get_compartment().get_volume_species());
   model.initialize();
   A.populate();
