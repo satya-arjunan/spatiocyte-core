@@ -78,14 +78,13 @@ void VisualLogger::initialize_log()
   logfile_.write((char*)(&dimensions.x), sizeof(dimensions.x));
   logfile_.write((char*)(&dimensions.z), sizeof(dimensions.z));
   logfile_.write((char*)(&dimensions.y), sizeof(dimensions.y));
-  const double voxRadius(VOXEL_RADIUS);
-  const Vector<double>& center(compartment_.get_center());
-  const double realColSize(center.x*2/(voxRadius*2));
-  logfile_.write((char*)(&realColSize), sizeof(realColSize));
-  const double realLayerSize(center.y*2/(voxRadius*2));
-  logfile_.write((char*)(&realLayerSize), sizeof(realLayerSize));
-  const double realRowSize(center.z*2/(voxRadius*2));
-  logfile_.write((char*)(&realRowSize), sizeof(realRowSize));
+  const double voxel_radius(VOXEL_RADIUS);
+  const Vector<double> real_dimensions(compartment_.get_dimensions()/
+      (voxel_radius*2));
+  std::cout << "dim:" << real_dimensions.x << " " << real_dimensions.y << " " << real_dimensions.z << std::endl;
+  logfile_.write((char*)(&real_dimensions.x), sizeof(real_dimensions.x));
+  logfile_.write((char*)(&real_dimensions.z), sizeof(real_dimensions.z));
+  logfile_.write((char*)(&real_dimensions.y), sizeof(real_dimensions.y));
   const unsigned latticeSpSize(species_.size());
   logfile_.write((char*)(&latticeSpSize), sizeof(latticeSpSize));
   const unsigned polymerSize(0);
@@ -95,13 +94,13 @@ void VisualLogger::initialize_log()
   const unsigned offLatticeSpSize(0);
   logfile_.write((char*)(&offLatticeSpSize), sizeof(offLatticeSpSize));
   logfile_.write((char*)(&marker_), sizeof(marker_));
-  logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
+  logfile_.write((char*)(&voxel_radius), sizeof(voxel_radius));
   for(unsigned i(0); i != species_.size(); ++i)
     {
       const unsigned stringSize(species_[i]->get_name_id().size());
       logfile_.write((char*)(&stringSize), sizeof(stringSize));
       logfile_.write(species_[i]->get_name_id().c_str(), stringSize);
-      logfile_.write((char*)(&voxRadius), sizeof(voxRadius));
+      logfile_.write((char*)(&voxel_radius), sizeof(voxel_radius));
     }
 }
 

@@ -39,11 +39,12 @@ Compartment::Compartment(std::string name, const double len_x,
     const double len_y, const double len_z, Model& model,
     const unsigned num_box)
   : name_(name),
-    length_(len_x, len_y, len_z),
-    center_(len_x/2, len_y/2, len_z/2),
     model_(model),
     lattice_(NUM_VOXEL, Vector<unsigned>(NUM_COL, NUM_ROW, NUM_LAY),
         num_box),
+    dimensions_(get_lattice().get_dimensions().x*2*VOXEL_RADIUS, 
+        get_lattice().get_dimensions().y*2*VOXEL_RADIUS,
+        get_lattice().get_dimensions().z*2*VOXEL_RADIUS),
     volume_species_("volume", 0, 0, model, *this, volume_species_, true),
     surface_species_("surface", 0, 0, model, *this, volume_species_, true) {}
 
@@ -231,6 +232,11 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   //vdx.m256i = _mm256_load_si256(mvdx);
 }
 
+/*AVX2 SIMD implementation of:
+ *  const bool odd_lay((vdx/NUM_COLROW)&1);
+ *  const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
+ *  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+ */
 void Compartment::set_tars(const __m256i vdx, __m256i nrand,
     uint32_t* tars) const { 
   //[mull] multiply unsigned and store high 16 bit result
@@ -266,7 +272,6 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand,
   //cast first 8 vdx from uint16_t to uint32_t and add with offset
   *(__m256i*)(tars) = 
     _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
-                                                     
   //cast second 8 indices from uint16_t to uint32_t
   index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
   //get the second 8 offsets
@@ -461,8 +466,12 @@ void Compartment::set_offsets() {
   offsets_[47] = NUM_COLROW+NUM_ROW;
 }
 
-const Vector<double>& Compartment::get_center() const {
-  return center_;
+const Vector<double>& Compartment::get_dimensions() const {
+  return dimensions_;
+}
+
+Vector<double> Compartment::get_center() const {
+  return dimensions_/2;
 }
 
 Species& Compartment::get_surface_species() {

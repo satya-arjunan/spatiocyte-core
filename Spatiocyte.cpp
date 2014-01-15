@@ -44,7 +44,7 @@ int main() {
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);
   visual_logger.push_species(A);
-  //visual_logger.push_species(model.get_compartment().get_surface_species());
+  visual_logger.push_species(model.get_compartment().get_surface_species());
   //visual_logger.push_species(model.get_compartment().get_volume_species());
   visual_logger.initialize();
 

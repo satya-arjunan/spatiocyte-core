@@ -72,10 +72,7 @@ unsigned Lattice::get_num_voxel() const {
 unsigned Lattice::box_mol_to_mol(const unsigned box, const umol_t box_mol)
     const {
   Vector<unsigned> mol_coord(box_mol_to_coord(box_mol));
-  const Vector<unsigned> box_coord(box_to_coord(box));
-  mol_coord.x += box_coord.x*box_voxel_dimensions_.x;
-  mol_coord.y += box_coord.y*box_voxel_dimensions_.y;
-  mol_coord.z += box_coord.z*box_voxel_dimensions_.z;
+  mol_coord += box_to_coord(box)*box_voxel_dimensions_;
   return coord_to_mol(mol_coord);
 }
 
@@ -85,13 +82,14 @@ unsigned Lattice::coord_to_mol(const Vector<unsigned>& coord) const {
 
 Vector<unsigned> Lattice::box_mol_to_coord(const umol_t box_mol) const {
   const unsigned xy(box_voxel_dimensions_.x*box_voxel_dimensions_.y);
-  return Vector<unsigned>(box_mol%(xy)/box_voxel_dimensions_.y, box_mol%(xy),
-      box_mol/xy);
+  return Vector<unsigned>(box_mol%xy/box_voxel_dimensions_.y, 
+      box_mol%xy%box_voxel_dimensions_.y, box_mol/xy);
 }
 
 Vector<unsigned> Lattice::box_to_coord(const unsigned box) const {
   const unsigned xy(box_dimensions_.x*box_dimensions_.y);
-  return Vector<unsigned>(box%(xy)/box_dimensions_.y, box%(xy), box/xy);
+  return Vector<unsigned>(box%xy/box_dimensions_.y,
+      box%xy%box_dimensions_.y, box/xy);
 }
 
 const Vector<unsigned>& Lattice::get_dimensions() const {

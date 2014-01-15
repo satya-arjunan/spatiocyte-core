@@ -56,7 +56,8 @@ class Compartment {
   void set_tars(const __m256i, __m256i, uint32_t*) const;
   __m256i get_tars(const __m256i, __m256i) const;
   umol_t get_tar(const umol_t, const unsigned) const;
-  const Vector<double>& get_center() const;
+  Vector<double> get_center() const;
+  const Vector<double>& get_dimensions() const;
   Species& get_surface_species();
   Species& get_volume_species();
   Model& get_model();
@@ -69,10 +70,9 @@ class Compartment {
   void set_offsets();
  private:
   const std::string name_;
-  const Vector<double> length_;
-  const Vector<double> center_;
   Model& model_;
   Lattice lattice_;
+  const Vector<double> dimensions_;
   Species volume_species_;
   Species surface_species_;
   voxel_t nbit_;

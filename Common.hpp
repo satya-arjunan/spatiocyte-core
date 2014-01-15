@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <emmintrin.h> //SSE2 intrinsics
 #include <immintrin.h> //AVX2 intrinsics
+#include <Vector.hpp>
 
 class Compartment;
 class Diffuser;
@@ -47,18 +48,6 @@ class Stepper;
 class VisualLogger;
 
 #define ADJS 12
-
-template<typename T>
-struct Vector
-{
-  Vector(const T a=0, const T b=0, const T c=0):
-    x(a),
-    y(b),
-    z(c) {}
-  T x;
-  T y;
-  T z;
-};
 
 typedef union
 {
