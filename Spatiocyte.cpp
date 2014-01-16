@@ -35,8 +35,8 @@
 #include <VisualLogger.hpp>
 
 int main() {
-  Model model(1);
-  Species A("A", 10000, 1e-12, model, model.get_compartment(),
+  Model model(10000);
+  Species A("A", 2, 1e-12, model, model.get_compartment(),
             model.get_compartment().get_volume_species());
   model.initialize();
   A.populate();
@@ -44,7 +44,7 @@ int main() {
   model.get_stepper().set_diffuser(A.get_diffuser());
   model.get_stepper().set_visual_logger(visual_logger);
   visual_logger.push_species(A);
-  visual_logger.push_species(model.get_compartment().get_surface_species());
+  //visual_logger.push_species(model.get_compartment().get_surface_species());
   //visual_logger.push_species(model.get_compartment().get_volume_species());
   visual_logger.initialize();
 
@@ -52,8 +52,8 @@ int main() {
   boost::posix_time::ptime start(
       boost::posix_time::microsec_clock::universal_time()); 
   //model.run(0.1);
-  model.run(0.8);
+  model.run(0.1);
   boost::posix_time::ptime end(
       boost::posix_time::microsec_clock::universal_time());
-  std::cout << "duration:" << (end-start)/8.0 << std::endl;
+  std::cout << "duration:" << (end-start)/1.0 << std::endl;
 }

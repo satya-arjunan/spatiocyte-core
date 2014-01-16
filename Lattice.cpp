@@ -36,13 +36,17 @@ Lattice::Lattice(const unsigned num_voxel,
     const Vector<unsigned>& dimensions, const unsigned num_box)
   : num_box_(num_box),
     box_dimensions_(Vector<unsigned>(unsigned(ceil(pow(num_box,1/3.0))),
-        unsigned(pow(num_box,1/3.0)), unsigned(pow(num_box,1/3.0)))),
+        unsigned(ceil(pow(num_box,1/3.0))), unsigned(pow(num_box,1/3.0)))),
     box_voxel_dimensions_(dimensions),
     dimensions_(Vector<unsigned>(box_voxel_dimensions_.x*box_dimensions_.x,
         box_voxel_dimensions_.y*box_dimensions_.y,
         box_voxel_dimensions_.z*box_dimensions_.z)),
     num_box_voxel_(box_voxel_dimensions_.x*box_voxel_dimensions_.y*
-        box_voxel_dimensions_.z) {}
+        box_voxel_dimensions_.z) {
+  std::cout << "box dimensions:" << box_dimensions_.x << " " << 
+    box_dimensions_.y << " " << box_dimensions_.z << std::endl;
+  std::cout << "num_box:" << num_box << std::endl;
+}
 
 void Lattice::initialize() {
   voxels_ = new voxel_t[get_num_voxel()];

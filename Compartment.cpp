@@ -55,17 +55,11 @@ void Compartment::initialize() {
   set_surface_structure();
   umol_t multiplier_colrow, multiplier_row, nshift_colrow, nshift_row;
   set_const_division_param(NUM_COLROW, &multiplier_colrow, &nshift_colrow);
+  multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
   nshift_colrow_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_colrow);
   set_const_division_param(NUM_ROW, &multiplier_row, &nshift_row);
+  multiplier_row_ = _mm256_set1_epi16(multiplier_row);
   nshift_row_ = _mm_set_epi64x((uint64_t)0, (uint64_t)nshift_row);
-  if(sizeof(umol_t) == 2) {
-    std::cout << "sizeof:" << sizeof(umol_t) << std::endl;
-    multiplier_colrow_ = _mm256_set1_epi16(multiplier_colrow);
-    multiplier_row_ = _mm256_set1_epi16(multiplier_row);
-  } else {
-    multiplier_colrow_ = _mm256_set1_epi32(multiplier_colrow);
-    multiplier_row_ = _mm256_set1_epi32(multiplier_row);
-  }
 }
 
 umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
@@ -73,7 +67,11 @@ umol_t Compartment::get_tar(const umol_t vdx, const unsigned nrand) const {
   const bool odd_col((vdx%NUM_COLROW/NUM_ROW)&1);
   //return vdx+offsets_[nrand+odd_lay*24+odd_col*12];
   //return vdx+offsets_[nrand+odd_lay+odd_col];
-  return vdx+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))];
+  int val(int(vdx)+offsets_[nrand+(24&(-odd_lay))+(12&(-odd_col))]);
+  if(val < 0 || val > NUM_VOXEL) {
+    return vdx;
+  }
+  return val;
   /*
   The registers:
     rax = 64 bit
@@ -286,37 +284,6 @@ void Compartment::set_tars(const __m256i vdx, __m256i nrand,
   *(__m256i*)(&tars[8]) =
     _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
                      index);
-}
-
-__m256i Compartment::get_tars_epi32(const __m256i vdx, __m256i nrand) const { 
-  //[mull] multiply unsigned and store high 32 bit result
-  //vdx*multiplier
-  __m256i quotient_colrow(_mm256_mulhi_epu32(vdx, multiplier_colrow_));
-  //[shrl] shift right logical (set the new bits on the left as 0)
-  //vdx/num_colrow = vdx*multiplier/2^nshift_colrow_
-  quotient_colrow = _mm256_srl_epi32(quotient_colrow, nshift_colrow_);
-  __m256i odd_lay(_mm256_and_si256(quotient_colrow, _mm256_set1_epi32(1)));
-  //[imull] signed multiply and store low 16 bit result
-  //(vdx/num_colrow)*num_colrow
-  quotient_colrow = _mm256_mullo_epi32(quotient_colrow,
-                                       _mm256_set1_epi32(NUM_COLROW));
-  //[subl] a-b 
-  //remainder = vdx-(vdx/num_colrow)*num_colrow
-  __m256i remainder_colrow(_mm256_sub_epi32(vdx, quotient_colrow));
-  //remainder*multiplier
-  __m256i quotient_row(_mm256_mulhi_epu32(remainder_colrow, multiplier_row_));
-  //remainder*multiplier/2^nshift_row_
-  quotient_row = _mm256_srl_epi32(quotient_row, nshift_row_);
-  __m256i odd_col(_mm256_and_si256(quotient_row, _mm256_set1_epi32(1)));
-  //Option 2 faster
-  odd_lay = _mm256_sign_epi32(odd_lay, _mm256_set1_epi64x(-1));
-  odd_lay = _mm256_and_si256(odd_lay, _mm256_set1_epi16(24));
-  odd_col = _mm256_sign_epi32(odd_col, _mm256_set1_epi64x(-1));
-  odd_col = _mm256_and_si256(odd_col, _mm256_set1_epi16(12));
-  nrand = _mm256_add_epi32(nrand, odd_lay);
-  nrand = _mm256_add_epi32(nrand, odd_col);
-  __m256i index(_mm256_i32gather_epi32(offsets_, nrand, 4));
-  return _mm256_add_epi32(vdx, index);
 }
 
 /*AVX2 SIMD implementation of:

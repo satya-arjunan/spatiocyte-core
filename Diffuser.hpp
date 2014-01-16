@@ -44,6 +44,7 @@ public:
   void initialize();
   void walk();
   void walk(voxel_t*, __m256i*, const unsigned);
+  void walk(umol_t*, const unsigned);
 private:
   double D_;
   Species& species_;

@@ -124,7 +124,6 @@ class Random {
   void RandomInitByArray(int const seeds[], int NumSeeds);
   int IRan(int min, int max);
   __m256i Ran16();
-  __m256i Ran8();
   int IRanX(int min, int max);
   uint32_t RanUint32_12();
   uint16_t RanUint16_12();

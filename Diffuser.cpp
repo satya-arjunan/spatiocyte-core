@@ -57,42 +57,32 @@ void Diffuser::initialize()
 
 void Diffuser::walk() {
   for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
-    walk(box_voxels_[box], (__m256i*)(&box_mols_[box][0]),
-        box_mols_[box].size());
+    walk(&box_mols_[box][0], box_mols_[box].size());
   }
 }
 
-void Diffuser::walk_epi32(voxel_t* voxels, __m256i* mols, const unsigned size) {
-  const unsigned n(size/8);
-  const unsigned m(size%8);
-  for (unsigned k(0); k != n; ++k, ++mols) {
-    __m256i mols_m256i(_mm256_load_si256(mols));
-    __m256i tars(compartment_.get_tars(mols_m256i, rng_.Ran8()));
-    for (unsigned j(0); j != 8; ++j) {
-      const uint32_t vdx(((umol_t*)&tars)[j]);
-      if (voxels[vdx] == vac_id_) {
-        voxels[((umol_t*)&mols_m256i)[j]] = vac_id_;
-        voxels[vdx] = species_id_;
-        ((umol_t*)&mols_m256i)[j] = vdx;
+void Diffuser::walk(umol_t* mols, const unsigned size) {
+  for (unsigned i(0); i != size; ++i) {
+    umol_t tar(compartment_.get_tar(mols[i], rng_.RanUint16_12()));
+    for(unsigned j(0); j != size; ++j) {
+      if(mols[j] == tar) {
+        goto next;
       }
     }
-    _mm256_store_si256(mols, mols_m256i);
-  }
-  if(m) {
-    __m256i tars(compartment_.get_tars(_mm256_load_si256(mols), rng_.Ran8()));
-    for (unsigned j(0); j != m; ++j) {
-      const uint32_t vdx(((umol_t*)&tars)[j]);
-      if (voxels[vdx] == vac_id_) {
-        voxels[((umol_t*)mols)[j]] = vac_id_;
-        voxels[vdx] = species_id_;
-        ((umol_t*)mols)[j] = vdx;
-      }
-    }
+    mols[i] = tar;
+next:
+    continue;
   }
 }
 
 /*
-void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
+void Diffuser::walk() {
+  for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
+    walk_mols((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
+  }
+}
+
+void Diffuser::walk_mols(__m256i* mols, const unsigned size) {
   const unsigned n(size/16);
   const unsigned m(size%16);
   uint32_t tars[16];
@@ -123,6 +113,31 @@ void Diffuser::walk(voxel_t* voxels, __m256i* mols, const unsigned size) {
 }
 */
 
+/*
+static uint8_t data[H][W]; for(int i=1; i<H-1; ++i) for(int j=1; j<W-1; ++j) {
+border = 1; for(int k=-1;k<=1;++k) for(int m=-1;m<=1;++m) border |= data[i+k][j+m] == 0;
+if(border)
+}
+ProcessElement(i, j);
+
+// Do for every line
+__m256i l2 = _mm256_loadu_si256((__m256i*)src_ptr);
+int mdl = _mm256_movemask_epi8( _mm256_cmpeq_epi8(l2, vzero) );
+// Check if mdl[1..30] == 0 - all pixels are masked out
+if( (~mdl & 0x7FFFFFFE) != 0) {
+  __m256i l1 = _mm256_loadu_si256((__m256i *) (src_ptr-W));
+  __m256i l3 = _mm256_loadu_si256((__m256i *) (src_ptr+W));
+  int up = _mm256_movemask_epi8(_mm256_cmpeq_epi8(l1, vzero));
+  int dwn = _mm256_movemask_epi8(_mm256_cmpeq_epi8(l3, vzero));
+  int border = up | mdl | dwn;
+  border = (border << 1) | border | (border >> 1);
+  // Process non border elements
+  for(int t=1; t <= 30; ++t)
+    if(border & (1 << t))
+      ProcessElement(i, j+t);
+}
+src_ptr += 30;
+*/
 
 /*
 //t = 1.115

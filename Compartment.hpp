@@ -54,7 +54,6 @@ class Compartment {
   ~Compartment() {}
   void initialize();
   void set_tars(const __m256i, __m256i, uint32_t*) const;
-  __m256i get_tars_epi32(const __m256i, __m256i) const;
   __m256i get_tars(const __m256i, __m256i) const;
   umol_t get_tar(const umol_t, const unsigned) const;
   Vector<double> get_center() const;

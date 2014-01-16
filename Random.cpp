@@ -295,10 +295,6 @@ __m256i Random::Ran16() {
   return _mm256_mulhi_epu16(BinRan256(), _mm256_set1_epi16(12));
 }
 
-__m256i Random::Ran8() {
-  return _mm256_mulhi_epu32(BinRan256(), _mm256_set1_epi32(12));
-}
-
 /*
 //VPMULHUW __m256i _mm256_mulhi_epu16 ( __m256i a, __m256i b)
 //VPMADDUBSW __m256i _mm256_maddubs_epi16 (__m256i a, __m256i b)
