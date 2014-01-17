@@ -126,7 +126,7 @@ class Random {
   __m256i Ran16();
   int IRanX(int min, int max);
   uint32_t RanUint32_12();
-  uint16_t RanUint16_12();
+  uint16_t Ran16_12();
   uint8_t RanUint8_12();
   double Ran();
   uint32_t BRan();

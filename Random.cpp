@@ -287,7 +287,7 @@ __m256i Random::BinRan256() {
   return ((__m256i*)state)[ix++];
 }
 
-uint16_t Random::RanUint16_12() {
+uint16_t Random::Ran16_12() {
    return (uint16_t)(((uint32_t)BRan16()*12) >> 16);
 }
 
