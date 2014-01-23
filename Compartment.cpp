@@ -411,6 +411,69 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   */
 }
 
+__m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
+  /*
+  __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
+  quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
+  __m256i odd_lay(_mm256_and_si256(quotient_colrow, _mm256_set1_epi16(1)));
+  quotient_colrow = _mm256_mullo_epi16(quotient_colrow,
+                                       _mm256_set1_epi16(NUM_COLROW));
+  __m256i remainder_colrow(_mm256_sub_epi16(vdx, quotient_colrow));
+  __m256i quotient_row(_mm256_mulhi_epu16(remainder_colrow, multiplier_row_));
+  quotient_row = _mm256_srl_epi16(quotient_row, nshift_row_);
+  __m256i odd_col(_mm256_and_si256(quotient_row, _mm256_set1_epi16(1)));
+  odd_lay = _mm256_sign_epi16(odd_lay, _mm256_set1_epi64x(-1));
+  odd_lay = _mm256_and_si256(odd_lay, _mm256_set1_epi16(24));
+  odd_col = _mm256_sign_epi16(odd_col, _mm256_set1_epi64x(-1));
+  odd_col = _mm256_and_si256(odd_col, _mm256_set1_epi16(12));
+  nrand = _mm256_add_epi16(nrand, odd_lay);
+  nrand = _mm256_add_epi16(nrand, odd_col);
+  __m256i index(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(nrand)));
+  index = _mm256_i32gather_epi32(offsets_, index, 4);
+  __m256i tar1 = _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_castsi256_si128(vdx)), index);
+  index = _mm256_cvtepu16_epi32(_mm256_extractf128_si256(nrand, 1));
+  index =  _mm256_i32gather_epi32(offsets_, index, 4);
+  __m256i tar2 =
+    _mm256_add_epi32(_mm256_cvtepu16_epi32(_mm256_extractf128_si256(vdx, 1)),
+                     index);
+  tar2 = _mm256_packus_epi32(tar1, tar2);
+  return _mm256_permute4x64_epi64(tar2, 216);
+  */
+  //__m256i tar1 = _mm256_i32gather_epi32(offsets_, nrand, 2);
+ // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
+ /*
+  __m256i tar1 = _mm256_permutevar8x32_epi32(vdx, nrand);
+  tar1 = _mm256_shuffle_epi8(tar1, nrand);
+   tar1 = _mm256_permutevar8x32_epi32(vdx, tar1);
+  __m256i tar2 = _mm256_shuffle_epi8(tar1, nrand);
+  tar2 = _mm256_permute4x64_epi64(tar1, 216);
+  tar2 = _mm256_srli_epi16(tar2, 2);
+  */
+  __m256i clr6(_mm256_setr_epi16(0,1,2,4,5,6,8,9,10,16,17,18,22,21,20,18));
+  __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
+  __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
+  clr6 = _mm256_and_si256(clr6, _mm256_set1_epi16(3));
+  clr6 = _mm256_or_si256(clr6, lay);
+  clr6 = _mm256_or_si256(clr6, col);
+  /*
+  cout_binary(clr6, "clr");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&clr6)[i] << " " << std::endl;
+    }
+
+  exit(0);
+  */
+
+
+  //return _mm256_add_epi16(clr6, _mm256_maddubs_epi16(tar1, tar2));
+  return clr6;
+}
+
+//_mm256_i32gather_epi32 = 2.84 s
+//_mm256_shuffle_epi8 = 1.63 s (so gather takes about 1.2 s)
+//2x_mm256_i32gather_epi32 = 4.1 s (1.63+2*1.2 = 4.1 s)
+
 void Compartment::set_offsets() {
   //col=even, layer=even
   offsets_ = new int[ADJS*4];
@@ -469,6 +532,117 @@ void Compartment::set_offsets() {
   offsets_[46] = NUM_COLROW;
   offsets_[47] = NUM_COLROW+NUM_ROW;
 }
+/*
+
+  //col=even, layer=even
+  offsets_[0].clr = (0, 0, -1);
+  offsets_[1].clr = (0, 0, 1);
+  offsets_[2].clr = (-1, 0, -1);
+  offsets_[3].clr = (-1, 0, 0);
+  offsets_[4].clr = (1, 0, -1);
+  offsets_[5].clr = (1, 0, 0);
+  offsets_[6].clr = (-1, -1, 0);
+  offsets_[7].clr = (0, -1, -1);
+  offsets_[8].clr = (0, -1, 0);
+  offsets_[9].clr = (-1, 1, 0);
+  offsets_[10].clr = (0, 1, -1);
+  offsets_[11].clr = (0, 1, 0);
+
+  offsets_[0] = -1;
+  offsets_[1] = 1;
+  offsets_[2] = -NUM_ROW-1;
+  offsets_[3] = -NUM_ROW;
+  offsets_[4] = NUM_ROW-1;
+  offsets_[5] = NUM_ROW;
+  offsets_[6] = -NUM_COLROW-NUM_ROW;
+  offsets_[7] = -NUM_COLROW-1;
+  offsets_[8] = -NUM_COLROW;
+  offsets_[9] = NUM_COLROW-NUM_ROW;
+  offsets_[10] = NUM_COLROW-1;
+  offsets_[11] = NUM_COLROW;
+
+  offsets_[24].clr = (0, 0, -1);
+  offsets_[25].clr = (0, 0, 1);
+  offsets_[26].clr = (-1, 0, 0);
+  offsets_[27].clr = (-1, 0, 1);
+  offsets_[28].clr = (1, 0, 0);
+  offsets_[29].clr = (1, 0, 1);
+  offsets_[30].clr = (0, -1, 0);
+  offsets_[31].clr = (0, -1, 1);
+  offsets_[32].clr = (1, -1, 0);
+  offsets_[33].clr = (0, 1, 0);
+  offsets_[34].clr = (0, 1, 1);
+  offsets_[35].clr = (1, 1, 0);
+
+  //col=even, layer=odd +24 = %layer*24
+  offsets_[24] = -1;
+  offsets_[25] = 1;
+  offsets_[26] = -NUM_ROW;
+  offsets_[27] = -NUM_ROW+1;
+  offsets_[28] = NUM_ROW;
+  offsets_[29] = NUM_ROW+1;
+  offsets_[30] = -NUM_COLROW;
+  offsets_[31] = -NUM_COLROW+1;
+  offsets_[32] = -NUM_COLROW+NUM_ROW;
+  offsets_[33] = NUM_COLROW;
+  offsets_[34] = NUM_COLROW+1;
+  offsets_[35] = NUM_COLROW+NUM_ROW;
+
+
+  offsets_[12].clr = (0, 0, -1);
+  offsets_[13].clr = (0, 0, 1);
+  offsets_[14].clr = (-1, 0, 0);
+  offsets_[15].clr = (-1, 0, 1);
+  offsets_[16].clr = (1, 0, 0);
+  offsets_[17].clr = (1, 0, 1);
+  offsets_[18].clr = (-1, -1, 0);
+  offsets_[19].clr = (0, -1, 0);
+  offsets_[20].clr = (0, -1, 1);
+  offsets_[21].clr = (-1, 1, 0);
+  offsets_[22].clr = (0, 1, 0);
+  offsets_[23].clr = (0, 1, 1);
+
+  //col=odd, layer=even +12 = %col*12
+  offsets_[12] = -1;
+  offsets_[13] = 1;
+  offsets_[14] = -NUM_ROW;
+  offsets_[15] = -NUM_ROW+1;
+  offsets_[16] = NUM_ROW;
+  offsets_[17] = NUM_ROW+1;
+  offsets_[18] = -NUM_COLROW-NUM_ROW;
+  offsets_[19] = -NUM_COLROW;
+  offsets_[20] = -NUM_COLROW+1;
+  offsets_[21] = NUM_COLROW-NUM_ROW;
+  offsets_[22] = NUM_COLROW;
+  offsets_[23] = NUM_COLROW+1;
+
+  offsets_[36].clr = (0, 0, -1);
+  offsets_[37].clr = (0, 0, 1);
+  offsets_[38].clr = (-1, 0, -1);
+  offsets_[39].clr = (-1, 0, 0);
+  offsets_[40].clr = (1, 0, -1);
+  offsets_[41].clr = (1, 0, 0);
+  offsets_[42].clr = (0, -1, -1);
+  offsets_[43].clr = (0, -1, 0);
+  offsets_[44].clr = (1, -1, 0);
+  offsets_[45].clr = (0, 1, -1);
+  offsets_[46].clr = (0, 1, 0);
+  offsets_[47].clr = (1, 1, 0);
+
+  //col=odd, layer=odd +36 = %col*12 + %layer*24
+  offsets_[36] = -1;
+  offsets_[37] = 1;
+  offsets_[38] = -NUM_ROW-1;
+  offsets_[39] = -NUM_ROW;
+  offsets_[40] = NUM_ROW-1;
+  offsets_[41] = NUM_ROW;
+  offsets_[42] = -NUM_COLROW-1;
+  offsets_[43] = -NUM_COLROW;
+  offsets_[44] = -NUM_COLROW+NUM_ROW;
+  offsets_[45] = NUM_COLROW-1;
+  offsets_[46] = NUM_COLROW;
+  offsets_[47] = NUM_COLROW+NUM_ROW;
+*/
 
 const Vector<double>& Compartment::get_dimensions() const {
   return dimensions_;

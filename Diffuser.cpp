@@ -54,7 +54,39 @@ void Diffuser::initialize() {
   std::cout << "vac_xor:" << vac_xor_ << std::endl;
 }
 
-//t(10000, 16) = 10.97
+void Diffuser::walk() {
+  for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
+    walk((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
+  }
+}
+
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  /*
+  __m256i cmps(_mm256_cmpeq_epi16(tars, mols_m256i));
+  for (unsigned i(0); i != 15; ++i) {
+    tars = _mm256_or_si256(_mm256_slli_si256(tars, 2),
+                           _mm256_srli_si256(tars, 30)); 
+    cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 2),
+                           _mm256_srli_si256(cmps, 30)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+  }
+  cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 2),
+                         _mm256_srli_si256(cmps, 30)); 
+  mols_m256i = _mm256_and_si256(mols_m256i, cmps);
+  cmps = _mm256_andnot_si256(cmps, cmps);
+  tars = _mm256_and_si256(tars, cmps);
+  mols_m256i = _mm256_or_si256(mols_m256i, tars);
+  _mm256_store_si256(base, mols_m256i);
+  */
+  _mm256_store_si256(base, tars);
+}
+//rng_.Ran16() + _mm256_store_si256 = 1.91 s
+//rng_.Ran16() + _mm256_store_si256 + get_tars = 5.8 s
+
+/*
+//t(10000, 16) = 11 s
 void Diffuser::walk() {
   for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
     walk((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
@@ -78,8 +110,9 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
   cmps = _mm256_andnot_si256(cmps, cmps);
   tars = _mm256_and_si256(tars, cmps);
   mols_m256i = _mm256_or_si256(mols_m256i, tars);
-  _mm256_store_si256(base, cmps);
+  _mm256_store_si256(base, mols_m256i);
 }
+*/
 
 /*
 // t = 43 s
