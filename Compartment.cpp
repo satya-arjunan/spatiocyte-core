@@ -534,60 +534,60 @@ void Compartment::set_offsets() {
 }
 /*
   //col=even, layer=even
-  offsets_[0].clr = (0, 0, -1);
-  offsets_[1].clr = (0, 0, 1);
-  offsets_[2].clr = (-1, 0, -1);
-  offsets_[3].clr = (-1, 0, 0);
-  offsets_[4].clr = (1, 0, -1);
-  offsets_[5].clr = (1, 0, 0);
-  offsets_[6].clr = (-1, -1, 0);
-  offsets_[7].clr = (0, -1, -1);
-  offsets_[8].clr = (0, -1, 0);
-  offsets_[9].clr = (-1, 1, 0);
-  offsets_[10].clr = (0, 1, -1);
-  offsets_[11].clr = (0, 1, 0);
+  offsets_[0].clr = (1, 1, 0);
+  offsets_[1].clr = (1, 1, 2);
+  offsets_[2].clr = (0, 1, 0);
+  offsets_[3].clr = (0, 1, 1);
+  offsets_[4].clr = (2, 1, 0);
+  offsets_[5].clr = (2, 1, 1);
+  offsets_[6].clr = (0, 0, 1);
+  offsets_[7].clr = (1, 0, 0);
+  offsets_[8].clr = (1, 0, 1);
+  offsets_[9].clr = (0, 2, 1);
+  offsets_[10].clr = (1, 2, 0);
+  offsets_[11].clr = (1, 2, 1);
 
   //col=even, layer=odd [%layer*24 = +24]
-  offsets_[24].clr = (0, 0, -1);
-  offsets_[25].clr = (0, 0, 1);
-  offsets_[26].clr = (-1, 0, 0);
-  offsets_[27].clr = (-1, 0, 1);
-  offsets_[28].clr = (1, 0, 0);
-  offsets_[29].clr = (1, 0, 1);
-  offsets_[30].clr = (0, -1, 0);
-  offsets_[31].clr = (0, -1, 1);
-  offsets_[32].clr = (1, -1, 0);
-  offsets_[33].clr = (0, 1, 0);
-  offsets_[34].clr = (0, 1, 1);
-  offsets_[35].clr = (1, 1, 0);
+  offsets_[24].clr = (1, 1, 0);
+  offsets_[25].clr = (1, 1, 2);
+  offsets_[26].clr = (0, 1, 1);
+  offsets_[27].clr = (0, 1, 2);
+  offsets_[28].clr = (2, 1, 1);
+  offsets_[29].clr = (2, 1, 2);
+  offsets_[30].clr = (1, 0, 1);
+  offsets_[31].clr = (1, 0, 2);
+  offsets_[32].clr = (2, 0, 1);
+  offsets_[33].clr = (1, 2, 1);
+  offsets_[34].clr = (1, 2, 2);
+  offsets_[35].clr = (2, 2, 1);
 
   //col=odd, layer=even [%col*12 = +12]
-  offsets_[12].clr = (0, 0, -1);
-  offsets_[13].clr = (0, 0, 1);
-  offsets_[14].clr = (-1, 0, 0);
-  offsets_[15].clr = (-1, 0, 1);
-  offsets_[16].clr = (1, 0, 0);
-  offsets_[17].clr = (1, 0, 1);
-  offsets_[18].clr = (-1, -1, 0);
-  offsets_[19].clr = (0, -1, 0);
-  offsets_[20].clr = (0, -1, 1);
-  offsets_[21].clr = (-1, 1, 0);
-  offsets_[22].clr = (0, 1, 0);
-  offsets_[23].clr = (0, 1, 1);
+  offsets_[12].clr = (1, 1, 0);
+  offsets_[13].clr = (1, 1, 2);
+  offsets_[14].clr = (0, 1, 1);
+  offsets_[15].clr = (0, 1, 2);
+  offsets_[16].clr = (2, 1, 1);
+  offsets_[17].clr = (2, 1, 2);
+  offsets_[18].clr = (0, 0, 1);
+  offsets_[19].clr = (1, 0, 1);
+  offsets_[20].clr = (1, 0, 2);
+  offsets_[21].clr = (0, 2, 1);
+  offsets_[22].clr = (1, 2, 1);
+  offsets_[23].clr = (1, 2, 2);
 
   //col=odd, layer=odd [%col*12 + %layer*24 = +36]
-  offsets_[36].clr = (0, 0, -1);
-  offsets_[37].clr = (0, 0, 1);
-  offsets_[38].clr = (-1, 0, -1);
-  offsets_[39].clr = (-1, 0, 0);
-  offsets_[40].clr = (1, 0, -1);
-  offsets_[41].clr = (1, 0, 0);
-  offsets_[42].clr = (0, -1, -1);
-  offsets_[43].clr = (0, -1, 0);
-  offsets_[44].clr = (1, -1, 0);
-  offsets_[45].clr = (0, 1, -1);
-  offsets_[46].clr = (0, 1, 0);
-  offsets_[47].clr = (1, 1, 0);
+  offsets_[36].clr = (1, 1, 0);
+  offsets_[37].clr = (1, 1, 2);
+  offsets_[38].clr = (0, 1, 0);
+  offsets_[39].clr = (0, 1, 1);
+  offsets_[40].clr = (2, 1, 0);
+  offsets_[41].clr = (2, 1, 1);
+  offsets_[42].clr = (1, 0, 0);
+  offsets_[43].clr = (1, 0, 1);
+  offsets_[44].clr = (2, 0, 1);
+  offsets_[45].clr = (1, 2, 0);
+  offsets_[46].clr = (1, 2, 1);
+  offsets_[47].clr = (2, 2, 1);
 */
 
 const Vector<double>& Compartment::get_dimensions() const {
