@@ -63,13 +63,27 @@ void Diffuser::walk() {
 void Diffuser::walk(__m256i* base, const unsigned size) {
   __m256i mols_m256i(_mm256_load_si256(base));
   __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
-  /*
   __m256i cmps(_mm256_cmpeq_epi16(tars, mols_m256i));
-  for (unsigned i(0); i != 15; ++i) {
-    tars = _mm256_or_si256(_mm256_slli_si256(tars, 2),
-                           _mm256_srli_si256(tars, 30)); 
-    cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 2),
-                           _mm256_srli_si256(cmps, 30)); 
+  for (unsigned i(0); i != 4; ++i) {
+    tars = _mm256_or_si256(_mm256_slli_epi32(tars, 16),
+                           _mm256_srli_epi32(tars, 16)); 
+    cmps = _mm256_or_si256(_mm256_slli_epi32(cmps, 16),
+                           _mm256_srli_epi32(cmps, 16)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+    tars = _mm256_or_si256(_mm256_slli_epi64(tars, 32),
+                           _mm256_srli_epi64(tars, 32)); 
+    cmps = _mm256_or_si256(_mm256_slli_epi64(cmps, 32),
+                           _mm256_srli_epi64(cmps, 32)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+    tars = _mm256_or_si256(_mm256_slli_epi32(tars, 16),
+                           _mm256_srli_epi32(tars, 16)); 
+    cmps = _mm256_or_si256(_mm256_slli_epi32(cmps, 16),
+                           _mm256_srli_epi32(cmps, 16)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+    tars = _mm256_or_si256(_mm256_slli_si256(tars, 8),
+                           _mm256_srli_si256(tars, 24)); 
+    cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 8),
+                           _mm256_srli_si256(cmps, 24)); 
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
   }
   cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 2),
@@ -79,11 +93,46 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
   tars = _mm256_and_si256(tars, cmps);
   mols_m256i = _mm256_or_si256(mols_m256i, tars);
   _mm256_store_si256(base, mols_m256i);
-  */
   _mm256_store_si256(base, tars);
 }
 //rng_.Ran16() + _mm256_store_si256 = 1.91 s
 //rng_.Ran16() + _mm256_store_si256 + get_tars = 5.8 s
+
+
+/*
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, mols_m256i));
+  for (unsigned i(0); i != 4; ++i) {
+  for (unsigned j(0); j != 2; ++j) {
+    tars = _mm256_or_si256(_mm256_slli_epi32(tars, 16),
+                           _mm256_srli_epi32(tars, 16)); 
+    cmps = _mm256_or_si256(_mm256_slli_epi32(cmps, 16),
+                           _mm256_srli_epi32(cmps, 16)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+    tars = _mm256_or_si256(_mm256_slli_epi64(tars, 32),
+                           _mm256_srli_epi64(tars, 32)); 
+    cmps = _mm256_or_si256(_mm256_slli_epi64(cmps, 32),
+                           _mm256_srli_epi64(cmps, 32)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+  }
+    tars = _mm256_or_si256(_mm256_slli_si256(tars, 8),
+                           _mm256_srli_si256(tars, 24)); 
+    cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 8),
+                           _mm256_srli_si256(cmps, 24)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, mols_m256i));
+  }
+  cmps = _mm256_or_si256(_mm256_slli_si256(cmps, 2),
+                         _mm256_srli_si256(cmps, 30)); 
+  mols_m256i = _mm256_and_si256(mols_m256i, cmps);
+  cmps = _mm256_andnot_si256(cmps, cmps);
+  tars = _mm256_and_si256(tars, cmps);
+  mols_m256i = _mm256_or_si256(mols_m256i, tars);
+  _mm256_store_si256(base, mols_m256i);
+  _mm256_store_si256(base, tars);
+}
+*/
 
 /*
 //t(10000, 16) = 11 s
