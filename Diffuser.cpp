@@ -78,6 +78,26 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
 }
 
 /*
+t = 5.9 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i vmols(mols_m256i);
+  __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  __m256i cmps(_mm256_set1_epi64x(0));
+  for (unsigned i(0); i != 15; ++i) {
+    vmols = _mm256_or_si256(_mm256_slli_si256(vmols, 2),
+                           _mm256_srli_si256(vmols, 30)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  mols_m256i = _mm256_and_si256(mols_m256i, cmps);
+  cmps = _mm256_andnot_si256(cmps, cmps);
+  tars = _mm256_and_si256(tars, cmps);
+  mols_m256i = _mm256_or_si256(mols_m256i, tars);
+  _mm256_store_si256(base, mols_m256i);
+}
+*/
+
+/*
 t = 7.9 s
 void Diffuser::walk(__m256i* base, const unsigned size) {
   __m256i mols_m256i(_mm256_load_si256(base));
