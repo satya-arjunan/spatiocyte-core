@@ -446,10 +446,11 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
  __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
  //set last bit of nrand as 0
  //nrand = [10, 8, 6, 4, 2, 0]
- nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(65534));
+ nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(0xfffe));
  //nrand*3 = [30, 24, 18, 12, 6, 0]
  __m256i nrand2(_mm256_add_epi16(nrand, nrand));
  nrand = _mm256_add_epi16(nrand2, nrand);
+ //1.66 s
 
  __m256i odd_lay(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 4));
@@ -457,22 +458,34 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
      _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 8));
  __m256i index(_mm256_or_si256(odd_nrand, odd_lay));
  index = _mm256_or_si256(index, odd_col);
+ //1.72 s
  __m256i clr(_mm256_setr_epi32(1292979281,
       3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537,
       4231285776));
   __m256i tar1 = _mm256_permutevar8x32_epi32(clr,
       _mm256_and_si256(index, _mm256_set1_epi32(7)));
+  //1.80
+  tar1 = _mm256_srlv_epi32(tar1, _mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
+  //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
-  tar1 = _mm256_srlv_epi32(tar1, _mm256_and_si256(nrand, _mm256_set1_epi32(65535)));
+  //2.00
   tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
+  //2.14
   __m256i clr6(_mm256_or_si256(tar1, tar2));
+  //2.14
+  clr6 = _mm256_xor_si256(clr6, _mm256_set1_epi16(21));
+  //2.21
   __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
+  //2.28
   __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
+  //2.39
   clr6 = _mm256_and_si256(clr6, _mm256_set1_epi16(3));
   clr6 = _mm256_or_si256(clr6, lay);
+  //2.48
   clr6 = _mm256_or_si256(clr6, col);
   __m256i vdx2 = _mm256_sub_epi16(vdx, _mm256_set1_epi16(1));
+  //2.50
   return _mm256_add_epi16(vdx2, clr6);
 
   /*
