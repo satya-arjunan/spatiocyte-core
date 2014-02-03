@@ -78,7 +78,7 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
   }
   mols_m256i = _mm256_and_si256(mols_m256i, cmps);
-  cmps = _mm256_andnot_si256(cmps, cmps);
+  cmps = _mm256_andnot_si256(cmps, _mm256_set1_epi64x(-1));
   tars = _mm256_and_si256(tars, cmps);
   mols_m256i = _mm256_or_si256(mols_m256i, tars);
   _mm256_store_si256(base, mols_m256i);

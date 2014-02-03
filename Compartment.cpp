@@ -442,169 +442,55 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //__m256i tar1 = _mm256_i32gather_epi32(offsets_, nrand, 2);
  // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
  
-  __m256i rand(nrand);
-  cout_binary(vdx, "vdx");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      Coord& coord(((Coord*)&vdx)[i]);
-      std::cout << coord.x << " " << coord.y << " " << coord.z << std::endl;
-    }
-
  //index contains odd_col:odd_lay:odd_nrand x 16 
  //first get odd_nrand
   __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
-  cout_binary(odd_nrand, "odd_nrand nrand");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&odd_nrand)[i] << " " << 
-        ((uint16_t*)&nrand)[i] << std::endl;
-    }
-
   //set last bit of nrand as 0
   //nrand = [10, 8, 6, 4, 2, 0]
   nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(0xfffe));
-  cout_binary(nrand, "nrand_and");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&nrand)[i] << std::endl;
-    }
-
   //nrand*3 = [30, 24, 18, 12, 6, 0]
   __m256i nrand2(_mm256_add_epi16(nrand, nrand));
   nrand = _mm256_add_epi16(nrand2, nrand);
-  cout_binary(nrand, "nrand*3");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&nrand)[i] << std::endl;
-    }
- //1.66 s
+  //1.66 s
 
   __m256i odd_lay(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 4));
-  cout_binary(odd_lay, "odd_lay");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&odd_lay)[i] << " " << 
-        ((Coord*)&vdx)[i].y << std::endl;
-    }
   __m256i odd_col(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(1024)), 8));
-  cout_binary(odd_col, "odd_col");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&odd_col)[i] << " " << 
-        ((Coord*)&vdx)[i].z << std::endl;
-    }
   __m256i index(_mm256_or_si256(odd_nrand, odd_lay));
   index = _mm256_or_si256(index, odd_col);
-  cout_binary(index, "index");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&index)[i] << std::endl;
-    }
- //1.72 s
- __m256i clr(_mm256_setr_epi32(1292979281,
+  //1.72 s
+  __m256i clr(_mm256_setr_epi32(1292979281,
       3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537,
       4231285776));
   __m256i tar1 = _mm256_permutevar8x32_epi32(clr,
       _mm256_and_si256(index, _mm256_set1_epi32(7)));
-  cout_binary(tar1, "tar1");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&tar1)[i] << std::endl;
-    }
   //1.80
   __m256i shift(_mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
-  cout_binary(shift, "shift");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&shift)[i] << std::endl;
-    }
   tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, shift),
       _mm256_set1_epi32(0xffff));
-  cout_binary(tar1, "tar1");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&tar1)[i] << std::endl;
-    }
   //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
-  cout_binary(tar2, "tar2");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&tar2)[i] << std::endl;
-    }
   //2.00
   tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
-  cout_binary(tar2, "tar2");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&tar2)[i] << std::endl;
-    }
   //2.14
   __m256i clr6(_mm256_or_si256(tar1, tar2));
-  cout_binary(clr6, "clr");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
-    }
   //2.14
   clr6 = _mm256_xor_si256(clr6, _mm256_set1_epi16(21));
-  cout_binary(clr6, "clr_xor");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
-    }
   //2.2
-  //__m256i lay(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 2));
   __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
-  cout_binary(lay, "lay");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&lay)[i] << std::endl;
-    }
   //2.28
-  //__m256i col(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 4));
   __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
-  cout_binary(col, "col");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&col)[i] << std::endl;
-    }
   //2.39
   __m256i row(_mm256_and_si256(clr6, _mm256_set1_epi16(3)));
-  cout_binary(row, "col lay row");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&col)[i] << " " << 
-        ((uint16_t*)&lay)[i] << " " << ((uint16_t*)&row)[i] <<std::endl;
-    }
   clr6 = _mm256_or_si256(row, lay);
-  cout_binary(clr6, "clr_lay_row");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
-    }
   //2.48
   clr6 = _mm256_or_si256(clr6, col);
-  cout_binary(clr6, "clr_col_lay_row");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((Coord*)&clr6)[i].z << " " << ((Coord*)&clr6)[i].y <<
-        " " << ((Coord*)&clr6)[i].x << std::endl;
-    }
   __m256i vdx2 = _mm256_sub_epi16(vdx, _mm256_set1_epi16(1057));
-  cout_binary(vdx2, "vdx2");
-  for(unsigned i(0); i != 16; ++i)
-    {
-      std::cout << ((Coord*)&vdx2)[i].z+((Coord*)&clr6)[i].z << " " << ((Coord*)&vdx2)[i].y+((Coord*)&clr6)[i].y <<
-        " " << ((Coord*)&vdx2)[i].x+((Coord*)&clr6)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << 
-        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x;
-      std::cout << " " << ((uint16_t*)&vdx2)[i] << " " << ((uint16_t*)&clr6)[i] << " " << ((uint16_t*)&vdx2)[i]+((uint16_t*)&clr6)[i] << std::endl;
-    }
   //2.50
   clr6 =  _mm256_add_epi16(vdx2, clr6);
+  /*
   cout_binary(clr6, "clr6");
   for(unsigned i(0); i != 16; ++i)
     {
@@ -618,15 +504,9 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
         ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << " idx:" << idx
         << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
         std::endl; 
-      /*
-      std::cout << ((Coord*)&clr6)[i].x << " " << ((Coord*)&clr6)[i].y << " " 
-        << ((Coord*)&clr6)[i].z << " vdx:" << ((Coord*)&vdx)[i].x << " " <<
-        ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].z << " idx:" << idx
-        << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
-        std::endl; 
-        */
     }
   exit(0);
+  */
   return clr6;
   //return _mm256_add_epi16(vdx2, clr6);
 
