@@ -550,25 +550,23 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       std::cout << ((uint16_t*)&clr6)[i] << std::endl;
     }
   //2.14
-  /*
   clr6 = _mm256_xor_si256(clr6, _mm256_set1_epi16(21));
   cout_binary(clr6, "clr_xor");
   for(unsigned i(0); i != 16; ++i)
     {
       std::cout << ((uint16_t*)&clr6)[i] << std::endl;
     }
-    */
   //2.2
-  __m256i lay(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 2));
-  //__m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
+  //__m256i lay(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 2));
+  __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
   cout_binary(lay, "lay");
   for(unsigned i(0); i != 16; ++i)
     {
       std::cout << ((uint16_t*)&lay)[i] << std::endl;
     }
   //2.28
-  __m256i col(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 4));
-  //__m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
+  //__m256i col(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 4));
+  __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
   cout_binary(col, "col");
   for(unsigned i(0); i != 16; ++i)
     {
@@ -600,9 +598,10 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   cout_binary(vdx2, "vdx2");
   for(unsigned i(0); i != 16; ++i)
     {
-      std::cout << ((Coord*)&vdx2)[i].z << " " << ((Coord*)&vdx2)[i].y <<
-        " " << ((Coord*)&vdx2)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << 
-        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << std::endl;
+      std::cout << ((Coord*)&vdx2)[i].z+((Coord*)&clr6)[i].z << " " << ((Coord*)&vdx2)[i].y+((Coord*)&clr6)[i].y <<
+        " " << ((Coord*)&vdx2)[i].x+((Coord*)&clr6)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << 
+        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x;
+      std::cout << " " << ((uint16_t*)&vdx2)[i] << " " << ((uint16_t*)&clr6)[i] << " " << ((uint16_t*)&vdx2)[i]+((uint16_t*)&clr6)[i] << std::endl;
     }
   //2.50
   clr6 =  _mm256_add_epi16(vdx2, clr6);
@@ -614,11 +613,18 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       const bool orand(((uint16_t*)&rand)[i]&1);
       const int mainIdx(orand*pow(2,0)+ol*pow(2,1)+oc*pow(2,2));
       const int idx =  mainIdx/2*12+((uint16_t*)&rand)[i];
+      std::cout << ((Coord*)&clr6)[i].z << " " << ((Coord*)&clr6)[i].y << " " 
+        << ((Coord*)&clr6)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << " " <<
+        ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << " idx:" << idx
+        << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
+        std::endl; 
+      /*
       std::cout << ((Coord*)&clr6)[i].x << " " << ((Coord*)&clr6)[i].y << " " 
         << ((Coord*)&clr6)[i].z << " vdx:" << ((Coord*)&vdx)[i].x << " " <<
         ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].z << " idx:" << idx
         << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
         std::endl; 
+        */
     }
   exit(0);
   return clr6;
@@ -658,16 +664,16 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       1 -> 2 -> 3
   odd_col:odd_lay:odd_nrand = 0:0:0 [col=even:layer=even:nrand=even]
   0 offsets_[2].clr = (1, 0, 1) = 010001; 6 bits 
-  2  offsets_[4].clr = (3, 0, 1) = 110001; 6 bits
-  4  offsets_[6].clr = (1, 1, 0) = 010100; 6 bits
+  2  offsets_[4].clr = (1, 0, -1)  = (3, 0, 1) = 110001; 6 bits
+  4  offsets_[6].clr = (-1, -1, 0) = (1, 1, 0) = 010100; 6 bits
   6  offsets_[8].clr = (0, 1, 0) = 000100; 6 bits
-  8  offsets_[10].clr = (0, 3, 1) = 001101; 6 bits
+  8  offsets_[10].clr = (0, 1, -1) = (0, 3, 1) = 001101; 6 bits
   10  offsets_[0].clr = (0, 0, 1) = 01; 2 bits (first 4 bits are always 0000) 
   total = 2+5*6 = 32 bits = 01001101000100010100110001010001 = 1292979281
 
   col:lay:nrand = 0:0:1 [col=even:layer=even:nrand=odd]
   1  offsets_[3].clr = (1, 0, 0) = 010000;
-  3  offsets_[5].clr = (3, 0, 0) = 110000;
+  3  offsets_[5].clr = (1, 0, 0) = (3, 0, 0) = 110000;
   5  offsets_[7].clr = (0, 1, 1) = 000101;
   7  offsets_[9].clr = (1, 3, 0) = 011100;
   9  offsets_[11].clr = (0, 3, 0) = 001100;
@@ -696,9 +702,9 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   24 offsets_[14].clr = (-1, 0, 0) = (1, 0, 0) = 010000;
   26 offsets_[16].clr = (3, 0, 0) = 110000;
   28 offsets_[18].clr = (1, 1, 0) = 010100;
-  30 offsets_[20].clr = (0, 1, 3) = 000111;
-  32 offsets_[22].clr = (0, 3, 0) = 001100;
-  34 offsets_[12].clr = (0, 0, 1) = 01;
+  30 offsets_[20].clr = (0, -1, 1) = (0, 1, 3) = 000111;
+  32 offsets_[22].clr = (0, 1, 0)  = (0, 3, 0) = 001100;
+  34 offsets_[12].clr = (0, 0, -1) = (0, 0, 1) = 01;
   total = 01001100000111010100110000010000 = 1276988432
 
   col:lay:nrand = 1:0:1 [col=odd:layer=even:nrand=odd]
@@ -723,9 +729,9 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   37 offsets_[39].clr = (1, 0, 0) = 010000;
   39 offsets_[41].clr = (3, 0, 0) = 110000;
   41 offsets_[43].clr = (0, 1, 0) = 000100;
-  43 offsets_[45].clr = (0, 3, 1) = 001101;
+  43 offsets_[45].clr = (0, 1, -1) = (0, 3, 1) = 001101;
   45 offsets_[47].clr = (3, 3, 0) = 111100;
-  47 offsets_[37].clr = (0, 0, 3) = 11;
+  47 offsets_[37].clr = (0, 0, 1) = (0, 0, 3) = 11;
   total = 11111100001101000100110000010000 = 4231285776
   _mm256_setr_epi32(lsb: 1292979281, 3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537, 4231285776);
 */
