@@ -663,7 +663,7 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       0 -> 1 -> 0
       1 -> 2 -> 3
   odd_col:odd_lay:odd_nrand = 0:0:0 [col=even:layer=even:nrand=even]
-  0 offsets_[2].clr = (1, 0, 1) = 010001; 6 bits 
+  0  offsets_[2].clr = (-1, 0, -1) = (1, 0, 1) = 010001; 6 bits 
   2  offsets_[4].clr = (1, 0, -1)  = (3, 0, 1) = 110001; 6 bits
   4  offsets_[6].clr = (-1, -1, 0) = (1, 1, 0) = 010100; 6 bits
   6  offsets_[8].clr = (0, 1, 0) = 000100; 6 bits
@@ -677,7 +677,7 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   5  offsets_[7].clr = (0, 1, 1) = 000101;
   7  offsets_[9].clr = (1, 3, 0) = 011100;
   9  offsets_[11].clr = (0, 3, 0) = 001100;
-  11  offsets_[1].clr = (0, 0, 3) = 11;
+  11 offsets_[1].clr = (0, 0, 3) = 11;
   total = 11001100011100000101110000010000 = 3429915664
 
   col:lay:nrand = 0:1:0 [col=even:layer=odd:nrand=even]
