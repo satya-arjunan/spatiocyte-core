@@ -92,6 +92,13 @@ typedef uint16_t umol_t;
 typedef int32_t mol2_t;
 typedef uint32_t umol2_t;
 
+struct Coord
+{
+  umol_t x:5;
+  umol_t y:5;
+  umol_t z:5;
+};
+
 template<typename T>
 void cout_binary(const T& a, const std::string str)
 {

@@ -50,7 +50,7 @@ private:
   double D_;
   Species& species_;
   Compartment& compartment_;
-  std::vector<std::vector<umol_t> >& box_mols_;
+  std::vector<std::vector<Coord> >& box_mols_;
   voxel_t** box_voxels_;
   const voxel_t species_id_;
   const voxel_t vac_id_;

@@ -441,52 +441,188 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   */
   //__m256i tar1 = _mm256_i32gather_epi32(offsets_, nrand, 2);
  // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
+ 
+  __m256i rand(nrand);
+  cout_binary(vdx, "vdx");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      Coord& coord(((Coord*)&vdx)[i]);
+      std::cout << coord.x << " " << coord.y << " " << coord.z << std::endl;
+    }
+
  //index contains odd_col:odd_lay:odd_nrand x 16 
  //first get odd_nrand
- __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
- //set last bit of nrand as 0
- //nrand = [10, 8, 6, 4, 2, 0]
- nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(0xfffe));
- //nrand*3 = [30, 24, 18, 12, 6, 0]
- __m256i nrand2(_mm256_add_epi16(nrand, nrand));
- nrand = _mm256_add_epi16(nrand2, nrand);
+  __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
+  cout_binary(odd_nrand, "odd_nrand nrand");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&odd_nrand)[i] << " " << 
+        ((uint16_t*)&nrand)[i] << std::endl;
+    }
+
+  //set last bit of nrand as 0
+  //nrand = [10, 8, 6, 4, 2, 0]
+  nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(0xfffe));
+  cout_binary(nrand, "nrand_and");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&nrand)[i] << std::endl;
+    }
+
+  //nrand*3 = [30, 24, 18, 12, 6, 0]
+  __m256i nrand2(_mm256_add_epi16(nrand, nrand));
+  nrand = _mm256_add_epi16(nrand2, nrand);
+  cout_binary(nrand, "nrand*3");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&nrand)[i] << std::endl;
+    }
  //1.66 s
 
- __m256i odd_lay(_mm256_srli_epi16(
+  __m256i odd_lay(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 4));
- __m256i odd_col(_mm256_srli_epi16(
-     _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 8));
- __m256i index(_mm256_or_si256(odd_nrand, odd_lay));
- index = _mm256_or_si256(index, odd_col);
+  cout_binary(odd_lay, "odd_lay");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&odd_lay)[i] << " " << 
+        ((Coord*)&vdx)[i].y << std::endl;
+    }
+  __m256i odd_col(_mm256_srli_epi16(
+     _mm256_and_si256(vdx, _mm256_set1_epi16(1024)), 8));
+  cout_binary(odd_col, "odd_col");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&odd_col)[i] << " " << 
+        ((Coord*)&vdx)[i].z << std::endl;
+    }
+  __m256i index(_mm256_or_si256(odd_nrand, odd_lay));
+  index = _mm256_or_si256(index, odd_col);
+  cout_binary(index, "index");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&index)[i] << std::endl;
+    }
  //1.72 s
  __m256i clr(_mm256_setr_epi32(1292979281,
       3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537,
       4231285776));
   __m256i tar1 = _mm256_permutevar8x32_epi32(clr,
       _mm256_and_si256(index, _mm256_set1_epi32(7)));
+  cout_binary(tar1, "tar1");
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << ((uint32_t*)&tar1)[i] << std::endl;
+    }
   //1.80
-  tar1 = _mm256_srlv_epi32(tar1, _mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
+  __m256i shift(_mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
+  cout_binary(shift, "shift");
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << ((uint32_t*)&shift)[i] << std::endl;
+    }
+  tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, shift),
+      _mm256_set1_epi32(0xffff));
+  cout_binary(tar1, "tar1");
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << ((uint32_t*)&tar1)[i] << std::endl;
+    }
   //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
+  cout_binary(tar2, "tar2");
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << ((uint32_t*)&tar2)[i] << std::endl;
+    }
   //2.00
   tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
+  cout_binary(tar2, "tar2");
+  for(unsigned i(0); i != 8; ++i)
+    {
+      std::cout << ((uint32_t*)&tar2)[i] << std::endl;
+    }
   //2.14
   __m256i clr6(_mm256_or_si256(tar1, tar2));
+  cout_binary(clr6, "clr");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
+    }
   //2.14
+  /*
   clr6 = _mm256_xor_si256(clr6, _mm256_set1_epi16(21));
-  //2.21
-  __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
+  cout_binary(clr6, "clr_xor");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
+    }
+    */
+  //2.2
+  __m256i lay(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 2));
+  //__m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
+  cout_binary(lay, "lay");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&lay)[i] << std::endl;
+    }
   //2.28
-  __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
+  __m256i col(_mm256_srli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 4));
+  //__m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
+  cout_binary(col, "col");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&col)[i] << std::endl;
+    }
   //2.39
-  clr6 = _mm256_and_si256(clr6, _mm256_set1_epi16(3));
-  clr6 = _mm256_or_si256(clr6, lay);
+  __m256i row(_mm256_and_si256(clr6, _mm256_set1_epi16(3)));
+  cout_binary(row, "col lay row");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&col)[i] << " " << 
+        ((uint16_t*)&lay)[i] << " " << ((uint16_t*)&row)[i] <<std::endl;
+    }
+  clr6 = _mm256_or_si256(row, lay);
+  cout_binary(clr6, "clr_lay_row");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((uint16_t*)&clr6)[i] << std::endl;
+    }
   //2.48
   clr6 = _mm256_or_si256(clr6, col);
-  __m256i vdx2 = _mm256_sub_epi16(vdx, _mm256_set1_epi16(1));
+  cout_binary(clr6, "clr_col_lay_row");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((Coord*)&clr6)[i].z << " " << ((Coord*)&clr6)[i].y <<
+        " " << ((Coord*)&clr6)[i].x << std::endl;
+    }
+  __m256i vdx2 = _mm256_sub_epi16(vdx, _mm256_set1_epi16(1057));
+  cout_binary(vdx2, "vdx2");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      std::cout << ((Coord*)&vdx2)[i].z << " " << ((Coord*)&vdx2)[i].y <<
+        " " << ((Coord*)&vdx2)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << 
+        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << std::endl;
+    }
   //2.50
-  return _mm256_add_epi16(vdx2, clr6);
+  clr6 =  _mm256_add_epi16(vdx2, clr6);
+  cout_binary(clr6, "clr6");
+  for(unsigned i(0); i != 16; ++i)
+    {
+      const bool ol(((Coord*)&vdx)[i].y&1);
+      const bool oc(((Coord*)&vdx)[i].z&1);
+      const bool orand(((uint16_t*)&rand)[i]&1);
+      const int mainIdx(orand*pow(2,0)+ol*pow(2,1)+oc*pow(2,2));
+      const int idx =  mainIdx/2*12+((uint16_t*)&rand)[i];
+      std::cout << ((Coord*)&clr6)[i].x << " " << ((Coord*)&clr6)[i].y << " " 
+        << ((Coord*)&clr6)[i].z << " vdx:" << ((Coord*)&vdx)[i].x << " " <<
+        ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].z << " idx:" << idx
+        << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
+        std::endl; 
+    }
+  exit(0);
+  return clr6;
+  //return _mm256_add_epi16(vdx2, clr6);
 
   /*
   cout_binary(test, "test");
@@ -521,77 +657,77 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       0 -> 1 -> 0
       1 -> 2 -> 3
   odd_col:odd_lay:odd_nrand = 0:0:0 [col=even:layer=even:nrand=even]
-  offsets_[2].clr = (1, 0, 1) = 010001; 6 bits 
-  offsets_[4].clr = (3, 0, 1) = 110001; 6 bits
-  offsets_[6].clr = (1, 1, 0) = 010100; 6 bits
-  offsets_[8].clr = (0, 1, 0) = 000100; 6 bits
-  offsets_[10].clr = (0, 3, 1) = 001101; 6 bits
-  offsets_[0].clr = (0, 0, 1) = 01; 2 bits (first 4 bits are always 0000) 
+  0 offsets_[2].clr = (1, 0, 1) = 010001; 6 bits 
+  2  offsets_[4].clr = (3, 0, 1) = 110001; 6 bits
+  4  offsets_[6].clr = (1, 1, 0) = 010100; 6 bits
+  6  offsets_[8].clr = (0, 1, 0) = 000100; 6 bits
+  8  offsets_[10].clr = (0, 3, 1) = 001101; 6 bits
+  10  offsets_[0].clr = (0, 0, 1) = 01; 2 bits (first 4 bits are always 0000) 
   total = 2+5*6 = 32 bits = 01001101000100010100110001010001 = 1292979281
 
   col:lay:nrand = 0:0:1 [col=even:layer=even:nrand=odd]
-  offsets_[3].clr = (1, 0, 0) = 010000;
-  offsets_[5].clr = (3, 0, 0) = 110000;
-  offsets_[7].clr = (0, 1, 1) = 000101;
-  offsets_[9].clr = (1, 3, 0) = 011100;
-  offsets_[11].clr = (0, 3, 0) = 001100;
-  offsets_[1].clr = (0, 0, 3) = 11;
+  1  offsets_[3].clr = (1, 0, 0) = 010000;
+  3  offsets_[5].clr = (3, 0, 0) = 110000;
+  5  offsets_[7].clr = (0, 1, 1) = 000101;
+  7  offsets_[9].clr = (1, 3, 0) = 011100;
+  9  offsets_[11].clr = (0, 3, 0) = 001100;
+  11  offsets_[1].clr = (0, 0, 3) = 11;
   total = 11001100011100000101110000010000 = 3429915664
 
   col:lay:nrand = 0:1:0 [col=even:layer=odd:nrand=even]
-  offsets_[26].clr = (1, 0, 0) = 010000;
-  offsets_[28].clr = (3, 0, 0) = 110000;
-  offsets_[30].clr = (0, 1, 0) = 000100;
-  offsets_[32].clr = (3, 1, 0) = 110100;
-  offsets_[34].clr = (0, 3, 3) = 001111;
-  offsets_[24].clr = (0, 0, 1) = 01;
+  12 offsets_[26].clr = (1, 0, 0) = 010000;
+  14 offsets_[28].clr = (3, 0, 0) = 110000;
+  16 offsets_[30].clr = (0, 1, 0) = 000100;
+  18 offsets_[32].clr = (3, 1, 0) = 110100;
+  20 offsets_[34].clr = (0, 3, 3) = 001111;
+  22 offsets_[24].clr = (0, 0, 1) = 01;
   total = 01001111110100000100110000010000 = 1339051024 
 
   col:lay:nrand = 0:1:1 [col=even:layer=odd:nrand=odd]
-  offsets_[27].clr = (1, 0, 3) = 010011;
-  offsets_[29].clr = (3, 0, 3) = 110011;
-  offsets_[31].clr = (0, 1, 3) = 000111;
-  offsets_[33].clr = (0, 3, 0) = 001100;
-  offsets_[35].clr = (3, 3, 0) = 111100;
-  offsets_[25].clr = (0, 0, 3) = 11;
+  13 offsets_[27].clr = (1, 0, 3) = 010011;
+  15 offsets_[29].clr = (3, 0, 3) = 110011;
+  17 offsets_[31].clr = (0, 1, 3) = 000111;
+  19 offsets_[33].clr = (0, 3, 0) = 001100;
+  21 offsets_[35].clr = (3, 3, 0) = 111100;
+  23 offsets_[25].clr = (0, 0, 3) = 11;
   total = 11111100001100000111110011010011 = 4231036115
 
   col:lay:nrand = 1:0:0 [col=odd:layer=even:nrand=even]
-  offsets_[14].clr = (1, 0, 0) = 010000;
-  offsets_[16].clr = (3, 0, 0) = 110000;
-  offsets_[18].clr = (1, 1, 0) = 010100;
-  offsets_[20].clr = (0, 1, 3) = 000111;
-  offsets_[22].clr = (0, 3, 0) = 001100;
-  offsets_[12].clr = (0, 0, 1) = 01;
+  24 offsets_[14].clr = (-1, 0, 0) = (1, 0, 0) = 010000;
+  26 offsets_[16].clr = (3, 0, 0) = 110000;
+  28 offsets_[18].clr = (1, 1, 0) = 010100;
+  30 offsets_[20].clr = (0, 1, 3) = 000111;
+  32 offsets_[22].clr = (0, 3, 0) = 001100;
+  34 offsets_[12].clr = (0, 0, 1) = 01;
   total = 01001100000111010100110000010000 = 1276988432
 
   col:lay:nrand = 1:0:1 [col=odd:layer=even:nrand=odd]
-  offsets_[15].clr = (1, 0, 3) = 010011;
-  offsets_[17].clr = (3, 0, 3) = 110011;
-  offsets_[19].clr = (0, 1, 0) = 000100;
-  offsets_[21].clr = (1, 3, 0) = 011100;
-  offsets_[23].clr = (0, 3, 3) = 001111;
-  offsets_[13].clr = (0, 0, 3) = 11;
+  25 offsets_[15].clr = (-1, 0, 1) = (1, 0, 3) = 010011;
+  27 offsets_[17].clr = (3, 0, 3) = 110011;
+  29 offsets_[19].clr = (0, -1, 0) = (0, 1, 0) = 000100;
+  31 offsets_[21].clr = (-1, 1, 0) = (1, 3, 0) = 011100;
+  33 offsets_[23].clr = (0, 3, 3) = 001111;
+  35 offsets_[13].clr = (0, 0, 3) = 11;
   total = 11001111011100000100110011010011 = 3480243411
 
   col:lay:nrand = 1:1:0 [col=odd:layer=odd:nrand=even]
-  offsets_[38].clr = (1, 0, 1) = 010001;
-  offsets_[40].clr = (3, 0, 1) = 110001;
-  offsets_[42].clr = (0, 1, 1) = 000101;
-  offsets_[44].clr = (3, 1, 0) = 110100;
-  offsets_[46].clr = (0, 3, 0) = 001100;
-  offsets_[36].clr = (0, 0, 1) = 01;
+  36 offsets_[38].clr = (1, 0, 1) = 010001;
+  38 offsets_[40].clr = (3, 0, 1) = 110001;
+  40 offsets_[42].clr = (0, 1, 1) = 000101;
+  42 offsets_[44].clr = (1, -1, 0) = (3, 1, 0) = 110100;
+  44 offsets_[46].clr = (0, 3, 0) = 001100;
+  46 offsets_[36].clr = (0, 0, 1) = 01;
   total = 01001100110100000101110001010001 = 1288723537
 
   col:lay:nrand = 1:1:1 [col=odd:layer=odd:nrand=odd]
-  offsets_[39].clr = (1, 0, 0) = 010000;
-  offsets_[41].clr = (3, 0, 0) = 110000;
-  offsets_[43].clr = (0, 1, 0) = 000100;
-  offsets_[45].clr = (0, 3, 1) = 001101;
-  offsets_[47].clr = (3, 3, 0) = 111100;
-  offsets_[37].clr = (0, 0, 3) = 11;
+  37 offsets_[39].clr = (1, 0, 0) = 010000;
+  39 offsets_[41].clr = (3, 0, 0) = 110000;
+  41 offsets_[43].clr = (0, 1, 0) = 000100;
+  43 offsets_[45].clr = (0, 3, 1) = 001101;
+  45 offsets_[47].clr = (3, 3, 0) = 111100;
+  47 offsets_[37].clr = (0, 0, 3) = 11;
   total = 11111100001101000100110000010000 = 4231285776
-  _mm256_setr_epi32(1292979281, 3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537, 4231285776);
+  _mm256_setr_epi32(lsb: 1292979281, 3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537, 4231285776);
 */
 
 

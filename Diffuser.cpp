@@ -56,6 +56,13 @@ void Diffuser::initialize() {
 
 void Diffuser::walk() {
   for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
+    /*
+    for(unsigned i(0); i != 16; ++i)
+      {
+        std::cout << box_mols_[box][i].x << " " << box_mols_[box][i].y <<
+          " " << box_mols_[box][i].z << std::endl;
+      }
+      */
     walk((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
   }
 }

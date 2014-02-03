@@ -66,14 +66,16 @@ void Species::populate() {
 
 void Species::populate_mol(const unsigned box, const umol_t vdx) {
   get_compartment().get_lattice().get_box_voxels()[box][vdx] = get_id();
-  get_box_mols()[box].push_back(vdx);
+  Coord clr(get_compartment().get_lattice().box_mol_to_box_coord(vdx));
+  get_box_mols()[box].push_back(clr);
 }
 
 umol_t Species::get_random_valid_mol(const unsigned box) {
-  std::vector<umol_t>& mols(get_box_mols()[box]);
-  umol_t mol(mols[rng_.IRan(0, mols.size())]);
-  while(get_compartment().get_lattice().get_box_voxels()[box][mol] != get_id()) {
-    mol = mols[rng_.IRan(0, mols.size())];
+  std::vector<Coord>& mols(get_box_mols()[box]);
+  umol_t mol(get_compartment().get_lattice().box_coord_to_box_mol(mols[rng_.IRan(0, mols.size())]));
+  while(get_compartment().get_lattice().get_box_voxels()[box][mol] != 
+        get_id()) {
+    mol = get_compartment().get_lattice().box_coord_to_box_mol(mols[rng_.IRan(0, mols.size())]);
   }
   return mol;
 }
@@ -132,13 +134,13 @@ std::vector<unsigned> Species::get_mols() {
   std::vector<unsigned> mols;
   for(unsigned box(0), m(get_box_mols().size()); box != m; ++box) {
     for(unsigned i(0), n(get_box_mols()[box].size()); i != n; ++i) {
-      mols.push_back(get_compartment().get_lattice().box_mol_to_mol(box,
+      mols.push_back(get_compartment().get_lattice().box_coord_to_mol(box,
           get_box_mols()[box][i]));
     }
   }
   return mols;
 }
 
-std::vector<std::vector<umol_t> >& Species::get_box_mols() {
+std::vector<std::vector<Coord> >& Species::get_box_mols() {
   return box_mols_;
 }

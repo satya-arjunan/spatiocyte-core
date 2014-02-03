@@ -42,8 +42,11 @@ class Lattice {
   unsigned get_num_box() const;
   unsigned get_num_box_voxel() const;
   unsigned get_num_voxel() const;
-  unsigned box_mol_to_mol(const unsigned, const umol_t) const;
+  unsigned box_coord_to_mol(const unsigned, const Coord) const;
+  //unsigned box_mol_to_mol(const unsigned, const umol_t) const;
   unsigned coord_to_mol(const Vector<unsigned>&) const;
+  umol_t box_coord_to_box_mol(const Coord) const;
+  Coord box_mol_to_box_coord(const umol_t) const;
   Vector<unsigned> box_mol_to_coord(const umol_t) const;
   Vector<unsigned> box_to_coord(const unsigned) const;
   const Vector<unsigned>& get_dimensions() const;

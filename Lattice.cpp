@@ -46,6 +46,8 @@ Lattice::Lattice(const unsigned num_voxel,
   std::cout << "box dimensions:" << box_dimensions_.x << " " << 
     box_dimensions_.y << " " << box_dimensions_.z << std::endl;
   std::cout << "num_box:" << num_box << std::endl;
+  std::cout << "box_voxel_dimensions:" << box_voxel_dimensions_.x << " " <<
+   box_voxel_dimensions_.y << " " << box_voxel_dimensions_.z << std::endl;
 }
 
 void Lattice::initialize() {
@@ -73,11 +75,37 @@ unsigned Lattice::get_num_voxel() const {
   return get_num_box_voxel()*get_num_box();
 }
 
+unsigned Lattice::box_coord_to_mol(const unsigned box, const Coord coord)
+    const {
+  Vector<unsigned> mol_coord;
+  mol_coord.x = coord.x;
+  mol_coord.y = coord.y;
+  mol_coord.z = coord.z;
+  mol_coord += box_to_coord(box)*box_voxel_dimensions_;
+  return coord_to_mol(mol_coord);
+}
+
+/*
 unsigned Lattice::box_mol_to_mol(const unsigned box, const umol_t box_mol)
     const {
   Vector<unsigned> mol_coord(box_mol_to_coord(box_mol));
   mol_coord += box_to_coord(box)*box_voxel_dimensions_;
   return coord_to_mol(mol_coord);
+}
+*/
+
+Coord Lattice::box_mol_to_box_coord(const umol_t box_mol) const {
+  Vector<unsigned> vec(box_mol_to_coord(box_mol));
+  Coord coord;
+  coord.x = vec.x;
+  coord.y = vec.y;
+  coord.z = vec.z;
+  return coord;
+}
+
+umol_t Lattice::box_coord_to_box_mol(const Coord coord) const {
+  return coord.x*box_voxel_dimensions_.y +
+      coord.y + coord.z*box_voxel_dimensions_.x*box_voxel_dimensions_.y;
 }
 
 unsigned Lattice::coord_to_mol(const Vector<unsigned>& coord) const {

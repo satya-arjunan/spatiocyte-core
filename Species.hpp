@@ -58,7 +58,7 @@ public:
   const std::string& get_name() const;
   const std::string get_name_id() const;
   std::vector<unsigned> get_mols();
-  std::vector<std::vector<umol_t> >& get_box_mols();
+  std::vector<std::vector<Coord> >& get_box_mols();
 private:
   const std::string get_init_name(const std::string) const;
 private:
@@ -70,7 +70,7 @@ private:
   const voxel_t id_;
   const voxel_t vac_id_;
   const voxel_t vac_xor_;
-  std::vector<std::vector<umol_t> > box_mols_;
+  std::vector<std::vector<Coord> > box_mols_;
   Diffuser diffuser_;
   Random rng_;
   voxel_t nbit_;
