@@ -100,7 +100,7 @@ struct Coord
 };
 
 template<typename T>
-void cout_binary(const T& a, const std::string str)
+void cout_binary(const T a, const std::string str)
 {
   std::cout << str << ": ";
   const char* beg(reinterpret_cast<const char*>(&a));
@@ -114,18 +114,14 @@ void cout_binary(const T& a, const std::string str)
   std::cout << std::endl;
 }
 
-template<typename T, typename U>
-void cout_uint(const T& a, const std::string str)
+template<typename Register, typename CastType>
+void cout_uint(const Register reg, const std::string title)
 {
-  const U* beg(reinterpret_cast<const U*>(&a));
-  const U* end(beg + sizeof(a));
-  std::cout << str << ": ";
-  while (1) {
-    std::cout << (uint32_t)(*--end) << ' ';
-    if (end == beg) {
-      break;
+  std::cout << title << ": " << std::endl;
+  for(unsigned i(0), n(sizeof(Register)/sizeof(CastType)); i != n; ++i)
+    {
+      std::cout << ((CastType*)&reg)[i] << " ";
     }
-  }
   std::cout << std::endl;
 }
 
