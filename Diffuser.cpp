@@ -68,6 +68,104 @@ void Diffuser::walk() {
 }
 
 void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2 = _mm256_permute2x128_si256(vmols, vmols, 1);
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+}
+
+/*
+//t=4.76 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2 = _mm256_permute2x128_si256(vmols, vmols, 1);
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  //rotate vmols and vmols2
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+}
+*/
+
+/*
+//t = 5.15 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  __m256i cmps(_mm256_setzero_si256());
+  for (unsigned i(0); i != 3; ++i) {
+    vmols = _mm256_shufflehi_epi16(vmols, 252);
+    vmols = _mm256_shufflelo_epi16(vmols, 233);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  vmols = _mm256_shuffle_epi32(vmols, 252);
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  for (unsigned i(0); i != 3; ++i) {
+    vmols = _mm256_shufflehi_epi16(vmols, 252);
+    vmols = _mm256_shufflelo_epi16(vmols, 233);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  vmols = _mm256_permute2x128_si256(vmols, vmols, 1);
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  for (unsigned i(0); i != 3; ++i) {
+    vmols = _mm256_shufflehi_epi16(vmols, 252);
+    vmols = _mm256_shufflelo_epi16(vmols, 233);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  vmols = _mm256_shuffle_epi32(vmols, 91);
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  for (unsigned i(0); i != 3; ++i) {
+    vmols = _mm256_shufflehi_epi16(vmols, 252);
+    vmols = _mm256_shufflelo_epi16(vmols, 233);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+}
+*/
+
+
+/*
+//t = 5.95 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i mols_m256i(_mm256_load_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  __m256i cmps(_mm256_setzero_si256());
+  for (unsigned i(0); i != 15; ++i) {
+    vmols = _mm256_or_si256(_mm256_slli_si256(vmols, 2),
+                           _mm256_srli_si256(vmols, 30)); 
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+}
+*/
+
+/*
+//t = 6.04 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
   __m256i mols_m256i(_mm256_load_si256(base));
   __m256i vmols(mols_m256i);
   __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
@@ -83,25 +181,6 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
   mols_m256i = _mm256_or_si256(mols_m256i, tars);
   _mm256_store_si256(base, mols_m256i);
   //_mm256_store_si256(base, tars);
-}
-
-/*
-t = 5.9 s
-void Diffuser::walk(__m256i* base, const unsigned size) {
-  __m256i mols_m256i(_mm256_load_si256(base));
-  __m256i vmols(mols_m256i);
-  __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
-  __m256i cmps(_mm256_set1_epi64x(0));
-  for (unsigned i(0); i != 15; ++i) {
-    vmols = _mm256_or_si256(_mm256_slli_si256(vmols, 2),
-                           _mm256_srli_si256(vmols, 30)); 
-    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
-  }
-  mols_m256i = _mm256_and_si256(mols_m256i, cmps);
-  cmps = _mm256_andnot_si256(cmps, cmps);
-  tars = _mm256_and_si256(tars, cmps);
-  mols_m256i = _mm256_or_si256(mols_m256i, tars);
-  _mm256_store_si256(base, mols_m256i);
 }
 */
 
