@@ -75,18 +75,12 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
       0x0908070605040302, 0x01000f0e0d0c0b0a));
   __m256i vmols2 = _mm256_permute2x128_si256(vmols, vmols, 1);
   __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
-  cout_uint<__m256i, uint16_t>(vmols, "vmols init");
-  cout_uint<__m256i, uint16_t>(vmols2, "vmols2 init");
   for (unsigned i(0); i != 7; ++i) {
-    std::cout << "i:" << i << std::endl;
     vmols = _mm256_shuffle_epi8(vmols, rot);
-    cout_uint<__m256i, uint16_t>(vmols, "vmols");
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
     vmols2 = _mm256_shuffle_epi8(vmols2, rot);
-    cout_uint<__m256i, uint16_t>(vmols2, "vmols2");
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
   }
-  exit(0);
   //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
   *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
 }
