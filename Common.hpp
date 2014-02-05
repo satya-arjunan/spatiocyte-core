@@ -114,15 +114,15 @@ void cout_binary(const T& a, const std::string str)
   std::cout << std::endl;
 }
 
-template<typename T>
-void cout_uint8(const T& a, const std::string str)
+template<typename T, typename U>
+void cout_uint(const T& a, const std::string str)
 {
-  const uint8_t* beg(reinterpret_cast<const uint8_t*>(&a));
-  const uint8_t* end(beg + sizeof(a));
+  const U* beg(reinterpret_cast<const U*>(&a));
+  const U* end(beg + sizeof(a));
   std::cout << str << ": ";
-  while(1) {
+  while (1) {
     std::cout << (uint32_t)(*--end) << ' ';
-    if(end == beg) {
+    if (end == beg) {
       break;
     }
   }
