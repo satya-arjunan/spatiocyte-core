@@ -68,12 +68,12 @@ void Diffuser::walk() {
 }
 
 void Diffuser::walk(__m256i* base, const unsigned size) {
-  const __m256i mols_m256i(_mm256_load_si256(base));
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
   __m256i vmols(mols_m256i);
   const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
   const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
       0x0908070605040302, 0x01000f0e0d0c0b0a));
-  __m256i vmols2 = _mm256_permute2x128_si256(vmols, vmols, 1);
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
   __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
   for (unsigned i(0); i != 7; ++i) {
     vmols = _mm256_shuffle_epi8(vmols, rot);
@@ -82,11 +82,34 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
   }
   //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
-  *base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  //*base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
 }
 
 /*
-//t=4.76 s
+//t=4.54 s gcc
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  //*base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+}
+*/
+
+/*
+//t=4.76 s icc
 void Diffuser::walk(__m256i* base, const unsigned size) {
   const __m256i mols_m256i(_mm256_load_si256(base));
   __m256i vmols(mols_m256i);
