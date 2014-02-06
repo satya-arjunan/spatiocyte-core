@@ -63,22 +63,34 @@ void Diffuser::walk() {
           " " << box_mols_[box][i].z << std::endl;
       }
       */
+    for(unsigned i(0); i != box_mols_[box].size(); ++i)
+      {
+        std::cout << "box:" << box << " i:" << i << " " << 
+          ((uint16_t*)&box_mols_[box][0])[i] << std::endl;
+      }
     walk((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
   }
+  exit(0);
 }
 
 void Diffuser::walk(__m256i* base, const unsigned size) {
-  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  const __m256i mols_m256i(_mm256_load_si256(base));
+  cout_uint<__m256i, uint16_t>(mols_m256i, "mols_m256i");
   __m256i vmols(mols_m256i);
   const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
   const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
       0x0908070605040302, 0x01000f0e0d0c0b0a));
   __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  cout_uint<__m256i, uint16_t>(vmols, "vmols init");
+  cout_uint<__m256i, uint16_t>(vmols2, "vmols2 init");
   __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
   for (unsigned i(0); i != 7; ++i) {
+    std::cout << "i:" << i << std::endl;
     vmols = _mm256_shuffle_epi8(vmols, rot);
+    cout_uint<__m256i, uint16_t>(vmols, "vmols");
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
     vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cout_uint<__m256i, uint16_t>(vmols2, "vmols2");
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
   }
   //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
