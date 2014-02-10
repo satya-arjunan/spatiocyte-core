@@ -32,6 +32,7 @@
 #include <Diffuser.hpp>
 #include <Compartment.hpp>
 #include <Model.hpp>
+#include <random>
 
 Diffuser::Diffuser(const double D, Species& species):
   D_(D),
@@ -52,16 +53,295 @@ void Diffuser::initialize() {
   std::cout << "one_nbit:" << one_nbit_ << std::endl;
   std::cout << "vac_id:" << vac_id_ << std::endl;
   std::cout << "vac_xor:" << vac_xor_ << std::endl;
+
 }
 
 void Diffuser::walk() {
+  k = 0;
   for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
     walk((__m256i*)(&box_mols_[box][0]), box_mols_[box].size());
   }
 }
 
+
+//t = 4.99 s (gcc)
 void Diffuser::walk(__m256i* base, const unsigned size) {
-  //must use the unaligned mov, vmovdqu because it is uint16_t which
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  int cmps(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    int cmp(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols)));
+    if (cmp) {
+      cmps |= cmp;
+      ++k;
+    }
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmp = _mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2));
+    if (cmp) {
+      cmps |= cmp;
+      ++k;
+    }
+  }
+  if (cmps) {
+    __m256i vmask(_mm256_set1_epi32(cmps));
+    const __m256i shuffle(_mm256_setr_epi64x(0x0000000000000000,
+        0x0101010101010101, 0x0202020202020202, 0x0303030303030303));
+    vmask = _mm256_shuffle_epi8(vmask, shuffle);
+    const __m256i bit_mask(_mm256_set1_epi64x(0x7fbfdfeff7fbfdfe));
+    vmask = _mm256_or_si256(vmask, bit_mask);
+    vmask = _mm256_cmpeq_epi8(vmask, _mm256_set1_epi64x(-1));
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, vmask));
+  }
+  else {
+    _mm256_storeu_si256(base, tars);
+  }
+}
+
+/*
+// t_gcc = 0.5182 s
+// t_icc = 3.20 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  const uint32_t mask(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  //const uint32_t mask(rng_.BRan());
+  __m256i vmask(_mm256_set1_epi32(mask));
+  const __m256i shuffle(_mm256_setr_epi64x(0x0000000000000000,
+      0x0101010101010101, 0x0202020202020202, 0x0303030303030303));
+  vmask = _mm256_shuffle_epi8(vmask, shuffle);
+  const __m256i bit_mask(_mm256_set1_epi64x(0x7fbfdfeff7fbfdfe));
+  vmask = _mm256_or_si256(vmask, bit_mask);
+  vmask = _mm256_cmpeq_epi8(vmask, _mm256_set1_epi64x(-1));
+  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, vmask));
+}
+*/
+
+/*
+// t_gcc = 3.13 s
+// t_icc = 3.30 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  const uint32_t mask(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  //const uint32_t mask(rng_.BRan());
+  __m256i vmask(_mm256_set1_epi32(mask));
+  const __m256i shift(_mm256_set_epi32(7, 6, 5, 4, 3, 2, 1, 0));
+  vmask = _mm256_sllv_epi32(vmask, shift);
+  const __m256i shuffle(_mm256_setr_epi64x(0x0105090d0004080c,
+      0x03070b0f02060a0e, 0x0105090d0004080c, 0x03070b0f02060a0e));
+  vmask = _mm256_shuffle_epi8(vmask, shuffle);
+  const __m256i perm(_mm256_setr_epi64x(0x0000000000000004, 0x0000000100000005,
+      0x0000000200000006, 0x0000000300000007));
+  vmask = _mm256_permutevar8x32_epi32(vmask, perm);
+  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, vmask));
+}
+*/
+
+/*
+// t_gcc = 3.63 s
+// t_icc = 3.70 s
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  uint32_t mask(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  //uint32_t mask(0x08104225);
+  const uint64_t pmask = 0x8080808080808080ULL; // bit unpacking mask for PDEP
+  uint64_t amask0, amask1, amask2, amask3; 
+  __m256i vmask; 
+  amask0 = _pdep_u64(mask, pmask);
+  mask >>= 8;
+  amask1 = _pdep_u64(mask, pmask);
+  mask >>= 8;
+  amask2 = _pdep_u64(mask, pmask);
+  mask >>= 8;
+  amask3 = _pdep_u64(mask, pmask);
+  vmask = _mm256_set_epi64x(amask3, amask2, amask1, amask0);
+  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, vmask));
+}
+*/
+
+/*
+//t = 4.99 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  int cmps(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    int cmp(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols)));
+    if (cmp) {
+      cmps |= cmp;
+      ++k;
+    }
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmp = _mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2));
+    if (cmp) {
+      cmps |= cmp;
+      ++k;
+    }
+  }
+  if (cmps) {
+    _mm256_storeu_si256(base, mols_m256i);
+  }
+  else {
+    _mm256_storeu_si256(base, tars);
+  }
+}
+*/
+
+/*
+//t = 5.75 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    __m256i cmp(_mm256_cmpeq_epi16(tars, vmols));
+    if (!_mm256_testz_si256(cmp, cmp)) { 
+      cmps = _mm256_or_si256(cmps, cmp);
+    }
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmp = _mm256_cmpeq_epi16(tars, vmols2);
+    if (!_mm256_testz_si256(cmp, cmp)) { 
+      cmps = _mm256_or_si256(cmps, cmp);
+    }
+  }
+  if (!_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, tars);
+  }
+  else {
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+}
+*/
+
+/*
+//t = 5.59 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    __m256i cmp(_mm256_cmpeq_epi16(tars, vmols));
+    if (_mm256_movemask_epi8(cmp)) { 
+      cmps = _mm256_or_si256(cmps, cmp);
+    }
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmp = _mm256_cmpeq_epi16(tars, vmols2);
+    if (_mm256_movemask_epi8(cmp)) { 
+      cmps = _mm256_or_si256(cmps, cmp);
+    }
+  }
+  if (!_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, tars);
+  }
+  else {
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+}
+*/
+
+/*
+//t = 4.50 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  if (!_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, tars);
+  }
+  else {
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+}
+*/
+
+/*
+//t = 4.53 s (gcc) 5.06 s (icc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  if (_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+  else {
+    _mm256_storeu_si256(base, tars);
+  }
+}
+*/
+
+/*
+//t = 4.55 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
   //may be unligned.
   const __m256i mols_m256i(_mm256_loadu_si256(base));
   __m256i vmols(mols_m256i);
@@ -77,12 +357,46 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
   }
   //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
-  _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
-  //*base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
+  if (!_mm256_testz_si256(cmps, cmps)) { 
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+  else {
+    _mm256_storeu_si256(base, tars);
+  }
 }
+*/
 
 /*
-//t=4.54 s gcc
+//t = 5.76 s (icc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  int cmps(_mm256_movemask_epi8(_mm256_cmpeq_epi16(tars, vmols2)));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps |= _mm256_movemask_epi8( _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps |= _mm256_movemask_epi8( _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+  for(int i(1); i <= 16; ++i)
+    {
+      if(!(cmps & (1 << i)))
+        {
+          ((uint16_t*)base)[i-1] = ((uint16_t*)&tars)[i-1];
+        }
+    }
+}
+*/
+
+/*
+//t=4.54 s (gcc)
 void Diffuser::walk(__m256i* base, const unsigned size) {
   const __m256i mols_m256i(_mm256_loadu_si256(base));
   __m256i vmols(mols_m256i);
@@ -99,7 +413,6 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
   }
   //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
   _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
-  //*base = _mm256_blendv_epi8(tars, mols_m256i, cmps);
 }
 */
 

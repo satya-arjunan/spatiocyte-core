@@ -102,7 +102,7 @@ struct Coord
 template<typename T>
 void cout_binary(const T a, const std::string str)
 {
-  std::cout << str << ": ";
+  std::cout << str << " msb to lsb:\n";
   const char* beg(reinterpret_cast<const char*>(&a));
   const char* end(beg + sizeof(a));
   while(1) {
@@ -117,10 +117,10 @@ void cout_binary(const T a, const std::string str)
 template<typename Register, typename CastType>
 void cout_uint(const Register reg, const std::string title)
 {
-  std::cout << title << ": " << std::endl;
+  std::cout << title << " lsb to msb:\n" << std::endl;
   for(unsigned i(0), n(sizeof(Register)/sizeof(CastType)); i != n; ++i)
     {
-      std::cout << ((CastType*)&reg)[i] << " ";
+      std::cout << (uint32_t)((CastType*)&reg)[i] << " ";
     }
   std::cout << std::endl;
 }

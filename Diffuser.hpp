@@ -59,6 +59,7 @@ private:
   RandomLib::Random rng2_;
   voxel_t nbit_;
   voxel_t one_nbit_;
+  unsigned k;
 };
 
 #endif /* __Diffuser_hpp */
