@@ -64,7 +64,7 @@ void Diffuser::walk() {
 }
 
 
-//t = 4.99 s (gcc)
+//t = 4.93 s (gcc)
 void Diffuser::walk(__m256i* base, const unsigned size) {
   //must use the unaligned mov, vmovdqu because base is uint16_t which
   //may be unligned.

@@ -18,8 +18,8 @@ LDFLAGS = -L$(HOME)/root/lib -lRandom
 #CXXFLAGS = -O3 -march=native -mavx -Werror -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
 CXXFLAGS = -O3 -march=core-avx2 -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
 CXXEFLAGS = -Wextra 
-CXX = icc
-#CXX = g++
+#CXX = icc
+CXX = g++
 GUILIBS = $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
 GUIFLAGS = $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2) -I.
 CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK
