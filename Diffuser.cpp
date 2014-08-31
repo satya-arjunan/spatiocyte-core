@@ -73,19 +73,20 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
   const __m256i add(_mm256_setr_epi64x(0x0202020202020202, 0x0202020202020202,
       0x0202020202020202, 0x0202020202020202));
   __m256i dars(_mm256_permute2x128_si256(tars, tars,  0x00));
+  //__m256i dars2(_mm256_permute2x128_si256(tars, tars,  0x11));
+  __m256i dars2(dars);
   __m256i cmps(_mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(dars, dup)));
+  cmps = _mm256_or_si256(cmps,
+      _mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(tars, dup2)));
   for (unsigned i(0); i != 7; ++i) {
     dup = _mm256_add_epi64(dup, add);
     cmps = _mm256_or_si256(cmps,
         _mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(dars, dup)));
   }
-  dars = _mm256_permute2x128_si256(tars, tars,  0x11);
-  cmps = _mm256_or_si256(cmps,
-      _mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(dars, dup2)));
   for (unsigned i(0); i != 7; ++i) {
     dup2 = _mm256_add_epi64(dup2, add);
     cmps = _mm256_or_si256(cmps,
-        _mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(dars, dup2)));
+        _mm256_cmpeq_epi16(mols_m256i, _mm256_shuffle_epi8(tars, dup2)));
   }
   if (!_mm256_movemask_epi8(cmps)) { 
     //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
@@ -95,6 +96,34 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
   }
 }
+
+/*
+//t = 4.50 s (gcc)
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  //must use the unaligned mov, vmovdqu because base is uint16_t which
+  //may be unligned.
+  const __m256i mols_m256i(_mm256_loadu_si256(base));
+  __m256i vmols(mols_m256i);
+  const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
+  const __m256i rot(_mm256_setr_epi64x(0x0908070605040302, 0x01000f0e0d0c0b0a,
+      0x0908070605040302, 0x01000f0e0d0c0b0a));
+  __m256i vmols2(_mm256_permute2x128_si256(vmols, vmols, 1));
+  __m256i cmps(_mm256_cmpeq_epi16(tars, vmols2));
+  for (unsigned i(0); i != 7; ++i) {
+    vmols = _mm256_shuffle_epi8(vmols, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols));
+    vmols2 = _mm256_shuffle_epi8(vmols2, rot);
+    cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(tars, vmols2));
+  }
+  if (!_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, tars);
+  }
+  else {
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
+  }
+}
+*/
 
 /*
 //t_gcc = 5.93 s
