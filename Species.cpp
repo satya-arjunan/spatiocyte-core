@@ -72,10 +72,12 @@ void Species::populate_mol(const unsigned box, const umol_t vdx) {
 
 umol_t Species::get_random_valid_mol(const unsigned box) {
   std::vector<Coord>& mols(get_box_mols()[box]);
-  umol_t mol(get_compartment().get_lattice().box_coord_to_box_mol(mols[rng_.IRan(0, mols.size())]));
+  umol_t mol(get_compartment().get_lattice().box_coord_to_box_mol(
+                                  mols[rng_.IRan(0, mols.size())]));
   while(get_compartment().get_lattice().get_box_voxels()[box][mol] != 
         get_id()) {
-    mol = get_compartment().get_lattice().box_coord_to_box_mol(mols[rng_.IRan(0, mols.size())]);
+    mol = get_compartment().get_lattice().box_coord_to_box_mol(
+                                 mols[rng_.IRan(0, mols.size())]);
   }
   return mol;
 }

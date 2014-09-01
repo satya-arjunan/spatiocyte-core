@@ -410,8 +410,6 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   exit(0);
   */
 }
-
-__m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
   /*
   __m256i quotient_colrow(_mm256_mulhi_epu16(vdx, multiplier_colrow_));
   quotient_colrow = _mm256_srl_epi16(quotient_colrow, nshift_colrow_);
@@ -440,17 +438,41 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   return _mm256_permute4x64_epi64(tar2, 216);
   */
   //__m256i tar1 = _mm256_i32gather_epi32(offsets_, nrand, 2);
- // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
+  // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
+
+
+__m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
+  //vdx contains the current Coord of 16 molecules in a box.
+  //Coord is a uint16_t type so it uses up 16 bits.
+  //Coord is made up of x, y, z values with each using up 5 bits.
+  //So the integer value range of each x, y, z is [0, 31].
+  //So 32 is the max side length of the box.
  
- //index contains odd_col:odd_lay:odd_nrand x 16 
- //first get odd_nrand
+  //nrand contains 16 random numbers, each using 16 bits with values in the
+  //range [0, 11] for 12 possible target directions in the HCP lattice.
+ 
+  //Later, we will be creating the variable index with length 16x16 bits.
+  //Each 16 bit index will contain odd_col:odd_lay:odd_nrand.
+  //For example if an index element is 1:0:1, then we will need to load the
+  //SIXTH elements from the table below. 
+
+  //Now lets get odd_nrand. Each odd_rand element is 16 bits length.
+  //The LSB of each 16 bit determines if the corresponding nrand element is odd.
   __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
-  //set last bit of nrand as 0
-  //nrand = [10, 8, 6, 4, 2, 0]
-  nrand = _mm256_and_si256(nrand, _mm256_set1_epi16(0xfffe));
-  //nrand*3 = [30, 24, 18, 12, 6, 0]
+
+  //We need to transform nrand from values in [0,11] to be one of
+  //{0, 6, 12, 18, 24, 30} so that it can be used as shift right logical (srl)
+  //count to select the correct clr after selecting the element from the
+  //table below.
+  //current nrand = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+  //set last bit of nrand as 0 to make it an even number
+  nrand = _mm256_xor_si256(nrand, odd_nrand);
+  //nrand = {0, 2, 4, 6, 8, 10}
+  //multipy nrand by 3
   __m256i nrand2(_mm256_add_epi16(nrand, nrand));
+  //nrand2 = nrand+nrand = {0, 4, 8, 12, 16, 20}
   nrand = _mm256_add_epi16(nrand2, nrand);
+  //nrand = nrand+nrand2 = {0, 6, 12, 18, 24, 30}
   //1.66 s
 
   __m256i odd_lay(_mm256_srli_epi16(
@@ -463,12 +485,19 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   __m256i clr(_mm256_setr_epi32(1292979281,
       3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537,
       4231285776));
+  //Get the first 8 targets using the 7 bits LSB of the 32 bit elements of 
+  //the index. So now we have only used the lower 16 bits of 8x32 bit elements
+  //of index. 
   __m256i tar1 = _mm256_permutevar8x32_epi32(clr,
       _mm256_and_si256(index, _mm256_set1_epi32(7)));
+
   //1.80
+  //Get the lower 16 bits of 32 bit elements of nrand and use that number
+  //to shift right logical 
   __m256i shift(_mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
   tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, shift),
       _mm256_set1_epi32(0xffff));
+
   //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
   //2.00
@@ -530,89 +559,102 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
 
 
 /*
+  example:
+  ori        (-1, 0, 1) 
+  add with 1 (0, 1, 2) (to avoid -1 which requires signed addition) -> 
+  xor with 1 (1, 0, 3) (to convert col:row originally converted from 00:00 to
+                        01:01, back to 00:00 to support the missing 4 bits
+                        that will become 0000 after right logical shift)
   1 xor 1 = 0
   0 xor 1 = 1
   3 xor 1 = 2
+
   so 
-    ori [-1, 0, 1] ->
-    add [0, 1, 2] (to avoid -1 which requires signed addition) -> 
-    xor with 1 [1, 0, 3] (to convert col:row from 01:01 to 00:00 to support the
-                          missing 4 bits that become 0000 after right logical
-                          shift)
      -1 -> 0 -> 1
       0 -> 1 -> 0
       1 -> 2 -> 3
-  odd_col:odd_lay:odd_nrand = 0:0:0 [col=even:layer=even:nrand=even]
-  0  offsets_[2].clr = (-1, 0, -1) = (1, 0, 1) = 010001; 6 bits 
-  2  offsets_[4].clr = (1, 0, -1)  = (3, 0, 1) = 110001; 6 bits
-  4  offsets_[6].clr = (-1, -1, 0) = (1, 1, 0) = 010100; 6 bits
-  6  offsets_[8].clr = (0, 1, 0) = 000100; 6 bits
-  8  offsets_[10].clr = (0, 1, -1) = (0, 3, 1) = 001101; 6 bits
-  10  offsets_[0].clr = (0, 0, 1) = 01; 2 bits (first 4 bits are always 0000) 
+
+  FIRST
+  odd_col:odd_lay:odd_nrand = 0:0:0 [col=even:layer=even:nrand=even]  srl count 
+  offsets_[2].clr  = (-1, 0, -1) = (1, 0, 1) = 010001; 6 bits         0
+  offsets_[4].clr  = (1, 0, -1)  = (3, 0, 1) = 110001; 6 bits         6
+  offsets_[6].clr  = (-1, -1, 0) = (1, 1, 0) = 010100; 6 bits         12
+  offsets_[8].clr  = (0, -1, 0)  = (0, 1, 0) = 000100; 6 bits         18
+  offsets_[10].clr = (0, 1, -1)  = (0, 3, 1) = 001101; 6 bits         24
+  offsets_[0].clr  = (0, 0, -1)  = (0, 0, 1) = 01; 2 bits             30
+                                                (first 4 bits are always 0000) 
   total = 2+5*6 = 32 bits = 01001101000100010100110001010001 = 1292979281
 
-  col:lay:nrand = 0:0:1 [col=even:layer=even:nrand=odd]
-  1  offsets_[3].clr = (1, 0, 0) = 010000;
-  3  offsets_[5].clr = (1, 0, 0) = (3, 0, 0) = 110000;
-  5  offsets_[7].clr = (0, 1, 1) = 000101;
-  7  offsets_[9].clr = (1, 3, 0) = 011100;
-  9  offsets_[11].clr = (0, 3, 0) = 001100;
-  11 offsets_[1].clr = (0, 0, 3) = 11;
+  SECOND
+  odd_col:odd_lay:odd_nrand = 0:0:1 [col=even:layer=even:nrand=odd]
+  offsets_[3].clr  = (-1, 0, 0)  = (1, 0, 0) = 010000;
+  offsets_[5].clr  = (1, 0, 0)   = (3, 0, 0) = 110000;
+  offsets_[7].clr  = (0, -1, -1) = (0, 1, 1) = 000101;
+  offsets_[9].clr  = (-1, 1, 0)  = (1, 3, 0) = 011100;
+  offsets_[11].clr = (0, 1, 0)   = (0, 3, 0) = 001100;
+  offsets_[1].clr  = (0, 0, 1)   = (0, 0, 3) = 11;
   total = 11001100011100000101110000010000 = 3429915664
 
-  col:lay:nrand = 0:1:0 [col=even:layer=odd:nrand=even]
-  12 offsets_[26].clr = (1, 0, 0) = 010000;
-  14 offsets_[28].clr = (3, 0, 0) = 110000;
-  16 offsets_[30].clr = (0, 1, 0) = 000100;
-  18 offsets_[32].clr = (3, 1, 0) = 110100;
-  20 offsets_[34].clr = (0, 3, 3) = 001111;
-  22 offsets_[24].clr = (0, 0, 1) = 01;
+  THIRD
+  odd_col:odd_lay:odd_nrand = 0:1:0 [col=even:layer=odd:nrand=even]
+  offsets_[26].clr = (-1, 0, 0)  = (1, 0, 0) = 010000;
+  offsets_[28].clr = (1, 0, 0)   = (3, 0, 0) = 110000;
+  offsets_[30].clr = (0, -1, 0)  = (0, 1, 0) = 000100;
+  offsets_[32].clr = (1, -1, 0)  = (3, 1, 0) = 110100;
+  offsets_[34].clr = (0, 1, 1)   = (0, 3, 3) = 001111;
+  offsets_[24].clr = (0, 0, -1)  = (0, 0, 1) = 01;
   total = 01001111110100000100110000010000 = 1339051024 
 
-  col:lay:nrand = 0:1:1 [col=even:layer=odd:nrand=odd]
-  13 offsets_[27].clr = (1, 0, 3) = 010011;
-  15 offsets_[29].clr = (3, 0, 3) = 110011;
-  17 offsets_[31].clr = (0, 1, 3) = 000111;
-  19 offsets_[33].clr = (0, 3, 0) = 001100;
-  21 offsets_[35].clr = (3, 3, 0) = 111100;
-  23 offsets_[25].clr = (0, 0, 3) = 11;
+  FOURTH
+  odd_col:odd_lay:odd_nrand = 0:1:1 [col=even:layer=odd:nrand=odd]
+  offsets_[27].clr = (-1, 0, 1)  = (1, 0, 3) = 010011;
+  offsets_[29].clr = (1, 0, 1)   = (3, 0, 3) = 110011;
+  offsets_[31].clr = (0, -1, 1)  = (0, 1, 3) = 000111;
+  offsets_[33].clr = (0, 1, 0)   = (0, 3, 0) = 001100;
+  offsets_[35].clr = (1, 1, 0)   = (3, 3, 0) = 111100;
+  offsets_[25].clr = (0, 0, 1)   = (0, 0, 3) = 11;
   total = 11111100001100000111110011010011 = 4231036115
 
-  col:lay:nrand = 1:0:0 [col=odd:layer=even:nrand=even]
-  24 offsets_[14].clr = (-1, 0, 0) = (1, 0, 0) = 010000;
-  26 offsets_[16].clr = (3, 0, 0) = 110000;
-  28 offsets_[18].clr = (1, 1, 0) = 010100;
-  30 offsets_[20].clr = (0, -1, 1) = (0, 1, 3) = 000111;
-  32 offsets_[22].clr = (0, 1, 0)  = (0, 3, 0) = 001100;
-  34 offsets_[12].clr = (0, 0, -1) = (0, 0, 1) = 01;
+  FIFTH
+  odd_col:odd_lay:odd_nrand = 1:0:0 [col=odd:layer=even:nrand=even]
+  offsets_[14].clr = (-1, 0, 0)  = (1, 0, 0) = 010000;
+  offsets_[16].clr = (1, 0, 0)   = (3, 0, 0) = 110000;
+  offsets_[18].clr = (-1, -1, 0) = (1, 1, 0) = 010100;
+  offsets_[20].clr = (0, -1, 1)  = (0, 1, 3) = 000111;
+  offsets_[22].clr = (0, 1, 0)   = (0, 3, 0) = 001100;
+  offsets_[12].clr = (0, 0, -1)  = (0, 0, 1) = 01;
   total = 01001100000111010100110000010000 = 1276988432
 
-  col:lay:nrand = 1:0:1 [col=odd:layer=even:nrand=odd]
-  25 offsets_[15].clr = (-1, 0, 1) = (1, 0, 3) = 010011;
-  27 offsets_[17].clr = (3, 0, 3) = 110011;
-  29 offsets_[19].clr = (0, -1, 0) = (0, 1, 0) = 000100;
-  31 offsets_[21].clr = (-1, 1, 0) = (1, 3, 0) = 011100;
-  33 offsets_[23].clr = (0, 3, 3) = 001111;
-  35 offsets_[13].clr = (0, 0, 3) = 11;
+  SIXTH
+  odd_col:odd_lay:odd_nrand = 1:0:1 [col=odd:layer=even:nrand=odd]
+  offsets_[15].clr = (-1, 0, 1)  = (1, 0, 3) = 010011;
+  offsets_[17].clr = (1, 0, 1)   = (3, 0, 3) = 110011;
+  offsets_[19].clr = (0, -1, 0)  = (0, 1, 0) = 000100;
+  offsets_[21].clr = (-1, 1, 0)  = (1, 3, 0) = 011100;
+  offsets_[23].clr = (0, 1, 1)   = (0, 3, 3) = 001111;
+  offsets_[13].clr = (0, 0, 1)   = (0, 0, 3) = 11;
   total = 11001111011100000100110011010011 = 3480243411
 
-  col:lay:nrand = 1:1:0 [col=odd:layer=odd:nrand=even]
-  36 offsets_[38].clr = (1, 0, 1) = 010001;
-  38 offsets_[40].clr = (3, 0, 1) = 110001;
-  40 offsets_[42].clr = (0, 1, 1) = 000101;
-  42 offsets_[44].clr = (1, -1, 0) = (3, 1, 0) = 110100;
-  44 offsets_[46].clr = (0, 3, 0) = 001100;
-  46 offsets_[36].clr = (0, 0, 1) = 01;
+  SEVENTH
+  odd_col:odd_lay:odd_nrand = 1:1:0 [col=odd:layer=odd:nrand=even]
+  offsets_[38].clr = (-1, 0, -1) = (1, 0, 1) = 010001;
+  offsets_[40].clr = (1, 0, -1)  = (3, 0, 1) = 110001;
+  offsets_[42].clr = (0, -1, -1) = (0, 1, 1) = 000101;
+  offsets_[44].clr = (1, -1, 0)  = (3, 1, 0) = 110100;
+  offsets_[46].clr = (0, 1, 0)   = (0, 3, 0) = 001100;
+  offsets_[36].clr = (0, 0, -1)  = (0, 0, 1) = 01;
   total = 01001100110100000101110001010001 = 1288723537
 
-  col:lay:nrand = 1:1:1 [col=odd:layer=odd:nrand=odd]
-  37 offsets_[39].clr = (1, 0, 0) = 010000;
-  39 offsets_[41].clr = (3, 0, 0) = 110000;
-  41 offsets_[43].clr = (0, 1, 0) = 000100;
-  43 offsets_[45].clr = (0, 1, -1) = (0, 3, 1) = 001101;
-  45 offsets_[47].clr = (3, 3, 0) = 111100;
-  47 offsets_[37].clr = (0, 0, 1) = (0, 0, 3) = 11;
+  EIGHTH
+  odd_col:odd_lay:odd_nrand = 1:1:1 [col=odd:layer=odd:nrand=odd]
+  offsets_[39].clr = (-1, 0, 0)  = (1, 0, 0) = 010000;
+  offsets_[41].clr = (1, 0, 0)   = (3, 0, 0) = 110000;
+  offsets_[43].clr = (0, -1, 0)  = (0, 1, 0) = 000100;
+  offsets_[45].clr = (0, 1, -1)  = (0, 3, 1) = 001101;
+  offsets_[47].clr = (1, 1, 0)   = (3, 3, 0) = 111100;
+  offsets_[37].clr = (0, 0, 1)   = (0, 0, 3) = 11;
   total = 11111100001101000100110000010000 = 4231285776
+
   _mm256_setr_epi32(lsb: 1292979281, 3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537, 4231285776);
 */
 
@@ -675,6 +717,64 @@ void Compartment::set_offsets() {
   offsets_[46] = NUM_COLROW;
   offsets_[47] = NUM_COLROW+NUM_ROW;
 }
+
+/*
+  //col=even, layer=even
+  offsets_[0].clr = (0, 0, -1);
+  offsets_[1].clr = (0, 0, 1);
+  offsets_[2].clr = (-1, 0, -1);
+  offsets_[3].clr = (-1, 0, 0);
+  offsets_[4].clr = (1, 0, -1);
+  offsets_[5].clr = (1, 0, 0);
+  offsets_[6].clr = (-1, -1, 0);
+  offsets_[7].clr = (0, -1, -1);
+  offsets_[8].clr = (0, -1, 0);
+  offsets_[9].clr = (-1, 1, 0);
+  offsets_[10].clr = (0, 1, -1);
+  offsets_[11].clr = (0, 1, 0);
+
+  //col=even, layer=odd [%layer*24 = +24]
+  offsets_[24].clr = (0, 0, -1);
+  offsets_[25].clr = (0, 0, 1);
+  offsets_[26].clr = (-1, 0, 0);
+  offsets_[27].clr = (-1, 0, 1);
+  offsets_[28].clr = (1, 0, 0);
+  offsets_[29].clr = (1, 0, 1);
+  offsets_[30].clr = (0, -1, 0);
+  offsets_[31].clr = (0, -1, 1);
+  offsets_[32].clr = (1, -1, 0);
+  offsets_[33].clr = (0, 1, 0);
+  offsets_[34].clr = (0, 1, 1);
+  offsets_[35].clr = (1, 1, 0);
+
+  //col=odd, layer=even [%col*12 = +12]
+  offsets_[12].clr = (0, 0, -1);
+  offsets_[13].clr = (0, 0, 1);
+  offsets_[14].clr = (-1, 0, 0);
+  offsets_[15].clr = (-1, 0, 1);
+  offsets_[16].clr = (1, 0, 0);
+  offsets_[17].clr = (1, 0, 1);
+  offsets_[18].clr = (-1, -1, 0);
+  offsets_[19].clr = (0, -1, 0);
+  offsets_[20].clr = (0, -1, 1);
+  offsets_[21].clr = (-1, 1, 0);
+  offsets_[22].clr = (0, 1, 0);
+  offsets_[23].clr = (0, 1, 1);
+
+  //col=odd, layer=odd [%col*12 + %layer*24 = +36]
+  offsets_[36].clr = (0, 0, -1);
+  offsets_[37].clr = (0, 0, 1);
+  offsets_[38].clr = (-1, 0, -1);
+  offsets_[39].clr = (-1, 0, 0);
+  offsets_[40].clr = (1, 0, -1);
+  offsets_[41].clr = (1, 0, 0);
+  offsets_[42].clr = (0, -1, -1);
+  offsets_[43].clr = (0, -1, 0);
+  offsets_[44].clr = (1, -1, 0);
+  offsets_[45].clr = (0, 1, -1);
+  offsets_[46].clr = (0, 1, 0);
+  offsets_[47].clr = (1, 1, 0);
+*/
 
 const Vector<double>& Compartment::get_dimensions() const {
   return dimensions_;
