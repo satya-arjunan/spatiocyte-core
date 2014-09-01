@@ -35,6 +35,7 @@
 #include <Common.hpp>
 #include <Compartment.hpp>
 #include <Stepper.hpp>
+#include <sstream>
 
 class Model {
  public: 

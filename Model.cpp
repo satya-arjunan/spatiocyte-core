@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <Spatiocyte.hpp>
 #include <Model.hpp>
+#include <math.h>
 
 Model::Model(const unsigned num_box)
     : num_box_(num_box),

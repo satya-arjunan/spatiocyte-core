@@ -32,7 +32,7 @@
 #ifndef __Diffuser_hpp
 #define __Diffuser_hpp
 
-#include <RandomLib/Random.hpp>
+//#include <RandomLib/Random.hpp>
 #include <Random.hpp>
 #include <Common.hpp>
 
@@ -56,7 +56,7 @@ private:
   const voxel_t vac_id_;
   const voxel_t vac_xor_;
   Random rng_;
-  RandomLib::Random rng2_;
+  //RandomLib::Random rng2_;
   voxel_t nbit_;
   voxel_t one_nbit_;
   unsigned k;
