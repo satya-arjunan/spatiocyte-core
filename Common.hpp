@@ -99,6 +99,13 @@ struct Coord
   umol_t z:5;
 };
 
+struct CoordInt
+{
+  int x;
+  int y;
+  int z;
+};
+
 template<typename T>
 void cout_binary(const T a, const std::string str) {
   std::cout << str << " msb -> lsb:" << std::endl;

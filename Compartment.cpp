@@ -442,6 +442,7 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
 
 //t_gcc_tcs3: 4.103 s
 __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
+  //__m256i rand(nrand);
   //vdx contains the current Coord of 16 molecules in a box.
   //Coord is a uint16_t type so it uses up 16 bits.
   //Coord is made up of x, y, z values with each using up 5 bits (we have one
@@ -506,7 +507,8 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //Srlv will use the lower 5 bits of 32-bit elements of nrand as the count of
   //shift right logical. The resulting lowest 32 bits contains the actual
   //offset that will be added with vdx to get the next target Coord.
-  tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, nrand),
+  __m256i shift(_mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
+  tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, shift),
                           _mm256_set1_epi32(0xffff));
   //1.91
 
@@ -562,11 +564,11 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   __m256i tars( _mm256_add_epi16(vdx2, offsets));
 
   //If any of the x, y, z values in tars is 0 or the side length then that
-  //means the molecule will be moving to the next adjacent box. We need to 
+  //molecule will be moving to the next adjacent box. We need to 
   //address this next. 
 
+  //Uncomment below if you want to test this correctness of this function:
   /*
-  cout_binary(offsets, "offsets");
   for(unsigned i(0); i != 16; ++i)
     {
       const bool ol(((Coord*)&vdx)[i].y&1);
@@ -574,30 +576,31 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       const bool orand(((uint16_t*)&rand)[i]&1);
       const int mainIdx(orand*pow(2,0)+ol*pow(2,1)+oc*pow(2,2));
       const int idx =  mainIdx/2*12+((uint16_t*)&rand)[i];
-      std::cout << ((Coord*)&offsets)[i].z << " " << ((Coord*)&offsets)[i].y
-        << " " << ((Coord*)&offsets)[i].x << " vdx:" << ((Coord*)&vdx)[i].z <<
-        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << " idx:" <<
-        idx << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
-        std::endl; 
+      int z1(((Coord*)&tars)[i].z);
+      int y1(((Coord*)&tars)[i].y);
+      int x1(((Coord*)&tars)[i].x);
+      int z2(((Coord*)&vdx)[i].z+off[idx].x);
+      int y2(((Coord*)&vdx)[i].y+off[idx].y);
+      int x2(((Coord*)&vdx)[i].x+off[idx].z);
+      int z3(((Coord*)&vdx)[i].z);
+      int y3(((Coord*)&vdx)[i].y);
+      int x3(((Coord*)&vdx)[i].x);
+      if(x3 != 0 && y3 != 0 && z3 != 0 && x3 != 31 && y3 != 31 && z3 != 31 && 
+         (z1 != z2 || y1 != y2 || x1 != x2))
+        {
+          //cout_binary(tars, "tars");
+          std::cout << "calc tars:" << z1 << "\t" << y1 << "\t" << x1 <<
+            "\texpected tars:" << z2  << " \t" << y2  << " \t" << x2  <<
+            "\tvdx:" << z3 << "\t" << y3  << " \t" << x3 << "\toff:" << 
+            off[idx].x << "\t" << off[idx].y << "\t" << off[idx].z << 
+            "\tidx:" << idx << " mainIdx:" << mainIdx << " rand:" <<
+            ((uint16_t*)&rand)[i]
+            << std::endl; 
+          exit(0);
+        }
     }
-  exit(0);
   */
   return tars;
-  //return _mm256_add_epi16(vdx2, offsets);
-
-  /*
-  cout_binary(test, "test");
-  for(unsigned i(0); i != 8; ++i)
-    {
-      std::cout << ((uint32_t*)&test)[i] << " " << std::endl;
-    }
-
-  exit(0);
-  */
-
-
-  //return _mm256_add_epi16(offsets, _mm256_maddubs_epi16(tar1, tar2));
-  //return offsets;
 }
 //_mm256_i32gather_epi32 = 2.84 s
 //_mm256_shuffle_epi8 = 1.63 s (so gather takes about 1.2 s)
@@ -762,65 +765,65 @@ void Compartment::set_offsets() {
   offsets_[45] = NUM_COLROW-1;
   offsets_[46] = NUM_COLROW;
   offsets_[47] = NUM_COLROW+NUM_ROW;
+
+
+  off = new CoordInt[48];
+  off[0] = {-1, 0, -1};
+  off[2] = {1, 0, -1};
+  off[4] = {-1, -1, 0};
+  off[6] = {0, -1, 0};
+  off[8] = {0, 1, -1};
+  off[10] = {0, 0, -1};
+
+  off[1] = {-1, 0, 0};
+  off[3] = {1, 0, 0};
+  off[5] = {0, -1, -1};
+  off[7] = {-1, 1, 0};
+  off[9] = {0, 1, 0};
+  off[11] = {0, 0, 1};
+
+  off[12] = {-1, 0, 0};
+  off[14] = {1, 0, 0};
+  off[16] = {0, -1, 0};
+  off[18] = {1, -1, 0};
+  off[20] = {0, 1, 1};
+  off[22] = {0, 0, -1};
+
+  off[13] = {-1, 0, 1};
+  off[15] = {1, 0, 1};
+  off[17] = {0, -1, 1};
+  off[19] = {0, 1, 0};
+  off[21] = {1, 1, 0};
+  off[23] = {0, 0, 1};
+
+  off[24] = {-1, 0, 0};
+  off[26] = {1, 0, 0};
+  off[28] = {-1, -1, 0};
+  off[30] = {0, -1, 1};
+  off[32] = {0, 1, 0};
+  off[34] = {0, 0, -1};
+
+  off[25] = {-1, 0, 1};
+  off[27] = {1, 0, 1};
+  off[29] = {0, -1, 0};
+  off[31] = {-1, 1, 0};
+  off[33] = {0, 1, 1};
+  off[35] = {0, 0, 1};
+
+  off[36] = {-1, 0, -1};
+  off[38] = {1, 0, -1};
+  off[40] = {0, -1, -1};
+  off[42] = {1, -1, 0};
+  off[44] = {0, 1, 0};
+  off[46] = {0, 0, -1};
+
+  off[37] = {-1, 0, 0};
+  off[39] = {1, 0, 0};
+  off[41] = {0, -1, 0};
+  off[43] = {0, 1, -1};
+  off[45] = {1, 1, 0};
+  off[47] = {0, 0, 1};
 }
-
-/*
-  //col=even, layer=even
-  offsets_[0].clr = (0, 0, -1);
-  offsets_[1].clr = (0, 0, 1);
-  offsets_[2].clr = (-1, 0, -1);
-  offsets_[3].clr = (-1, 0, 0);
-  offsets_[4].clr = (1, 0, -1);
-  offsets_[5].clr = (1, 0, 0);
-  offsets_[6].clr = (-1, -1, 0);
-  offsets_[7].clr = (0, -1, -1);
-  offsets_[8].clr = (0, -1, 0);
-  offsets_[9].clr = (-1, 1, 0);
-  offsets_[10].clr = (0, 1, -1);
-  offsets_[11].clr = (0, 1, 0);
-
-  //col=even, layer=odd [%layer*24 = +24]
-  offsets_[24].clr = (0, 0, -1);
-  offsets_[25].clr = (0, 0, 1);
-  offsets_[26].clr = (-1, 0, 0);
-  offsets_[27].clr = (-1, 0, 1);
-  offsets_[28].clr = (1, 0, 0);
-  offsets_[29].clr = (1, 0, 1);
-  offsets_[30].clr = (0, -1, 0);
-  offsets_[31].clr = (0, -1, 1);
-  offsets_[32].clr = (1, -1, 0);
-  offsets_[33].clr = (0, 1, 0);
-  offsets_[34].clr = (0, 1, 1);
-  offsets_[35].clr = (1, 1, 0);
-
-  //col=odd, layer=even [%col*12 = +12]
-  offsets_[12].clr = (0, 0, -1);
-  offsets_[13].clr = (0, 0, 1);
-  offsets_[14].clr = (-1, 0, 0);
-  offsets_[15].clr = (-1, 0, 1);
-  offsets_[16].clr = (1, 0, 0);
-  offsets_[17].clr = (1, 0, 1);
-  offsets_[18].clr = (-1, -1, 0);
-  offsets_[19].clr = (0, -1, 0);
-  offsets_[20].clr = (0, -1, 1);
-  offsets_[21].clr = (-1, 1, 0);
-  offsets_[22].clr = (0, 1, 0);
-  offsets_[23].clr = (0, 1, 1);
-
-  //col=odd, layer=odd [%col*12 + %layer*24 = +36]
-  offsets_[36].clr = (0, 0, -1);
-  offsets_[37].clr = (0, 0, 1);
-  offsets_[38].clr = (-1, 0, -1);
-  offsets_[39].clr = (-1, 0, 0);
-  offsets_[40].clr = (1, 0, -1);
-  offsets_[41].clr = (1, 0, 0);
-  offsets_[42].clr = (0, -1, -1);
-  offsets_[43].clr = (0, -1, 0);
-  offsets_[44].clr = (1, -1, 0);
-  offsets_[45].clr = (0, 1, -1);
-  offsets_[46].clr = (0, 1, 0);
-  offsets_[47].clr = (1, 1, 0);
-*/
 
 const Vector<double>& Compartment::get_dimensions() const {
   return dimensions_;
