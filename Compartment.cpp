@@ -504,36 +504,69 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //1.80
 
   //Srlv will use the lower 5 bits of 32-bit elements of nrand as the count of
-  //shift right logical. The resulting lowest 32 bits contains the offset
-  //from the lookup table.
+  //shift right logical. The resulting lowest 32 bits contains the actual
+  //offset that will be added with vdx to get the next target Coord.
   tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, nrand),
                           _mm256_set1_epi32(0xffff));
-
   //1.91
-  __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
 
+  //Now let's get the remaining 8 target elements from the lookup table. We
+  //need to look at the upper 16 bits of the 32-bit index elements, so we
+  //shift them right by 16 bits first.
+  __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
   //2.00
+
+  //First shift right the 32-bit elements of nrand by 16 bits to get
+  //the 5 bits that determines the count of shift right logical.
+  //Then after getting the offset, shift it left by 16 bits so that we can
+  //OR the tar2 result with tar1 to get all 16 offsets.
   tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
+  //2.14
 
+  //Let's get the offsets
+  __m256i offsets(_mm256_or_si256(tar1, tar2));
   //2.14
-  __m256i clr6(_mm256_or_si256(tar1, tar2));
-  //2.14
-  clr6 = _mm256_xor_si256(clr6, _mm256_set1_epi16(21));
+  
+  //Undo XOR in the offsets by performing XOR with 1 for each col:row:layer
+  //21 dec = 010101 bin
+  offsets = _mm256_xor_si256(offsets, _mm256_set1_epi16(21));
   //2.2
-  __m256i lay(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(12)), 3));
-  //2.28
-  __m256i col(_mm256_slli_epi16(_mm256_and_si256(clr6, _mm256_set1_epi16(48)), 6));
-  //2.39
-  __m256i row(_mm256_and_si256(clr6, _mm256_set1_epi16(3)));
-  clr6 = _mm256_or_si256(row, lay);
+
+  //Get row, layer, col in the form of Coord, with each using up 5 bits.
+  __m256i row(_mm256_and_si256(offsets, _mm256_set1_epi16(3)));
+  //12 dec = 1100 bin. The bit position of current layer is 2.
+  //We shift the layer result left by 3 bits to get it to the start position
+  //of y, which is 5.
+  __m256i lay(_mm256_slli_epi16(_mm256_and_si256(offsets,
+                                                 _mm256_set1_epi16(12)), 3));
+  //48 dec = 110000 bin. The bit position of current col is 4.
+  //We shift the col result left by 6 bits to get it to the start bit position
+  //of z, which is 10.
+  __m256i col(_mm256_slli_epi16(_mm256_and_si256(offsets,
+                                                 _mm256_set1_epi16(48)), 6));
+  offsets = _mm256_or_si256(row, lay);
   //2.48
-  clr6 = _mm256_or_si256(clr6, col);
+  offsets = _mm256_or_si256(offsets, col);
+
+  //Subtract each col, layer and row in vdx with 1 since offsets have already
+  //been added with 1.
+  //1057 dec = 100001000001 bin
+  //For this to work, when populating the box with molecules, we must
+  //make sure the Coord is never at the edge surface. So the values of
+  //x, y, z should never be 0 or the side length.
   __m256i vdx2 = _mm256_sub_epi16(vdx, _mm256_set1_epi16(1057));
   //2.50
-  clr6 =  _mm256_add_epi16(vdx2, clr6);
+
+  //Add offset with the vdx2 to get the final targets.
+  __m256i tars( _mm256_add_epi16(vdx2, offsets));
+
+  //If any of the x, y, z values in tars is 0 or the side length then that
+  //means the molecule will be moving to the next adjacent box. We need to 
+  //address this next. 
+
   /*
-  cout_binary(clr6, "clr6");
+  cout_binary(offsets, "offsets");
   for(unsigned i(0); i != 16; ++i)
     {
       const bool ol(((Coord*)&vdx)[i].y&1);
@@ -541,16 +574,16 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       const bool orand(((uint16_t*)&rand)[i]&1);
       const int mainIdx(orand*pow(2,0)+ol*pow(2,1)+oc*pow(2,2));
       const int idx =  mainIdx/2*12+((uint16_t*)&rand)[i];
-      std::cout << ((Coord*)&clr6)[i].z << " " << ((Coord*)&clr6)[i].y << " " 
-        << ((Coord*)&clr6)[i].x << " vdx:" << ((Coord*)&vdx)[i].z << " " <<
-        ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << " idx:" << idx
-        << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
+      std::cout << ((Coord*)&offsets)[i].z << " " << ((Coord*)&offsets)[i].y
+        << " " << ((Coord*)&offsets)[i].x << " vdx:" << ((Coord*)&vdx)[i].z <<
+        " " << ((Coord*)&vdx)[i].y << " " << ((Coord*)&vdx)[i].x << " idx:" <<
+        idx << " mainIdx:" << mainIdx << " rand:" << ((uint16_t*)&rand)[i] <<
         std::endl; 
     }
   exit(0);
   */
-  return clr6;
-  //return _mm256_add_epi16(vdx2, clr6);
+  return tars;
+  //return _mm256_add_epi16(vdx2, offsets);
 
   /*
   cout_binary(test, "test");
@@ -563,8 +596,8 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   */
 
 
-  //return _mm256_add_epi16(clr6, _mm256_maddubs_epi16(tar1, tar2));
-  //return clr6;
+  //return _mm256_add_epi16(offsets, _mm256_maddubs_epi16(tar1, tar2));
+  //return offsets;
 }
 //_mm256_i32gather_epi32 = 2.84 s
 //_mm256_shuffle_epi8 = 1.63 s (so gather takes about 1.2 s)
