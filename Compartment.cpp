@@ -444,26 +444,29 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
 __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
   //vdx contains the current Coord of 16 molecules in a box.
   //Coord is a uint16_t type so it uses up 16 bits.
-  //Coord is made up of x, y, z values with each using up 5 bits.
+  //Coord is made up of x, y, z values with each using up 5 bits (we have one
+  //spare bit).
   //So the integer value range of each x, y, z is [0, 31].
   //So 32 is the max side length of the box.
  
   //nrand contains 16 random numbers, each using 16 bits with values in the
-  //range [0, 11] for 12 possible target directions in the HCP lattice.
+  //range [0, 11] for 12 possible target neighbor directions in the HCP lattice.
  
-  //Later, we will be creating the variable index with length 16x16 bits.
-  //Each 16 bit index will contain odd_col:odd_lay:odd_nrand.
+  //Later, we will be creating the variable "index" with length 16x16 bits.
+  //Each 16 bit index element will contain odd_col:odd_lay:odd_nrand to get
+  //the element in the lookup table below.
   //For example if an index element is 1:0:1, then we will need to load the
-  //SIXTH elements from the table below. 
+  //SIXTH element from the lookup table below. 
 
-  //Now lets get odd_nrand. Each odd_rand element is 16 bits length.
-  //The LSB of each 16 bit determines if the corresponding nrand element is odd.
+  //Now lets set odd_nrand as bit 1 of index. Each index element is 16 bits
+  //length. Bit 1 of each 16 bit element determines if the corresponding nrand
+  //element is odd.
   __m256i odd_nrand(_mm256_and_si256(nrand, _mm256_set1_epi16(1)));
 
-  //We need to transform nrand from values in [0,11] to be one of
+  //We need to transform nrand from values in [0, 11] to be one of
   //{0, 6, 12, 18, 24, 30} so that it can be used as shift right logical (srl)
   //count to select the correct clr after selecting the element from the
-  //table below.
+  //lookup table below.
   //current nrand = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
   //set last bit of nrand as 0 to make it an even number
   nrand = _mm256_xor_si256(nrand, odd_nrand);
@@ -475,21 +478,29 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //nrand = nrand+nrand2 = {0, 6, 12, 18, 24, 30}
   //1.66 s
 
+  //Now let's get the odd_lay by loading bit 6 of the vdx and setting it as
+  //bit 2 of odd_lay.
   __m256i odd_lay(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(32)), 4));
+  //Let's get the odd_col by loading bit 11 of the vdx and setting it as bit 3
+  //of odd_col.
   __m256i odd_col(_mm256_srli_epi16(
      _mm256_and_si256(vdx, _mm256_set1_epi16(1024)), 8));
+  //Put odd_col, odd_lay and odd_nrand in index.
   __m256i index(_mm256_or_si256(odd_nrand, odd_lay));
   index = _mm256_or_si256(index, odd_col);
   //1.72 s
+
+  //Set the lookup table.
   __m256i clr(_mm256_setr_epi32(1292979281,
       3429915664, 1339051024, 4231036115, 1276988432, 3480243411, 1288723537,
       4231285776));
-  //Get the first 8 targets using the 7 bits LSB of the 32 bit elements of 
-  //the index. So now we have only used the lower 16 bits of 8x32 bit elements
-  //of index. 
-  __m256i tar1 = _mm256_permutevar8x32_epi32(clr,
-      _mm256_and_si256(index, _mm256_set1_epi32(7)));
+
+  //Get the first 8 target elements from the lookup table using the last 3 bits
+  //of 32-bit elements of index which hold the odd_col:odd_lay:odd_nrand.
+  //So now we still have not used the the last 3 bits in the upper 16 bits of
+  //32-bit elements of index.
+  __m256i tar1 = _mm256_permutevar8x32_epi32(clr, index);
 
   //1.80
   //Get the lower 16 bits of 32 bit elements of nrand and use that number
@@ -500,7 +511,17 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
 
   //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
+  /*
+  const __m256i srlt(_mm256_setr_epi64x(0x0008000600040002, 0x000f000e000c000a,
+      0x0008000600040002, 0x000f000e000c000a));
+  __m256i tar2 = _mm256_permutevar8x32_epi32(clr,
+                                             _mm256_shuffle_epi8(index, srlt));
+                                             */
   //2.00
+  /*
+  tar2 = _mm256_slli_epi32(
+      _mm256_srlv_epi32(tar2, _mm256_shuffle_epi8(nrand, srlt)), 16);
+      */
   tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
   //2.14
