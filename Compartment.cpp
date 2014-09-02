@@ -510,17 +510,12 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       _mm256_set1_epi32(0xffff));
 
   //1.91
-  //__m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
-  const __m256i srlt(_mm256_set_epi16(15, 15, 13, 13, 11, 11, 9, 9, 7, 7, 5, 5, 3, 3, 1, 1));
-  __m256i tar2 = _mm256_permutevar8x32_epi32(clr,
-                                             _mm256_shuffle_epi8(index, srlt));
+  __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
+
   //2.00
   tar2 = _mm256_slli_epi32(
-      _mm256_srlv_epi32(tar2, _mm256_shuffle_epi8(nrand, srlt)), 16);
-  /*
-  tar2 = _mm256_slli_epi32(
       _mm256_srlv_epi32(tar2, _mm256_srli_epi32(nrand, 16)), 16);
-      */
+
   //2.14
   __m256i clr6(_mm256_or_si256(tar1, tar2));
   //2.14
