@@ -497,17 +497,17 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
       4231285776));
 
   //Get the first 8 target elements from the lookup table using the last 3 bits
-  //of 32-bit elements of index which hold the odd_col:odd_lay:odd_nrand.
+  //(odd_col:odd_lay:odd_nrand) of 32-bit elements of index.
   //So now we still have not used the the last 3 bits in the upper 16 bits of
-  //32-bit elements of index.
+  //32-bit elements of index, we will use them later.
   __m256i tar1 = _mm256_permutevar8x32_epi32(clr, index);
-
   //1.80
-  //Get the lower 16 bits of 32 bit elements of nrand and use that number
-  //to shift right logical 
-  __m256i shift(_mm256_and_si256(nrand, _mm256_set1_epi32(0xffff)));
-  tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, shift),
-      _mm256_set1_epi32(0xffff));
+
+  //Srlv will use the lower 5 bits of 32-bit elements of nrand as the count of
+  //shift right logical. The resulting lowest 32 bits contains the offset
+  //from the lookup table.
+  tar1 = _mm256_and_si256(_mm256_srlv_epi32(tar1, nrand),
+                          _mm256_set1_epi32(0xffff));
 
   //1.91
   __m256i tar2 = _mm256_permutevar8x32_epi32(clr, _mm256_srli_epi32(index, 16));
