@@ -440,7 +440,7 @@ __m256i Compartment::get_tars(const __m256i vdx, __m256i nrand) const {
   //__m256i tar1 = _mm256_i32gather_epi32(offsets_, nrand, 2);
   // __m256i tar2 = _mm256_i32gather_epi32(offsets_, _mm256_srli_epi16(nrand, 2), 4);
 
-//t_gcc_tcs3: 4.103 s
+//t_gcc_tcs3: 4.157 s
 __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const { 
   //__m256i rand(nrand);
   //vdx contains the current Coord of 16 molecules in a box.
