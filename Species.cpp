@@ -59,7 +59,15 @@ void Species::initialize() {
 void Species::populate() {
   for(unsigned box(0), n(get_box_mols().size()); box != n; ++box) {
     for(unsigned i(0); i != init_nmols_; ++i) {
-      populate_mol(box, vacant_.get_random_valid_mol(box));
+      umol_t mol(vacant_.get_random_valid_mol(box));
+      //Ensure mols are not populated on the box edges.
+      //When getting target coords during walk, we assume mols have additional
+      //space at the edge to be added or subtracted.
+      //This is needed because the coords are unsigned values.
+      while(get_compartment().get_lattice().is_mol_at_box_edge(mol)) {
+        mol = vacant_.get_random_valid_mol(box);
+      }
+      populate_mol(box, mol);
     }
   }
 }

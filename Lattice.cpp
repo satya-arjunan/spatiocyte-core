@@ -103,6 +103,17 @@ Coord Lattice::box_mol_to_box_coord(const umol_t box_mol) const {
   return coord;
 }
 
+bool Lattice::is_mol_at_box_edge(const umol_t box_mol) const {
+  const Coord coord(box_mol_to_box_coord(box_mol));
+  if(coord.x == 0 || coord.y == 0 || coord.z == 0 ||
+     coord.x == box_voxel_dimensions_.x-1 ||
+     coord.y == box_voxel_dimensions_.y-1 ||
+     coord.z == box_voxel_dimensions_.z-1) {
+    return true;
+  }
+  return false;
+}
+
 umol_t Lattice::box_coord_to_box_mol(const Coord coord) const {
   return coord.x*box_voxel_dimensions_.y +
       coord.y + coord.z*box_voxel_dimensions_.x*box_voxel_dimensions_.y;

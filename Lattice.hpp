@@ -39,6 +39,7 @@ class Lattice {
   Lattice(const unsigned, const Vector<unsigned>&, const unsigned);
   ~Lattice() {}
   void initialize();
+  bool is_mol_at_box_edge(const umol_t) const;
   unsigned get_num_box() const;
   unsigned get_num_box_voxel() const;
   unsigned get_num_voxel() const;

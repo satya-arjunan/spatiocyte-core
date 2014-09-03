@@ -764,8 +764,8 @@ next:
 
 
 /*
-//t(10000, 16) = 94 s
-//t(1, 10000) = 1.11 s
+//t(10000 boxes, 16 molecules per box) = 94 s
+//t(1 box, 10000 molecules per box) = 1.11 s
 void Diffuser::walk() {
   for(unsigned box(0), n(box_mols_.size()); box != n; ++box) {
     walk(box_voxels_[box], (__m256i*)(&box_mols_[box][0]),
