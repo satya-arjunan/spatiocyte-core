@@ -63,6 +63,7 @@ void Diffuser::walk() {
   }
 }
 
+//t_gcc_tcs3 = 4.65
 //t_gcc_procyte = 5.87
 void Diffuser::walk(__m256i* base, const unsigned size) {
   const __m256i mols_m256i(_mm256_loadu_si256(base));
