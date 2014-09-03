@@ -63,8 +63,7 @@ void Diffuser::walk() {
   }
 }
 
-/*
-//t_gcc = 5.87
+//t_gcc_procyte = 5.87
 void Diffuser::walk(__m256i* base, const unsigned size) {
   const __m256i mols_m256i(_mm256_loadu_si256(base));
   const __m256i tars(compartment_.get_tars_exp(mols_m256i, rng_.Ran16()));
@@ -97,8 +96,8 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
   }
 }
-*/
 
+/*
 //t_gcc = 5.28 s kernel vmlinuz-3.13.0-35-generic.efi.signed (new and onwards)
 //t_gcc = 4.56 s kernel vmlinuz-3.12.0-031200-generic (and for all previous)
 void Diffuser::walk(__m256i* base, const unsigned size) {
@@ -125,6 +124,7 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
   }
 }
+*/
 
 /*
 //t_gcc = 5.93 s
