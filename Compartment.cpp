@@ -551,7 +551,7 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //2.48
   offsets = _mm256_or_si256(offsets, col);
 
-  //Subtract each col, layer and row in vdx with 1 since offsets have already
+  //Subtract each col, layer and row in vdx by 1 since offsets have already
   //been added with 1.
   //1057 dec = 100001000001 bin
   //For this to work, when populating the box with molecules, we must

@@ -63,7 +63,9 @@ void Diffuser::walk() {
   }
 }
 
-
+//This function adds 3 s into the total time.
+//Move this into get_tars_exp. Expand col:lay:row from 5:5:5 bits to 8:8:8 bits
+//and perform get_tar and check edge tars simultaneously
 __m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
   //Uncomment below to test if vdx molecules are in edge:
   /*
