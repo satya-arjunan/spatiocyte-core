@@ -63,6 +63,75 @@ void Diffuser::walk() {
   }
 }
 
+//t_gcc_tcs3 = 
+//t_gcc_procyte = 8.77
+//Biggest advantage (and a problem) with Spatiocyte is that we need to consider
+//collisions between hardbody particles. Two particles cannot occupy the same
+//voxel, so we always need to avoid such a condition. In LatticeMicrobes this
+//issue does not arise since multiple molecules can occupy the same voxel.
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i vdx(_mm256_loadu_si256(base));
+  const __m256i tars(compartment_.get_tars_exp(vdx, rng_.Ran16()));
+  //Uncomment below to test if vdx molecules are in edge:
+  /*
+  for(unsigned i(0); i != 16; ++i)
+    {
+      int z1(((Coord*)&vdx)[i].z);
+      int y1(((Coord*)&vdx)[i].y);
+      int x1(((Coord*)&vdx)[i].x);
+      if(x1 == 0 || y1 == 0 || z1 == 0 || x1 == 28 || y1 == 24 || z1 == 30)
+        {
+          std::cout << "vdx:" << x1 << "\t" << y1 << "\t" << z1 << std::endl;
+          exit(0);
+        }
+    }
+    */
+  const __m256i zeroes(_mm256_set1_epi16(0));
+  const __m256i x_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31)));
+  const __m256i y_tars(_mm256_and_si256(tars, _mm256_set1_epi16(992)));
+  const __m256i z_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31744)));
+  const __m256i x_max(_mm256_set1_epi16(28)); 
+  const __m256i y_max(_mm256_set1_epi16(768)); 
+  const __m256i z_max(_mm256_set1_epi16(30720));
+  //Check if the col in tar is 0:
+  __m256i cmps(_mm256_cmpeq_epi16(zeroes, x_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, y_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, z_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(x_max, x_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(y_max, y_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(z_max, z_tars));
+  //__m256i cmps(_mm256_set1_epi16(0));
+  
+  __m256i dup(_mm256_setr_epi64x(0x0100010001000100, 0x0100010001000100,
+      0x0100010001000100, 0x0100010001000100));
+  __m256i dup2(dup);
+  const __m256i add(_mm256_setr_epi64x(0x0202020202020202, 0x0202020202020202,
+      0x0202020202020202, 0x0202020202020202));
+  __m256i dars(_mm256_permute2x128_si256(tars, tars,  0x00));
+  cmps = _mm256_or_si256(cmps, 
+      _mm256_cmpeq_epi16(vdx, _mm256_shuffle_epi8(dars, dup)));
+  cmps = _mm256_or_si256(cmps,
+      _mm256_cmpeq_epi16(vdx, _mm256_shuffle_epi8(tars, dup2)));
+  for (unsigned i(0); i != 7; ++i) {
+    dup = _mm256_add_epi64(dup, add);
+    cmps = _mm256_or_si256(cmps,
+        _mm256_cmpeq_epi16(vdx, _mm256_shuffle_epi8(dars, dup)));
+  }
+  for (unsigned i(0); i != 7; ++i) {
+    dup2 = _mm256_add_epi64(dup2, add);
+    cmps = _mm256_or_si256(cmps,
+        _mm256_cmpeq_epi16(vdx, _mm256_shuffle_epi8(tars, dup2)));
+  }
+  if (!_mm256_movemask_epi8(cmps)) { 
+    //convert next line from 16 bit 32 bit coord and use_mm256_maskstore_epi32
+    _mm256_storeu_si256(base, tars);
+  }
+  else {
+    _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, vdx, cmps));
+  }
+}
+
+/*
 //t_gcc_tcs3 = 4.65
 //t_gcc_procyte = 5.87
 void Diffuser::walk(__m256i* base, const unsigned size) {
@@ -97,6 +166,7 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
     _mm256_storeu_si256(base, _mm256_blendv_epi8(tars, mols_m256i, cmps));
   }
 }
+*/
 
 /*
 //t_gcc = 5.28 s kernel vmlinuz-3.13.0-35-generic.efi.signed (new and onwards)

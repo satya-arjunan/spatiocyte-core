@@ -567,7 +567,7 @@ __m256i Compartment::get_tars_exp(const __m256i vdx, __m256i nrand) const {
   //molecule will be moving to the next adjacent box. We need to 
   //address this next. 
 
-  //Uncomment below if you want to test this correctness of this function:
+  //Uncomment below if you want to test the correctness of this function:
   /*
   for(unsigned i(0); i != 16; ++i)
     {
