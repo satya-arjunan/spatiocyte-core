@@ -47,6 +47,7 @@ public:
   void walk(__m256i*, const unsigned);
   void walk(umol_t*, const unsigned);
 private:
+  __m256i cmp_box_edge_tars(const __m256i) const;
   double D_;
   Species& species_;
   Compartment& compartment_;
