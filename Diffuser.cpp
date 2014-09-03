@@ -63,7 +63,7 @@ void Diffuser::walk() {
   }
 }
 
-//t_gcc_tcs3 = 
+//t_gcc_tcs3 = 7.159
 //t_gcc_procyte = 8.77
 //Biggest advantage (and a problem) with Spatiocyte is that we need to consider
 //collisions between hardbody particles. Two particles cannot occupy the same
