@@ -1,3 +1,5 @@
+#t_gcc_procyte: 713.48 s
+
 import time
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
 sim.VoxelRadius = 2.5e-9 
@@ -19,8 +21,8 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 
 theSimulator.createEntity('Variable', 'Variable:/:A').Value = 160000
 
-logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-logger.VariableReferenceList = [['_', 'Variable:/Surface:VACANT'], ['_', 'Variable:/:A']]
+#logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
+#logger.VariableReferenceList = [['_', 'Variable:/Surface:VACANT'], ['_', 'Variable:/:A']]
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/:A']]
