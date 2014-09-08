@@ -70,18 +70,6 @@ AVX512
 //Move this into get_tars_exp. Expand col:lay:row from 5:5:5 bits to 8:8:8 bits
 //and perform get_tar and check edge tars simultaneously
 __mmask16 Diffuser::cmp_box_edge_tars(const __m256i tars) const {
-  //Uncomment below to test if vdx molecules are in edge:
-  //for(unsigned i(0); i != 16; ++i)
-  //  {
-  //    int z1(((Coord*)&vdx)[i].z);
-  //    int y1(((Coord*)&vdx)[i].y);
-  //    int x1(((Coord*)&vdx)[i].x);
-  //    if(x1 == 0 || y1 == 0 || z1 == 0 || x1 == 28 || y1 == 24 || z1 == 30)
-  //      {
-  //        std::cout << "vdx:" << x1 << "\t" << y1 << "\t" << z1 << std::endl;
-  //        exit(0);
-  //      }
-  //  }
   const __m256i zeroes(_mm256_set1_epi16(0));
   const __m256i x_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31)));
   const __m256i y_tars(_mm256_and_si256(tars, _mm256_set1_epi16(992)));
@@ -138,11 +126,53 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
 }
 */
 
-//This function adds 3 s into the total time.
+//This function adds 3 s to the total time.
+__m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
+  const __m256i zeroes(_mm256_set1_epi16(0));
+  const __m256i x_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31)));
+  const __m256i y_tars(_mm256_and_si256(tars, _mm256_set1_epi16(992)));
+  const __m256i z_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31744)));
+  const __m256i x_max(_mm256_set1_epi16(28)); //28
+  const __m256i y_max(_mm256_set1_epi16(768)); //24
+  const __m256i z_max(_mm256_set1_epi16(30720)); //30
+  __m256i cmps(_mm256_cmpeq_epi16(zeroes, x_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, y_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, z_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(x_max, x_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(y_max, y_tars));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(z_max, z_tars));
+  return cmps;
+}
+
+/*
+//This function adds 13 s to the total time.
 //Move this into get_tars_exp. Expand col:lay:row from 5:5:5 bits to 8:8:8 bits
 //and perform get_tar and check edge tars simultaneously
 __m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
-  //Uncomment below to test if vdx molecules are in edge:
+  __m256i cmps;//(_mm256_set1_epi16(0));
+  for(unsigned i(0); i != 16; ++i)
+    {
+      const int x(((Coord*)&tars)[i].x);
+      const int y(((Coord*)&tars)[i].y);
+      const int z(((Coord*)&tars)[i].z);
+      if(x == 0 || y == 0 || z == 0 || x == 28 || y == 24 || z == 30)
+        {
+          ((umol_t*)&cmps)[i] = 0xFFFF;
+        }
+    }
+  return cmps;
+}
+*/
+
+//t_gcc_tcs3 = 7.159
+//t_gcc_procyte = 8.77
+//Biggest advantage (and a problem) with Spatiocyte is that we need to consider
+//collisions between hardbody particles. Two particles cannot occupy the same
+//voxel, so we always need to avoid such a condition. In LatticeMicrobes this
+//issue does not arise since multiple molecules can occupy the same voxel.
+void Diffuser::walk(__m256i* base, const unsigned size) {
+  const __m256i vdx(_mm256_loadu_si256(base));
+  //Uncomment below to test cmp_box_edge_tars function:
   /*
   for(unsigned i(0); i != 16; ++i)
     {
@@ -155,31 +185,7 @@ __m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
           exit(0);
         }
     }
-    */
-  const __m256i zeroes(_mm256_set1_epi16(0));
-  const __m256i x_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31)));
-  const __m256i y_tars(_mm256_and_si256(tars, _mm256_set1_epi16(992)));
-  const __m256i z_tars(_mm256_and_si256(tars, _mm256_set1_epi16(31744)));
-  const __m256i x_max(_mm256_set1_epi16(28)); 
-  const __m256i y_max(_mm256_set1_epi16(768)); 
-  const __m256i z_max(_mm256_set1_epi16(30720));
-  __m256i cmps(_mm256_cmpeq_epi16(zeroes, x_tars));
-  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, y_tars));
-  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, z_tars));
-  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(x_max, x_tars));
-  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(y_max, y_tars));
-  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(z_max, z_tars));
-  return cmps;
-}
-
-//t_gcc_tcs3 = 7.159
-//t_gcc_procyte = 8.77
-//Biggest advantage (and a problem) with Spatiocyte is that we need to consider
-//collisions between hardbody particles. Two particles cannot occupy the same
-//voxel, so we always need to avoid such a condition. In LatticeMicrobes this
-//issue does not arise since multiple molecules can occupy the same voxel.
-void Diffuser::walk(__m256i* base, const unsigned size) {
-  const __m256i vdx(_mm256_loadu_si256(base));
+  */
   const __m256i tars(compartment_.get_tars_exp(vdx, rng_.Ran16()));
   __m256i cmps(cmp_box_edge_tars(tars));
   
