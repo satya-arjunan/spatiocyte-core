@@ -126,6 +126,7 @@ void Diffuser::walk(__m256i* base, const unsigned size) {
 }
 */
 
+/*
 //This function adds 3 s to the total time.
 __m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
   const __m256i zeroes(_mm256_set1_epi16(0));
@@ -143,6 +144,71 @@ __m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
   cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(z_max, z_tars));
   return cmps;
 }
+*/
+
+/*
+00000 0
+00001 1
+00010 2
+00011 3
+00100 4
+00101 5
+00110 6
+00111 7
+01000 8
+01001 9
+01010 10 a
+01011 11 b
+01100 12 c
+01101 13 d
+01110 14 e
+01111 15 f
+10000 16
+10001 17
+10010 18
+10011 19
+10100 20
+10101 21
+10110 22
+10111 23
+11000 24 *
+11001 25
+11010 26
+11011 27
+11100 28 *
+11101 29
+11110 30 *
+11111 31
+
+0    30    24    28
+0 11110 11000 11100 : 16 bits 
+0111 1011 0001 1100 : 16 bits (rearranged)
+   7    b    1    c : hex
+1000 0100 1110 0011 : inverted
+   8    4    e    3 : inverted hex
+//const __m256i max(_mm256_set1_epi16(30720:768:28));
+*/
+
+__m256i Diffuser::cmp_box_edge_tars(const __m256i tars) const {
+  //const __m256i ones(_mm256_set1_epi16(0xffff));
+  //const __m256i zeroes(_mm256_set1_epi16(0));
+  const __m256i min{(_mm256_set1_epi16(0));
+  const __m256i max{(_mm256_set1_epi16(0x7b1c));
+  //const __m256i min_inv{(_mm256_set1_epi16(0xffff));
+  //const __m256i max_inv(_mm256_set1_epi16(0x84e3));
+  __m256i cmps(_mm256_cmpeq_epi16(min, _mm256_xor_si256(min, tars)));
+  cmps = _mm256_or_si256(cmps, _mm256_cmpeq_epi16(zeroes, _mm256_xor_si256(max, tars)));
+  return cmps;
+}
+tars    10 11 00
+inv_tar 01 00 11
+min     00 00 00
+inv_min 11 11 11 
+tars cmpeq min = 00 00 00
+tars xor min = 10 11 00
+tars xor inv_min = 01 00 11
+//PTEST
+//_mm256_cmpgt_epi16
 
 /*
 //This function adds 13 s to the total time.
