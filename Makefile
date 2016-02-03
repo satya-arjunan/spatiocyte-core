@@ -13,7 +13,7 @@ SRC=\
 		Random\
 		Optimization
 
-IFLAGS = -I. -I$(HOME)/root/include -I/usr/include/x86_64-linux-gnu/c++/4.8
+IFLAGS = -I. -I$(HOME)/root/include -I/usr/include/x86_64-linux-gnu/c++/5.2.1
 LDFLAGS = # -L$(HOME)/root/lib -lRandom
 #CXXFLAGS = -O3 -march=native -mavx -Werror -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate
 CXXFLAGS = -O3 -march=core-avx2 -Wfatal-errors -Wall -std=c++0x #-fprofile-use #-pg -fprofile-generate

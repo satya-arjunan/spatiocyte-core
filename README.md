@@ -1,7 +1,7 @@
 spatiocyte-core
 ===============
 
-A multithreaded standalone spatiocyte package.
+A SIMD (Intel AVX2) standalone Spatiocyte package.
 
 1. Get spatiocyte-core
     * $ git clone https://github.com/satya-arjunan/spatiocyte-core.git
@@ -20,7 +20,8 @@ A multithreaded standalone spatiocyte package.
     * $ cd ..
     * $ make install
 
-3. Compile spatiocyte-core
+3. Compile spatiocyte-core 
+    * update include path in Makefile (-I/usr/include/x86_64-linux-gnu/c++/5.2.1)
     * $ make (or 'make -jx' with x the number of available CPU cores)
 
 4. Run spatiocyte-core
