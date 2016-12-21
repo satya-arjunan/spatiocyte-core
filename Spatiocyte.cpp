@@ -51,9 +51,15 @@ int main() {
   model.run(0.0001);
   boost::posix_time::ptime start(
       boost::posix_time::microsec_clock::universal_time()); 
-  model.run(0.1);
-  //model.run(0.01);
+  unsigned steps(1000);
+  //unsigned steps(model.run(0.5));
+  model.step(steps);
   boost::posix_time::ptime end(
       boost::posix_time::microsec_clock::universal_time());
-  std::cout << "duration:" << (end-start)/1.0 << std::endl;
+
+  boost::posix_time::time_duration duration(end-start);
+  double bups((A.get_mols().size())*steps/
+               (duration.total_milliseconds()/1000.0));
+  std::cout << "duration:" << duration << " BUPS:" << bups/1e+9 <<
+    " msecs:" << duration.total_milliseconds() << std::endl;
 }

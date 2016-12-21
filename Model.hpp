@@ -43,6 +43,7 @@ class Model {
   ~Model() {}
   void initialize();
   void run(const double);
+  void step(const unsigned);
   unsigned get_nbit() const;
   unsigned push_species(Species&);
   Compartment& get_compartment();

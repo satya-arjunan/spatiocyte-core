@@ -252,7 +252,7 @@ uint8_t Random::BRan8() {
 */
 
 uint16_t Random::BRan16() {
-   // Output 32 random bits
+   // Output 16 random bits
    uint16_t y;
 
    if (ix >= SFMT_N*8) {

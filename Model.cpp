@@ -53,6 +53,12 @@ void Model::run(const double interval) {
     }
 }
 
+void Model::step(const unsigned steps) {
+  for (unsigned i(0); i != steps; ++i) {
+      stepper_.step();
+    }
+}
+
 unsigned Model::get_nbit() const {
   return nbit_;
 }
