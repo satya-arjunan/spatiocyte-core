@@ -51,7 +51,7 @@ int main() {
   model.run(0.0001);
   boost::posix_time::ptime start(
       boost::posix_time::microsec_clock::universal_time()); 
-  unsigned steps(1000);
+  unsigned steps(100);
   //unsigned steps(model.run(0.5));
   model.step(steps);
   boost::posix_time::ptime end(
